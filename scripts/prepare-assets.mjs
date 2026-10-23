@@ -45,3 +45,12 @@ for (const variant of ["internal", "nosimd_internal"]) {
 console.log(
   "Pinned Lite0 checksum verified; MediaPipe 0.10.32 WASM assets copied.",
 );
+
+await copyFile(
+  new URL("../THIRD_PARTY_NOTICES.md", import.meta.url),
+  new URL("../public/THIRD_PARTY_NOTICES.txt", import.meta.url),
+);
+await copyFile(
+  new URL("../licenses/Apache-2.0.txt", import.meta.url),
+  new URL("../public/Apache-2.0.txt", import.meta.url),
+);

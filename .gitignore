@@ -6,3 +6,5 @@ playwright-report/
 public/models/*.tflite
 public/wasm/*
 !public/wasm/.gitkeep
+public/THIRD_PARTY_NOTICES.txt
+public/Apache-2.0.txt

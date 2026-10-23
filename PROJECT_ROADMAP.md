@@ -1,6 +1,8 @@
 # Visual Labs AI roadmap
 
-All phases are planned, not implemented. Deliver each in a separate branch and PR into main.
+Phase 1 is implemented on its development branch, pending review and real-device validation.
+Phases 2–5 and all stretch/exploratory targets remain planned, not implemented.
+Deliver each phase in a separate branch and PR into main.
 Codex develops; Claude reviews. Never merge, deploy or modify production without user approval.
 
 ## Phase 1 — Live object detection

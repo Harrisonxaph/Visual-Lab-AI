@@ -1,13 +1,44 @@
-# Model limitations
+# Model and platform limitations
 
-No model has yet been validated in this application. EfficientDet-Lite0 with MediaPipe Tasks Vision
-CPU/WASM is proposed; downloaded model availability does not prove runtime compatibility.
+## Verified combination
 
-Confidence is a model score, not measured accuracy or a calibrated probability of correctness.
-Scores vary with lighting, scale, occlusion, blur and domain shift. COCO coverage is limited to its
-supported categories; do not describe unsupported objects as detectable. Verify label mapping from
-the selected artifact rather than assuming contiguous IDs or presenting background as a category.
+EfficientDet-Lite0 float32 / v1, MediaPipe Tasks Vision 0.10.32, CPU/WASM in a module worker.
+Verified on Chromium 154, Linux x86_64 using a fixed image and synthetic camera video stream,
+in both development and production builds (production test disables GPU acceleration).
+Physical cameras, macOS Safari, real iPhone/iPad Safari and Android remain unverified.
+Do not interpret responsive viewport screenshots as device inference evidence.
 
-Postprocessing can omit results; the UI cannot recover alternatives or discarded predictions that
-are not returned. No tracking, identity recognition, training, accuracy benchmark or learning from
-corrections exists in Phase 1. Device performance and browser support require measured evidence.
+Module workers, OffscreenCanvas, transferable ImageBitmap and WebAssembly are required.
+SIMD is detected by MediaPipe; SIMD and non-SIMD binaries are included, but the non-SIMD
+path has not been separately forced and validated. Missing capabilities fail visibly.
+The tested vendor module-worker loader adaptations are documented in THIRD_PARTY_NOTICES.md.
+No assumption of universal GPU acceleration is made; the selected inference delegate is CPU.
+
+## Detector interpretation
+
+Confidence is an uncalibrated model score, not measured accuracy or a guaranteed probability.
+Lighting, blur, scale, pose, background, occlusion and domain shift can change results or produce
+false positives/negatives. This is an educational tool, not a safety-critical perception system.
+The 80 named COCO categories are listed in [docs/COCO_LABELS.md](docs/COCO_LABELS.md).
+The embedded label file has 90 entries including placeholder gaps; IDs are not assumed contiguous.
+The detector cannot identify arbitrary objects, specific people or unsupported custom classes.
+
+Runtime preprocessing resizes to the detector's 320×320 input. UI boxes use returned frame pixels.
+The app receives postprocessed results, not raw class logits. The fixed 5% output floor and
+50-result cap can omit results. The slider cannot recover omitted detections. No alternative
+class probabilities or discarded proposals are invented or exposed in this phase.
+
+## Performance and privacy
+
+Inference time measures the synchronous detection call inside the worker. Processing FPS measures
+completed frames per elapsed running time, including capture/transfer/scheduling. It is a running
+average, not camera FPS, a latency percentile or accuracy. Processing is capped at 10 FPS and only
+one frame is in flight. CPU, battery and thermal behavior still require real-device evaluation.
+
+Permission is requested only after Start. Pause retains camera preview, Stop releases tracks.
+Backgrounding pauses inference; camera preview may still be active until Stop or page exit.
+Only the threshold is optionally persisted. Frames and detections remain transient and local.
+The model is served locally after initial setup; no offline/PWA guarantee exists yet.
+
+No tracking, identity persistence, active learning, training, retraining, ground-truth evaluation
+or model comparison is implemented. Corrections cannot improve this detector in Phase 1.
