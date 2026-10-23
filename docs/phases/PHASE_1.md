@@ -1,7 +1,9 @@
 # Phase 1 implementation and testing
 
-Implemented on `phase-1/live-object-detection`; baseline main `cafa8c7`. No merge or deployment.
-Codex implementation and supplemental engineering review are separate from the pending Claude review.
+Implemented on `phase-1/live-object-detection`; baseline main `cafa8c7`. No merge or explicit deployment command.
+The existing Vercel Git integration did publish branch previews; see the review follow-up below.
+The designated review has now been supplied through the user; fixes and response are recorded
+in docs/reviews/PHASE_1_RESPONSE.md. Real-device testing and merge approval remain pending.
 
 ## Delivered
 
@@ -19,19 +21,22 @@ All five phases and all stretch targets remain documented; implementation stays 
 
 ## Automated verification (2026-10-23)
 
-- `npm test`: **15 passed** (threshold, empty output, clipping, completed-frame FPS, camera denial,
+- `npm test`: **21 passed** (threshold, empty output, clipping, completed-frame FPS, camera denial,
   late permission grant cleanup, stale paused/stopped results, one-frame limit, load failure/retry,
   loading cancellation, worker timeout/retry, stalled capture/late-bitmap cleanup, background interruptions during permission/model loading,
-  stale worker error isolation).
-- `npm run test:browser`: **16 passed** on Chromium 154 / Linux x86_64. Includes mocked lifecycle/
-  layout checks, actual model-load failure, worker crash, aspect-change overlay clearing, and actual CPU inference tests.
+  stale worker error isolation, injected model configuration/metadata, rolling FPS, camera-end
+  messaging, score formatting and drawable counts).
+- `npm run test:browser`: **19 passed** locally on Chromium 154.0.8037.57 / Linux x86_64. Includes mocked lifecycle/
+  layout checks, actual model-load failure, worker crash, aspect-change overlay clearing, metadata
+  replacement, score/count consistency, and actual CPU inference at two configured output floors.
 - `npm run test:production`: **1 passed** against built assets with GPU acceleration disabled.
 - `npm run check`, `npm run build`, `npm run format:check`, `git diff --check`: passed.
 - `npm audit`: **0 vulnerabilities** in the checked lockfile at verification time.
 - Clean model acquisition downloaded the actual artifact and verified SHA-256 successfully.
 
 The isolated real-worker test used a fixed image; the complete UI test used a canvas-based camera
-stream with that image. Neither uses a physical camera. Phone/tablet viewport checks are Chromium
+stream with that image. Neither uses a physical camera. The supplied review reports Chromium 153 for its own run and CI; this differs from the local
+154 environment and is recorded separately in EXPERIMENTS.md. Phone/tablet viewport checks are Chromium
 layout tests at 390/768px, not iOS validation. Remote GitHub CI status is independent of local results.
 See EXPERIMENTS.md for exact model input, outputs, hardware and measured timing caveats.
 
@@ -60,13 +65,13 @@ macOS Safari, real iPhone Safari and real iPad Safari; add Android Chrome when a
 
 ## Limitations and next action
 
-Real iOS/Safari/Android and physical-camera behavior remain unverified. Only Lite0 is implemented;
-Lite2 compatibility/comparison is deferred to Phase 3. No accuracy benchmark, tracking, recording,
+Real iOS/Safari/Android and physical-camera behavior remain unverified. Lite0 remains the only default asset;
+Lite2 compatibility evidence was supplied in the review and is recorded in EXPERIMENTS.md.
+Controlled model comparison remains Phase 3. No accuracy benchmark, tracking, recording,
 training, PWA, offline guarantee or advanced module is included. Vendor module-worker compatibility
 adaptations need device scrutiny. First load requires asset acquisition; slow devices can time out.
 
-Recommended next action: Claude review using docs/CLAUDE_REVIEW.md, remote CI inspection, and
-real-device testing above. Resolve material findings before requesting approval to merge. Do not
+Recommended next action: inspect the review fixes and remote CI, then complete real-device testing above. Resolve material findings before requesting approval to merge. Do not
 start Phase 2, merge or deploy merely because Phase 1 tests pass.
 
 ## Pull request and supplemental review
@@ -75,4 +80,21 @@ Draft PR: https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1
 Fresh Codex audit found a startup/background pause gap and noted stale-worker errors and transient
 aspect mismatch. Regression tests reproduced each; fixes preserve startup suspension, ignore
 obsolete worker errors and clear mismatched boxes on video resize. Full local suites passed after
-fixes. This audit is not Claude review; Claude approval remains pending.
+fixes. That audit was not Claude review. The subsequent user-supplied designated review is now recorded
+in docs/reviews/PHASE_1_RESPONSE.md; merge approval remains pending.
+
+## Review follow-up and device gate
+
+The supplied review's findings are tracked in docs/reviews/PHASE_1_RESPONSE.md. Model configuration
+is now injected, FPS uses a 2-second rolling window, externally ended cameras show reconnect
+guidance, score display is capped at 99%, and only drawable results contribute to counts.
+CI uses PR events/manual dispatch only. Vercel automatic Git deployments are disabled in vercel.json
+for refs containing that config; earlier previews remain untouched. No merge or manual deployment
+is authorized.
+
+| Required physical-device check | Status |
+| --- | --- |
+| Real iPhone Safari camera/inference/rotation/background checklist | Not run: no physical device attached |
+| Real iPad Safari camera/inference/rotation/background checklist | Not run: no physical device attached |
+
+Phase 2 must not start before these checks and the user's merge decision.

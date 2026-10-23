@@ -14,6 +14,16 @@ path has not been separately forced and validated. Missing capabilities fail vis
 The tested vendor module-worker loader adaptations are documented in THIRD_PARTY_NOTICES.md.
 No assumption of universal GPU acceleration is made; the selected inference delegate is CPU.
 
+## Lite2 investigation
+
+The user-supplied Phase 1 review reports successful EfficientDet-Lite2 float32 / v1 inference
+in the same worker without code changes: both cat and dog were detected in the fixed image.
+The review's single cold runs were 760 ms (Lite2) and 316 ms (Lite0), on Chromium 153 as reported.
+This is compatibility evidence only, not a benchmark or evidence of comparative accuracy.
+See EXPERIMENTS.md for provenance and missing hardware/checksum details. Lite0 remains the
+shipped default; no Lite2 asset, model selector or comparison lab is added to Phase 1. No Lite2
+claim is made for Safari, iOS, other devices, sustained performance or accuracy.
+
 ## Detector interpretation
 
 Confidence is an uncalibrated model score, not measured accuracy or a guaranteed probability.
@@ -25,14 +35,17 @@ The detector cannot identify arbitrary objects, specific people or unsupported c
 
 Runtime preprocessing resizes to the detector's 320×320 input. UI boxes use returned frame pixels.
 The app receives postprocessed results, not raw class logits. The fixed 5% output floor and
-50-result cap can omit results. The slider cannot recover omitted detections. No alternative
+50-result cap can omit results. The slider cannot recover omitted detections. Displayed detection scores are rounded and capped at 99% to avoid suggesting certainty;
+filtering still uses unrounded scores. Only drawable, clipped results contribute to the visible count.
+No alternative
 class probabilities or discarded proposals are invented or exposed in this phase.
 
 ## Performance and privacy
 
 Inference time measures the synchronous detection call inside the worker. Processing FPS measures
-completed frames per elapsed running time, including capture/transfer/scheduling. It is a running
-average, not camera FPS, a latency percentile or accuracy. Processing is capped at 10 FPS and only
+completed frames in the latest 2-second rolling window, including capture/transfer/scheduling.
+Before two seconds have elapsed, it uses elapsed session time. It is not camera FPS, a latency
+percentile or accuracy. Processing is capped at 10 FPS and only
 one frame is in flight. CPU, battery and thermal behavior still require real-device evaluation.
 
 Permission is requested only after Start. Pause retains camera preview, Stop releases tracks.

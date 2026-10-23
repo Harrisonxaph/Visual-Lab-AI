@@ -1,5 +1,5 @@
 import { FilesetResolver, ObjectDetector } from "@mediapipe/tasks-vision";
-import { MODEL, type WorkerRequest, type WorkerResponse } from "./types";
+import { type WorkerRequest, type WorkerResponse } from "./types";
 // MediaPipe falls back from importScripts to this hook in module workers.
 (self as unknown as { import: (url: string) => Promise<unknown> }).import = (
   url,
@@ -17,10 +17,10 @@ self.onmessage = async ({ data }: MessageEvent<WorkerRequest>) => {
         data.wasmUrl.replace(/\/$/, ""),
       );
       detector = await ObjectDetector.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: data.modelUrl, delegate: "CPU" },
+        baseOptions: { modelAssetPath: data.modelUrl, delegate: data.delegate },
         runningMode: "VIDEO",
-        scoreThreshold: MODEL.floor,
-        maxResults: MODEL.maxResults,
+        scoreThreshold: data.scoreThreshold,
+        maxResults: data.maxResults,
       });
       send({ type: "ready" });
     } else {

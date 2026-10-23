@@ -61,7 +61,7 @@ transferable ImageBitmap, OffscreenCanvas and WASM. Unsupported features show ac
 MediaPipe SIMD capability detection selects its WASM variant; no GPU delegate is required.
 
 Confidence is a model score, **not measured accuracy**. The UI displays results at or above the
-threshold, subject to a 5% model output floor and 50-result cap. Processing is capped at 10 FPS;
+threshold, subject to a 5% model output floor and 50-result cap. Processing FPS uses a 2-second rolling window, and scheduling is capped at 10 FPS;
 actual speed depends on hardware. Model-load timeout is 45 seconds, frame inference timeout is
 15 seconds, and frame capture timeout is 5 seconds. Slow devices may need to retry.
 
@@ -76,6 +76,12 @@ actual speed depends on hardware. Model-load timeout is 45 seconds, frame infere
 - [Assistant instructions](AGENTS.md)
 - [Third-party provenance and notices](THIRD_PARTY_NOTICES.md)
 
-Codex implements; Claude is the intended reviewer. Review remains pending until it actually occurs.
+Codex implements; Claude is the intended reviewer. The user supplied the Phase 1 review; findings and the implementation response are recorded
+in [the review response](docs/reviews/PHASE_1_RESPONSE.md). Real-device validation remains pending.
 Each phase uses a separate branch and PR. Merging or deployment requires explicit user approval.
 Application source: MIT. Third-party assets retain their own terms and attribution.
+
+Vercel Git integration automatically created previews of earlier branch pushes. `vercel.json` now
+disables automatic Git deployments for refs containing it; no existing preview is removed.
+No manual deployment or production change is authorized by this PR. The CI workflow runs on PR
+events or manual dispatch, avoiding duplicate push/PR jobs.

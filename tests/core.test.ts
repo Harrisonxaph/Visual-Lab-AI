@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { filterDetections, clipBox, ProcessingMeter } from "../src/detections";
 import { Camera } from "../src/camera";
 import { Lab, type LabDependencies } from "../src/lab";
+import { MODEL } from "../src/inference/types";
 import { WorkerDetector } from "../src/inference/client";
 const detection = {
   label: "cat",
@@ -210,7 +211,7 @@ describe("worker lifecycle", () => {
       onmessageerror: null,
     };
     const factory = vi.fn(() => worker as unknown as Worker);
-    const detector = new WorkerDetector(factory, 100);
+    const detector = new WorkerDetector(MODEL, factory, 100);
     const rejected = expect(detector.load()).rejects.toThrow(/timed out/i);
     await vi.advanceTimersByTimeAsync(101);
     await rejected;
@@ -273,7 +274,7 @@ it("ignores an old worker error after a replacement session loads", async () => 
     .fn()
     .mockReturnValueOnce(oldWorker)
     .mockReturnValueOnce(newWorker);
-  const detector = new WorkerDetector(factory);
+  const detector = new WorkerDetector(MODEL, factory);
   const fatal = vi.fn();
   detector.onFatal = fatal;
   const first = detector.load();
@@ -294,4 +295,23 @@ it("ignores an old worker error after a replacement session loads", async () => 
   expect(newWorker.terminate).not.toHaveBeenCalled();
   detector.close();
   vi.unstubAllGlobals();
+});
+
+it("reports an external camera interruption distinctly from an explicit Stop", async () => {
+  const h = harness();
+  await h.lab.start();
+  h.lab.cameraEnded();
+  expect(h.lab.snapshot.state).toBe("stopped");
+  expect(h.lab.snapshot.message).toContain("Camera connection ended");
+  expect(h.lab.snapshot.message).toContain("another app");
+  expect(h.lab.snapshot.message).toContain("Start camera");
+  expect(h.deps.detector.close).toHaveBeenCalled();
+  h.lab.stop();
+  expect(h.lab.snapshot.message).toBe("Camera off. Frames were not saved.");
+});
+it("shows a recent slowdown instead of averaging it into a long session", () => {
+  const meter = new ProcessingMeter();
+  meter.reset(0);
+  for (let ms = 100; ms <= 10000; ms += 100) meter.complete(ms);
+  expect(meter.complete(12000)).toBe(0.5);
 });

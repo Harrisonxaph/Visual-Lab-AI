@@ -1,8 +1,7 @@
 name: Phase 1 checks
 on:
   pull_request:
-  push:
-    branches: ["phase-1/live-object-detection"]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

@@ -1,4 +1,9 @@
-import type { Detection, WorkerRequest, WorkerResponse } from "./types";
+import type {
+  Detection,
+  DetectorConfiguration,
+  WorkerRequest,
+  WorkerResponse,
+} from "./types";
 export interface FrameResult {
   detections: Detection[];
   inferenceMs: number;
@@ -17,6 +22,7 @@ export class WorkerDetector {
   private id = 0;
   onFatal?: (error: Error) => void;
   constructor(
+    private config: DetectorConfiguration,
     private factory: () => Worker = () =>
       new Worker(new URL("./detector.worker.ts", import.meta.url), {
         type: "module",
@@ -79,8 +85,11 @@ export class WorkerDetector {
         const base = new URL(import.meta.env.BASE_URL, location.href);
         this.post({
           type: "init",
-          modelUrl: new URL("models/efficientdet_lite0.tflite", base).href,
-          wasmUrl: new URL("wasm/", base).href,
+          modelUrl: new URL(this.config.modelPath, base).href,
+          wasmUrl: new URL(this.config.wasmPath, base).href,
+          scoreThreshold: this.config.floor,
+          maxResults: this.config.maxResults,
+          delegate: this.config.delegate,
         });
       } catch (error) {
         this.fail(

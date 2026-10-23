@@ -1,9 +1,10 @@
 import "./style.css";
 import { Camera } from "./camera";
 import { captureFrame } from "./capture";
-import { filterDetections } from "./detections";
+import { visibleDetections, formatScore } from "./detections";
 import { WorkerDetector } from "./inference/client";
 import { MODEL } from "./inference/types";
+import { modelDetails } from "./model-info";
 import { Lab, type Snapshot } from "./lab";
 import { drawDetections } from "./overlay";
 const icon = (name: string, size = 20) => {
@@ -43,7 +44,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
             <div class="stage-grid" aria-hidden="true"></div>
             <div class="stage-corner top-left" aria-hidden="true"></div><div class="stage-corner top-right" aria-hidden="true"></div><div class="stage-corner bottom-left" aria-hidden="true"></div><div class="stage-corner bottom-right" aria-hidden="true"></div>
             <div class="stage-intro"><div class="intro-icon">${icon("scan", 38)}</div><h3 id="stage-title">A new perspective starts here</h3><p id="stage-description">Point your camera at everyday objects.<br>Explore how a model makes sense of them.</p><span class="stage-caption">CAMERA OFF · NOTHING IS RECORDED</span></div>
-            <div class="stage-footer"><span id="frame-label">WAITING FOR INPUT</span><span>EfficientDet-Lite0 <span class="small-dot"></span> CPU</span></div>
+            <div class="stage-footer"><span id="frame-label">WAITING FOR INPUT</span><span><span id="stage-model"></span></span></div>
           </div>
           <div class="camera-toolbar"><div class="camera-buttons"><button id="start" class="button primary">${icon("camera", 17)} Start camera</button><button id="pause" class="button secondary" disabled>${icon("pause", 16)} <span>Pause inference</span></button><button id="stop" class="button stop" disabled aria-label="Stop camera">${icon("stop", 15)}<span>Stop camera</span></button></div></div>
           <p class="session-message" id="session-message" role="status">Start when you’re ready. Your browser will ask for camera access.</p>
@@ -51,14 +52,14 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
           <div class="metrics"><div><span class="metric-label">${icon("pulse", 15)} Inference time</span><strong id="inference-time">—<small> ms</small></strong></div><div><span class="metric-label">Processing speed</span><strong id="processing-fps">—<small> FPS</small></strong></div><div><span class="metric-label">Visible detections</span><strong data-testid="detection-count">0</strong></div></div>
         </section>
         <aside class="inspector">
-          <section class="panel threshold-panel" aria-labelledby="threshold-title"><div class="panel-heading"><h2 id="threshold-title">Confidence threshold</h2>${icon("scan", 17)}</div><div class="threshold-body"><div class="threshold-value"><strong id="threshold-value">50<span>%</span></strong><span>Minimum score<br>to display</span></div><label class="sr-only" for="threshold">Confidence threshold</label><input id="threshold" type="range" min="0.05" max="1" step="0.01" value="0.5"><div class="range-ends"><span>5% · More results</span><span>100% · Fewer results</span></div><p>Move the threshold to investigate which detections stay and which disappear.</p></div></section>
+          <section class="panel threshold-panel" aria-labelledby="threshold-title"><div class="panel-heading"><h2 id="threshold-title">Confidence threshold</h2>${icon("scan", 17)}</div><div class="threshold-body"><div class="threshold-value"><strong id="threshold-value">50<span>%</span></strong><span>Minimum score<br>to display</span></div><label class="sr-only" for="threshold">Confidence threshold</label><input id="threshold" type="range" min="${MODEL.floor}" max="1" step="0.01" value="0.5"><div class="range-ends"><span>${MODEL.floor * 100}% · More results</span><span>100% · Fewer results</span></div><p>Move the threshold to investigate which detections stay and which disappear.</p></div></section>
           <section class="panel results-panel" aria-labelledby="results-title"><div class="panel-heading"><h2 id="results-title">Detected objects</h2><span class="subtle-tag">THIS FRAME</span></div><div data-testid="detections" class="detections"><div class="empty-results">${icon("layers", 28)}<strong>Waiting to observe</strong><p>Detected objects and their scores<br>will appear here.</p></div></div></section>
           <div class="privacy-note">${icon("shield", 20)}<p><strong>Private by design</strong>Frames stay in your browser. No image uploads, recordings or paid APIs. Model assets download before inference.</p></div>
         </aside>
       </div>
       <div class="learn-grid">
-        <section class="panel explanation"><div class="learn-icon">${icon("info", 23)}</div><div><div class="eyebrow">A NOTE FROM THE LAB</div><h2>Confidence isn’t accuracy.</h2><p>An 80% score expresses the model’s confidence in a label. It does not mean the model is correct 80% of the time. Try changing lighting, distance or angle, and watch the scores change.</p><div class="tip"><span>TRY THIS</span> Find an object, then slowly cover part of it.</div></div></section>
-        <section class="panel model-panel"><h2>${icon("layers", 18)} Inside the model</h2><dl><div><dt>Detector</dt><dd>${MODEL.name} <span>float32 / v1</span></dd></div><div><dt>Runtime</dt><dd>MediaPipe 0.10.32 · CPU/WASM</dd></div><div><dt>Coverage</dt><dd>80 COCO categories</dd></div><div><dt>Model size</dt><dd>13.2 MiB <span>+ runtime assets</span></dd></div></dl><details><summary>Model & compatibility notes</summary><p>Model source: Google MediaPipe. Chromium worker inference verified with a fixed image. Safari on real iPhone/iPad still requires device testing. No GPU acceleration is assumed.</p><p>Output floor: 5%; at most 50 results after model postprocessing. Other predictions may be omitted. No tracking, alternative-class analysis or retraining in this phase.</p><p>Processing FPS includes transfer and scheduling; inference time measures the worker’s detection call. FPS is capped at 10 to limit work. Neither measures accuracy.</p><a href="https://ai.google.dev/edge/mediapipe/solutions/vision/object_detector" target="_blank" rel="noopener noreferrer">Read model documentation ↗</a></details></section>
+        <section class="panel explanation"><div class="learn-icon">${icon("info", 23)}</div><div><div class="eyebrow">A NOTE FROM THE LAB</div><h2>Confidence isn’t accuracy.</h2><p>An 80% score expresses the model’s confidence in a label. It does not mean the model is correct 80% of the time. Try changing lighting, distance or angle, and watch the scores change. Displayed scores are rounded and capped at 99%; thresholds use the original scores.</p><div class="tip"><span>TRY THIS</span> Find an object, then slowly cover part of it.</div></div></section>
+        <section class="panel model-panel"><h2>${icon("layers", 18)} Inside the model</h2><dl><div><dt>Detector</dt><dd><span id="model-name"></span> <span id="model-version"></span></dd></div><div><dt>Runtime</dt><dd><span id="model-runtime"></span></dd></div><div><dt>Coverage</dt><dd><span id="model-coverage"></span></dd></div><div><dt>Model size</dt><dd><span id="model-size"></span> <span>+ runtime assets</span></dd></div></dl><details><summary>Model & compatibility notes</summary><p>Model source: <span id="model-source"></span>. <span id="model-compatibility"></span></p><p id="model-output-notes"></p><p>Processing FPS uses a 2-second rolling window, including transfer and scheduling; inference time measures the worker’s detection call. FPS is capped at 10 to limit work. Neither measures accuracy.</p><a id="model-documentation" target="_blank" rel="noopener noreferrer">Read model documentation ↗</a></details></section>
       </div>
       <footer class="page-footer"><span>VISUAL LABS AI <span class="footer-divider">/</span> Make it a lab.</span><span>Local processing. Curious minds.</span></footer>
     </main>
@@ -68,7 +69,22 @@ const element = <T extends HTMLElement = HTMLElement>(selector: string) =>
 const video = element<HTMLVideoElement>("video"),
   canvas = element<HTMLCanvasElement>("canvas");
 const slider = element<HTMLInputElement>("#threshold");
-let threshold = 0.5;
+const details = modelDetails(MODEL);
+for (const [id, value] of Object.entries({
+  "stage-model": details.stageLabel,
+  "model-name": details.name,
+  "model-version": details.version,
+  "model-runtime": details.runtime,
+  "model-coverage": details.coverage,
+  "model-size": details.size,
+  "model-source": details.source,
+  "model-compatibility": details.compatibility,
+  "model-output-notes": details.outputNotes,
+}))
+  element(`#${id}`).textContent = value;
+element<HTMLAnchorElement>("#model-documentation").href =
+  MODEL.documentationUrl;
+let threshold = Math.max(0.5, MODEL.floor);
 try {
   const saved = localStorage.getItem("visual-labs.threshold");
   const value = Number(saved);
@@ -83,9 +99,9 @@ try {
   /* Storage is optional. */
 }
 slider.value = String(threshold);
-const detector = new WorkerDetector();
+const detector = new WorkerDetector(MODEL);
 let lab: Lab;
-const camera = new Camera(video, () => lab.stop());
+const camera = new Camera(video, () => lab.cameraEnded());
 lab = new Lab(
   {
     camera,
@@ -111,7 +127,12 @@ function render(snapshot: Snapshot): void {
       snapshot.width / snapshot.height - video.videoWidth / video.videoHeight,
     ) < 0.001;
   const detections = frameMatchesVideo
-    ? filterDetections(snapshot.detections, threshold)
+    ? visibleDetections(
+        snapshot.detections,
+        threshold,
+        snapshot.width,
+        snapshot.height,
+      )
     : [];
   element('[data-testid="lab-state"]').textContent =
     state[0].toUpperCase() + state.slice(1);
@@ -171,7 +192,7 @@ function render(snapshot: Snapshot): void {
   );
   slider.style.setProperty(
     "--range-progress",
-    `${((threshold - 0.05) / 0.95) * 100}%`,
+    `${((threshold - MODEL.floor) / (1 - MODEL.floor)) * 100}%`,
   );
   const results = element('[data-testid="detections"]');
   results.replaceChildren();
@@ -202,7 +223,7 @@ function render(snapshot: Snapshot): void {
       name.className = "detection-name";
       name.textContent = detection.label;
       const score = document.createElement("strong");
-      score.textContent = `${Math.round(detection.score * 100)}%`;
+      score.textContent = formatScore(detection.score);
       const bar = document.createElement("div");
       bar.className = "score-bar";
       const fill = document.createElement("span");

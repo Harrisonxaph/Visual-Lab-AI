@@ -121,6 +121,13 @@ export class Lab {
       message: "Camera off. Frames were not saved.",
     });
   }
+  cameraEnded(): void {
+    this.stop();
+    this.emit({
+      message:
+        "Camera connection ended. The camera may have disconnected or been interrupted by another app. Choose Start camera to reconnect.",
+    });
+  }
   fail(error: unknown): void {
     this.stop();
     this.emit({ state: "error", error: cameraError(error), message: "" });

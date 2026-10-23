@@ -35,6 +35,36 @@ Reproduce: `npm ci && npm run assets`, install Chromium through Playwright, then
 actual outputs/configuration; latency is expected to vary. CI is configured but a remote CI run
 must be inspected independently before claiming it passed.
 
+## Reviewer-supplied Lite2 compatibility evidence
+
+Source: the user-provided Phase 1 review, received 2026-10-23, for the existing worker path.
+The reviewer ran **EfficientDet-Lite2 float32 / v1** (approximately **23.1 MB as reported**)
+against the same cat-and-dog test image with no worker code changes. It returned both cat and dog.
+The review reports Chromium **153** for its run and CI, separately from the local Chromium 154
+record above. The reported cold detection-call times were:
+
+| Model | Single cold call (reviewer-reported) |
+| --- | --- |
+| EfficientDet-Lite0 float32 / v1 | 316 ms |
+| EfficientDet-Lite2 float32 / v1 | 760 ms |
+
+This establishes **compatibility evidence for the existing CPU/WASM worker**, not a speed or
+accuracy benchmark. There was no warmup, repeated-sample distribution or labelled accuracy
+measurement. Full browser patch version, exact hardware/load and Lite2 checksum were not supplied;
+these timings are attributed to the review and were not independently reproduced in this session.
+No inference speed ratio or accuracy improvement is claimed. Lite0 remains the default asset;
+Lite2 is not downloaded by the app. Controlled side-by-side comparison remains Phase 3 work.
+Model source: https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float32/1/efficientdet_lite2.tflite
+
+## Review-fix configuration checks
+
+The worker client now receives a typed detector configuration, including model/asset paths,
+metadata, score floor and result cap. The worker no longer imports a default model constant.
+A real-worker regression uses the pinned Lite0 image at floors 0.05 and 0.9: the former returns
+cat and dog; the latter returns an empty result. This validates configuration propagation; it is
+not a model comparison. UI tests replace metadata with a test configuration to check that stage,
+version, runtime, coverage, size and output-limit text all follow the supplied configuration.
+
 ## Future experiment records
 
 Record experiment ID/date, model/runtime/WASM versions and hashes, input provenance/consent,

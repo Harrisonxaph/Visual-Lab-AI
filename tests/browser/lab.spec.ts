@@ -197,6 +197,9 @@ test("camera track ending externally stops the session", async ({ page }) => {
     stream.getTracks()[0].dispatchEvent(new Event("ended"));
   });
   await expect(page.getByTestId("lab-state")).toHaveText("Stopped");
+  await expect(page.locator("#session-message")).toContainText(
+    "Camera connection ended",
+  );
 });
 
 test("an actual model asset download failure is reported and camera is released", async ({
@@ -281,4 +284,91 @@ test("camera aspect change clears old boxes while the next result is pending", a
     );
   expect(ratio).toBeCloseTo(0.5);
   await page.getByRole("button", { name: "Stop camera", exact: true }).click();
+});
+
+test("result count and displayed scores match drawable boxes without claiming certainty", async ({
+  page,
+}) => {
+  await camera(page);
+  await page.addInitScript(() => {
+    const original = CanvasRenderingContext2D.prototype.fillText;
+    Object.assign(window, { __labScoreText: [] as string[] });
+    CanvasRenderingContext2D.prototype.fillText = function (
+      ...args: Parameters<typeof original>
+    ) {
+      (window as unknown as { __labScoreText: string[] }).__labScoreText.push(
+        args[0],
+      );
+      return original.apply(this, args);
+    };
+  });
+  await page.route("**/src/inference/detector.worker.ts*", (route) =>
+    route.fulfill({
+      contentType: "text/javascript",
+      body: `
+    self.onmessage=({data})=>{
+      if(data.type==='init') postMessage({type:'ready'});
+      else {data.bitmap.close();postMessage({type:'result',id:data.id,inferenceMs:20,detections:[
+        {label:'cup',score:0.995,box:{x:100,y:100,width:100,height:100}},
+        {label:'outside',score:0.9,box:{x:900,y:10,width:10,height:10}}]});}
+    };`,
+    }),
+  );
+  await page.goto("/");
+  await page.getByRole("button", { name: "Start camera", exact: true }).click();
+  await expect(page.getByTestId("detection-count")).toHaveText("1");
+  await expect(page.getByTestId("detections")).toContainText("99%");
+  await expect(page.getByTestId("detections")).not.toContainText("outside");
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __labScoreText: string[] }).__labScoreText,
+    ),
+  ).toContain("cup  99%");
+  await page.getByRole("button", { name: "Stop camera", exact: true }).click();
+});
+
+test("the model panel and stage label use the supplied model configuration", async ({
+  page,
+}) => {
+  const { MODEL } = await import("../../src/inference/types");
+  const config = {
+    ...MODEL,
+    name: "Different detector",
+    version: "test / v9",
+    runtime: "Test Runtime 1.2.3",
+    modelPath: "models/another.tflite",
+    bytes: 2097152,
+    categories: 4,
+    floor: 0.2,
+    maxResults: 7,
+    source: "Test publisher",
+    compatibility: "A test compatibility statement",
+  };
+  await page.route("**/src/inference/types.ts*", (route) =>
+    route.fulfill({
+      contentType: "text/javascript",
+      body: `export const MODEL=${JSON.stringify(config)};`,
+    }),
+  );
+  await page.goto("/");
+  await expect(page.locator("#stage-model")).toHaveText(
+    "Different detector · CPU",
+  );
+  await expect(page.locator("#model-version")).toHaveText("test / v9");
+  await expect(page.locator("#model-runtime")).toHaveText(
+    "Test Runtime 1.2.3 · CPU/WASM",
+  );
+  await expect(page.locator("#model-size")).toHaveText("2.0 MiB");
+  await expect(page.locator("#model-coverage")).toHaveText("4 COCO categories");
+  await expect(
+    page.getByRole("slider", { name: "Confidence threshold" }),
+  ).toHaveAttribute("min", "0.2");
+  await page.getByText("Model & compatibility notes", { exact: true }).click();
+  await expect(page.locator("#model-source")).toHaveText("Test publisher");
+  await expect(page.locator("#model-compatibility")).toHaveText(
+    "A test compatibility statement",
+  );
+  await expect(page.locator("#model-output-notes")).toContainText(
+    "at most 7 results",
+  );
 });

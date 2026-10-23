@@ -1,4 +1,6 @@
-# Visual Labs AI architecture — proposed
+# Visual Labs AI architecture — approved design snapshot
+
+Historical proposal snapshot. Current Lite2 evidence and review corrections are in ARCHITECTURE.md and EXPERIMENTS.md.
 
 Status: design proposal; no application implemented. Phase 1 only.
 

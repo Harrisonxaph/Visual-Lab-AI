@@ -22,13 +22,34 @@ export function clipBox(box: Box, width: number, height: number): Box | null {
 }
 export class ProcessingMeter {
   private started = 0;
-  private frames = 0;
+  private completions: number[] = [];
+  private readonly windowMs = 2000;
   reset(now: number) {
     this.started = now;
-    this.frames = 0;
+    this.completions = [];
   }
   complete(now: number): number {
-    this.frames++;
-    return now > this.started ? (this.frames * 1000) / (now - this.started) : 0;
+    const windowStart = Math.max(this.started, now - this.windowMs);
+    this.completions.push(now);
+    this.completions = this.completions.filter((time) => time > windowStart);
+    return now > windowStart
+      ? (this.completions.length * 1000) / (now - windowStart)
+      : 0;
   }
+}
+
+/** Detection scores use rounded display values capped below certainty; filtering uses raw scores. */
+export function formatScore(score: number): string {
+  return `${Math.min(99, Math.max(0, Math.round(score * 100)))}%`;
+}
+export function visibleDetections(
+  detections: Detection[],
+  threshold: number,
+  width: number,
+  height: number,
+): Detection[] {
+  return filterDetections(detections, threshold).flatMap((detection) => {
+    const box = clipBox(detection.box, width, height);
+    return box ? [{ ...detection, box }] : [];
+  });
 }

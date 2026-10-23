@@ -1,6 +1,6 @@
 # Visual Labs AI architecture
 
-Status: approved design implemented for Phase 1; real-device validation and Claude review pending.
+Status: approved design implemented for Phase 1; review findings received through the user; real-device validation and merge approval pending.
 
 ## Repository inspection (2026-10-23)
 
@@ -18,7 +18,8 @@ This avoids requiring WebGPU/WebGL. CPU/WASM availability still requires validat
 
 Alternatives: TensorFlow.js COCO-SSD has established browser usage but changes the detector family;
 a custom TFLite runtime needs more preprocessing and output-decoding work and validation.
-EfficientDet-Lite2 remains a Phase 3 candidate, conditional on actual compatibility tests.
+EfficientDet-Lite2 float32 / v1 has reviewer-supplied compatibility evidence for this worker
+(see EXPERIMENTS.md); controlled model comparison remains Phase 3 work.
 The user approved this architecture on 2026-10-23.
 
 ## Boundaries and data flow
@@ -80,7 +81,8 @@ Worker crashes and model initialization timeouts transition to an actionable err
 resources; Retry creates a fresh worker. Externally ended camera tracks transition to stopped and
 require a new explicit Start. The model panel shows model/runtime versions, CPU delegate, verified
 class coverage, asset source and measured compatibility status. Do not label an untested device
-supported. Builder check performed by Codex; Claude review remains pending.
+supported. Builder check performed by Codex; the designated review was subsequently supplied
+through the user and its findings are tracked in docs/reviews/PHASE_1_RESPONSE.md.
 
 ## Implementation evidence and modules
 
@@ -101,8 +103,26 @@ verified with Chromium, not assumed portable. `THIRD_PARTY_NOTICES.md` records a
 Frame capture times out after 5s and late bitmaps are closed. Model load times out after 45s;
 inference after 15s. Backgrounding pauses without automatic resume. Camera permission requests
 remain cancellable through Stop; a late granted stream is released. Model errors release camera.
-The running-average processing rate is capped by scheduling at 10 FPS.
+Processing FPS uses a 2-second rolling window; scheduling caps work at 10 FPS.
 
 Video resize updates the container's live aspect ratio and clears old-aspect results until a matching
 frame completes. Backgrounding during pending permission/model initialization is remembered, so
 startup finishes paused and requires explicit Resume. Obsolete worker error callbacks are ignored.
+
+## Review follow-up
+
+`DetectorConfiguration` in `src/inference/types.ts` defines the chosen model, asset paths, runtime,
+metadata and limits. The caller passes it into `WorkerDetector`; init messages carry the explicit
+score threshold, result cap and CPU delegate to the adapter. `src/model-info.ts` derives displayed
+metadata from the same configuration; asset preparation uses its model path/source/hash. Lite0
+remains the only default asset. These interfaces do not add a Phase 3 model-comparison UI.
+
+An externally ended camera track produces a connection-ended/reconnect explanation, distinct from
+explicit Stop. Score presentation is capped at 99%, raw scores still drive inclusive filtering, and
+only drawable boxes contribute to the displayed list/count. Hidden tabs retain the approved Pause
+behavior (camera remains on); an automatic camera shutdown timer is deferred and not claimed.
+
+Vercel's existing Git integration published previews of earlier phase commits. The repository's
+`vercel.json` now disables automatic Git deployments for refs containing that configuration,
+consistent with the no-deployment-without-approval rule. Existing previews are not removed and
+project/production settings are not changed by this configuration addition.

@@ -1,4 +1,4 @@
-import { clipBox } from "./detections";
+import { clipBox, formatScore } from "./detections";
 import type { Detection } from "./inference/types";
 /** Canvas and video share an aspect-ratio container; boxes stay in frame pixels. */
 export function drawDetections(
@@ -23,7 +23,7 @@ export function drawDetections(
     ctx.fillStyle = "#b9f58014";
     ctx.fillRect(x, y, w, h);
     ctx.strokeRect(x, y, w, h);
-    const text = `${detection.label}  ${Math.round(detection.score * 100)}%`;
+    const text = `${detection.label}  ${formatScore(detection.score)}`;
     const labelWidth = Math.min(width, ctx.measureText(text).width + 16),
       labelHeight = font + 14;
     const labelX = Math.max(0, Math.min(x, width - labelWidth));

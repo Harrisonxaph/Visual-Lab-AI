@@ -1263,3 +1263,14 @@ input[type="range"]::-moz-range-thumb {
     padding: 0;
   }
 }
+
+.model-panel dd > span[id] {
+  font-size: inherit;
+  color: inherit;
+  margin-left: 0;
+}
+.model-panel #model-version {
+  font-size: 8px;
+  color: #96a088;
+  margin-left: 3px;
+}
