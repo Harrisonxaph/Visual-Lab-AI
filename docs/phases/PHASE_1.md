@@ -19,11 +19,12 @@ All five phases and all stretch targets remain documented; implementation stays 
 
 ## Automated verification (2026-10-23)
 
-- `npm test`: **12 passed** (threshold, empty output, clipping, completed-frame FPS, camera denial,
+- `npm test`: **15 passed** (threshold, empty output, clipping, completed-frame FPS, camera denial,
   late permission grant cleanup, stale paused/stopped results, one-frame limit, load failure/retry,
-  loading cancellation, worker timeout/retry, stalled capture/late-bitmap cleanup).
-- `npm run test:browser`: **15 passed** on Chromium 154 / Linux x86_64. Includes mocked lifecycle/
-  layout checks, actual model-load failure, worker crash, and actual CPU inference tests.
+  loading cancellation, worker timeout/retry, stalled capture/late-bitmap cleanup, background interruptions during permission/model loading,
+  stale worker error isolation).
+- `npm run test:browser`: **16 passed** on Chromium 154 / Linux x86_64. Includes mocked lifecycle/
+  layout checks, actual model-load failure, worker crash, aspect-change overlay clearing, and actual CPU inference tests.
 - `npm run test:production`: **1 passed** against built assets with GPU acceleration disabled.
 - `npm run check`, `npm run build`, `npm run format:check`, `git diff --check`: passed.
 - `npm audit`: **0 vulnerabilities** in the checked lockfile at verification time.
@@ -67,3 +68,11 @@ adaptations need device scrutiny. First load requires asset acquisition; slow de
 Recommended next action: Claude review using docs/CLAUDE_REVIEW.md, remote CI inspection, and
 real-device testing above. Resolve material findings before requesting approval to merge. Do not
 start Phase 2, merge or deploy merely because Phase 1 tests pass.
+
+## Pull request and supplemental review
+
+Draft PR: https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1
+Fresh Codex audit found a startup/background pause gap and noted stale-worker errors and transient
+aspect mismatch. Regression tests reproduced each; fixes preserve startup suspension, ignore
+obsolete worker errors and clear mismatched boxes on video resize. Full local suites passed after
+fixes. This audit is not Claude review; Claude approval remains pending.

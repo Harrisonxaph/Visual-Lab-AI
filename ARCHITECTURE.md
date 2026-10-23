@@ -102,3 +102,7 @@ Frame capture times out after 5s and late bitmaps are closed. Model load times o
 inference after 15s. Backgrounding pauses without automatic resume. Camera permission requests
 remain cancellable through Stop; a late granted stream is released. Model errors release camera.
 The running-average processing rate is capped by scheduling at 10 FPS.
+
+Video resize updates the container's live aspect ratio and clears old-aspect results until a matching
+frame completes. Backgrounding during pending permission/model initialization is remembered, so
+startup finishes paused and requires explicit Resume. Obsolete worker error callbacks are ignored.

@@ -104,7 +104,15 @@ function render(snapshot: Snapshot): void {
   const running = state === "running",
     paused = state === "paused",
     loading = state === "loading";
-  const detections = filterDetections(snapshot.detections, threshold);
+  const frameMatchesVideo =
+    !video.videoWidth ||
+    !video.videoHeight ||
+    Math.abs(
+      snapshot.width / snapshot.height - video.videoWidth / video.videoHeight,
+    ) < 0.001;
+  const detections = frameMatchesVideo
+    ? filterDetections(snapshot.detections, threshold)
+    : [];
   element('[data-testid="lab-state"]').textContent =
     state[0].toUpperCase() + state.slice(1);
   element("#status-pill").dataset.state = state;
@@ -147,7 +155,7 @@ function render(snapshot: Snapshot): void {
       ? "PREVIEW ON · INFERENCE PAUSED"
       : "WAITING FOR INPUT";
   element(".video-stage").style.aspectRatio =
-    `${running || paused ? snapshot.width : video.videoWidth || 640} / ${running || paused ? snapshot.height : video.videoHeight || 480}`;
+    `${video.videoWidth || snapshot.width} / ${video.videoHeight || snapshot.height}`;
   element("#inference-time").innerHTML =
     `${snapshot.inferenceMs === null ? "—" : snapshot.inferenceMs.toFixed(0)}<small> ms</small>`;
   element("#processing-fps").innerHTML =
@@ -172,12 +180,16 @@ function render(snapshot: Snapshot): void {
     wrapper.className = "empty-results";
     wrapper.innerHTML = `${icon("layers", 28)}<strong></strong><p></p>`;
     wrapper.querySelector("strong")!.textContent = running
-      ? "No objects above this threshold"
+      ? frameMatchesVideo
+        ? "No objects above this threshold"
+        : "Camera dimensions changed"
       : paused
         ? "Observation on pause"
         : "Waiting to observe";
     wrapper.querySelector("p")!.textContent = running
-      ? "Try a supported object, better lighting or a lower threshold."
+      ? frameMatchesVideo
+        ? "Try a supported object, better lighting or a lower threshold."
+        : "Waiting for a frame with the new dimensions."
       : paused
         ? "Resume inference to see new results."
         : "Detected objects and their scores will appear here.";
@@ -234,6 +246,7 @@ slider.addEventListener("input", () => {
   }
   render(lab.snapshot);
 });
+video.addEventListener("resize", () => render(lab.snapshot));
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) lab.pause();
 });

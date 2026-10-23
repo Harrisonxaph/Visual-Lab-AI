@@ -46,6 +46,7 @@ export class Lab {
   private generation = 0;
   private scheduled?: number;
   private busy = false;
+  private pauseAfterLoad = false;
   private lastVideoTime = -1;
   private lastTimestamp = 0;
   private lastFrameAt = -Infinity;
@@ -60,6 +61,7 @@ export class Lab {
   }
   async start(): Promise<void> {
     this.stop();
+    this.pauseAfterLoad = false;
     const generation = this.generation;
     this.emit({
       state: "loading",
@@ -75,12 +77,17 @@ export class Lab {
       this.meter.reset(this.deps.now());
       this.lastVideoTime = -1;
       this.emit({ state: "running", message: "" });
-      this.schedule();
+      if (this.pauseAfterLoad) this.pause();
+      else this.schedule();
     } catch (error) {
       if (generation === this.generation) this.fail(error);
     }
   }
   pause(): void {
+    if (this.snapshot.state === "loading") {
+      this.pauseAfterLoad = true;
+      return;
+    }
     if (this.snapshot.state !== "running") return;
     this.generation++;
     this.unschedule();

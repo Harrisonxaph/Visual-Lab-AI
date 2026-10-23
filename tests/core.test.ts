@@ -226,3 +226,72 @@ describe("worker lifecycle", () => {
     vi.unstubAllGlobals();
   });
 });
+
+it("stays paused when backgrounding interrupts model loading, even after returning", async () => {
+  const h = harness();
+  const loading = deferred<void>();
+  vi.mocked(h.deps.detector.load).mockReturnValueOnce(loading.promise);
+  const starting = h.lab.start();
+  await flush();
+  h.lab.pause(); // Page was hidden while the model was loading.
+  loading.resolve();
+  await starting;
+  await h.tick();
+  expect(h.lab.snapshot.state).toBe("paused");
+  expect(h.deps.capture).not.toHaveBeenCalled();
+  h.lab.resume();
+  await h.tick();
+  expect(h.lab.snapshot.state).toBe("running");
+  expect(h.deps.capture).toHaveBeenCalledOnce();
+  h.lab.stop();
+});
+
+it("keeps a permission-stage background interruption paused after permission is granted", async () => {
+  const h = harness();
+  const permission = deferred<void>();
+  vi.mocked(h.deps.camera.start).mockReturnValueOnce(permission.promise);
+  const starting = h.lab.start();
+  h.lab.pause();
+  permission.resolve();
+  await starting;
+  expect(h.lab.snapshot.state).toBe("paused");
+  expect(h.deps.capture).not.toHaveBeenCalled();
+  h.lab.stop();
+});
+it("ignores an old worker error after a replacement session loads", async () => {
+  vi.stubGlobal("location", { href: "http://localhost/" });
+  const make = () => ({
+    postMessage: vi.fn(),
+    terminate: vi.fn(),
+    onmessage: null,
+    onerror: null,
+    onmessageerror: null,
+  });
+  const oldWorker = make(),
+    newWorker = make();
+  const factory = vi
+    .fn()
+    .mockReturnValueOnce(oldWorker)
+    .mockReturnValueOnce(newWorker);
+  const detector = new WorkerDetector(factory);
+  const fatal = vi.fn();
+  detector.onFatal = fatal;
+  const first = detector.load();
+  (oldWorker.onmessage as unknown as (e: { data: unknown }) => void)({
+    data: { type: "ready" },
+  });
+  await first;
+  const oldError = oldWorker.onerror as unknown as (event: ErrorEvent) => void;
+  const oldMessageError = oldWorker.onmessageerror as unknown as () => void;
+  const second = detector.load();
+  (newWorker.onmessage as unknown as (e: { data: unknown }) => void)({
+    data: { type: "ready" },
+  });
+  await second;
+  oldError({ preventDefault: vi.fn() } as unknown as ErrorEvent);
+  oldMessageError();
+  expect(fatal).not.toHaveBeenCalled();
+  expect(newWorker.terminate).not.toHaveBeenCalled();
+  detector.close();
+  vi.unstubAllGlobals();
+});

@@ -62,6 +62,7 @@ export class WorkerDetector {
             this.fail(new Error(`Detector: ${data.message}`));
         };
         worker.onerror = (event) => {
+          if (worker !== this.worker) return;
           event.preventDefault?.();
           this.fail(
             new Error(
@@ -69,10 +70,12 @@ export class WorkerDetector {
             ),
           );
         };
-        worker.onmessageerror = () =>
+        worker.onmessageerror = () => {
+          if (worker !== this.worker) return;
           this.fail(
             new Error("This browser could not transfer inference data."),
           );
+        };
         const base = new URL(import.meta.env.BASE_URL, location.href);
         this.post({
           type: "init",

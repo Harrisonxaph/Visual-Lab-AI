@@ -7,6 +7,7 @@ async function camera(page: Page, denied = false) {
         const canvas = document.createElement("canvas");
         canvas.width = 640;
         canvas.height = 480;
+        Object.assign(window, { __labCameraTest: canvas });
         const context = canvas.getContext("2d")!;
         const draw = () => {
           context.fillStyle = "#243b36";
@@ -231,4 +232,53 @@ test("worker crashes produce a recoverable error", async ({ page }) => {
   await expect(
     page.getByRole("button", { name: "Start camera", exact: true }),
   ).toBeEnabled();
+});
+
+test("camera aspect change clears old boxes while the next result is pending", async ({
+  page,
+}) => {
+  await camera(page);
+  await page.route("**/src/inference/detector.worker.ts*", (route) =>
+    route.fulfill({
+      contentType: "text/javascript",
+      body: `
+    let sent=false; self.onmessage=({data})=>{
+      if(data.type==='init') postMessage({type:'ready'});
+      else {data.bitmap.close();if(!sent){sent=true;postMessage({type:'result',id:data.id,inferenceMs:20,detections:[{label:'cup',score:0.8,box:{x:100,y:100,width:100,height:100}}]});}}
+    };`,
+    }),
+  );
+  await page.goto("/");
+  await page.getByRole("button", { name: "Start camera", exact: true }).click();
+  await expect(page.getByTestId("detection-count")).toHaveText("1");
+  await page.evaluate(() => {
+    const c = (window as unknown as { __labCameraTest: HTMLCanvasElement })
+      .__labCameraTest;
+    c.width = 320;
+    c.height = 640;
+  });
+  await expect
+    .poll(() =>
+      page
+        .locator("video")
+        .evaluate((v: HTMLVideoElement) => v.videoWidth / v.videoHeight),
+    )
+    .toBe(0.5);
+  await expect(page.getByTestId("detection-count")).toHaveText("0");
+  expect(
+    await page.locator("canvas").evaluate((c: HTMLCanvasElement) =>
+      c
+        .getContext("2d")!
+        .getImageData(0, 0, c.width, c.height)
+        .data.some((v) => v !== 0),
+    ),
+  ).toBe(false);
+  const ratio = await page
+    .locator(".video-stage")
+    .evaluate(
+      (el) =>
+        el.getBoundingClientRect().width / el.getBoundingClientRect().height,
+    );
+  expect(ratio).toBeCloseTo(0.5);
+  await page.getByRole("button", { name: "Stop camera", exact: true }).click();
 });
