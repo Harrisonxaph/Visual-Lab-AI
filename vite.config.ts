@@ -1,2 +1,5 @@
-import { defineConfig } from 'vitest/config';
-export default defineConfig({ test: { include: ['tests/**/*.test.ts'] }, worker: { format: 'es' } });
+import { defineConfig } from "vitest/config";
+export default defineConfig({
+  test: { include: ["tests/**/*.test.ts"] },
+  worker: { format: "es" },
+});

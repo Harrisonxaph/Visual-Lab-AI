@@ -3,22 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=24.5.0"
+  },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "assets": "node scripts/prepare-assets.mjs",
+    "assets": "node --use-env-proxy scripts/prepare-assets.mjs",
     "check": "tsc --noEmit",
     "build": "npm run assets && npm run check && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:production": "playwright test --config playwright.production.config.ts",
+    "format:check": "prettier --check src tests scripts *.ts *.html *.json"
   },
-  "dependencies": { "@mediapipe/tasks-vision": "0.10.32" },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "0.10.32"
+  },
   "devDependencies": {
     "@playwright/test": "1.56.1",
     "@types/node": "24.10.0",
+    "prettier": "3.6.2",
     "typescript": "5.9.3",
-    "vite": "7.1.12",
-    "vitest": "3.2.4"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   }
 }
