@@ -373,3 +373,50 @@ test("the model panel and stage label use the supplied model configuration", asy
   );
   await expect(page.locator(".range-ends")).toContainText("7% · More results");
 });
+
+test("camera acquisition stays inactive until an explicit Start click", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.assign(window, { __cameraAcquisitions: 0 });
+    Object.defineProperty(navigator.mediaDevices, "getUserMedia", {
+      value: async () => {
+        (window as unknown as { __cameraAcquisitions: number })
+          .__cameraAcquisitions++;
+        throw new DOMException(
+          "Intentional denial for acquisition-gate test",
+          "NotAllowedError",
+        );
+      },
+    });
+  });
+  await page.goto("/");
+  await expect(page.getByTestId("lab-state")).toHaveText("Idle");
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { __cameraAcquisitions: number })
+          .__cameraAcquisitions,
+    ),
+  ).toBe(0);
+  expect(
+    await page.locator("video").evaluate((v: HTMLVideoElement) => v.srcObject),
+  ).toBeNull();
+  await page.getByRole("button", { name: "Start camera", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Camera access was denied",
+  );
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { __cameraAcquisitions: number })
+          .__cameraAcquisitions,
+    ),
+  ).toBe(1);
+});
