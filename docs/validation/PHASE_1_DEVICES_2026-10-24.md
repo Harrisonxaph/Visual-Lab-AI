@@ -1,6 +1,6 @@
 # Phase 1 physical-device validation — 2026-10-24
 
-Status: **in progress; no physical-device test observations collected yet**.
+Status: **in progress; first iPhone observations received; unexpected pre-start camera activity under investigation**.
 This is a results ledger, not evidence that Safari or physical cameras work.
 
 ## Scope and build
@@ -22,8 +22,8 @@ deployments must remain unchanged. No merge or Phase 2 is authorized.
 
 CI success and Vercel deployment status are automated/service evidence, not physical-device evidence.
 Earlier Chromium tests used a synthetic camera stream and do not establish Safari support.
-Physical results will be labelled **user-reported** unless directly observed. No performance figures,
-error messages, device permissions or privacy/network observations have been supplied yet.
+Physical results will be labelled **user-reported** unless directly observed. The initial iPhone UI/permission/indicator observations below were supplied by the user. No performance
+figures, exact error/prompt text, network inspection or iPad test observations have been supplied yet.
 Do not mark untested cases passed or infer network behavior from a camera indicator.
 
 ## User-reported devices
@@ -43,8 +43,9 @@ that individual check. A pass must cite an observation in the session log below.
 
 | Check | iPhone | iPad |
 | --- | --- | --- |
-| Open the exact preview in Safari; authenticate successfully | Pending | Pending |
-| Before Start: camera inactive and no permission prompt | Pending | Pending |
+| Open the exact preview in Safari; authenticate successfully | Pass — user reports lab opens (S1) | Pending |
+| Before Start: camera inactive and no permission prompt | Fail — user reports automatic prompt and green indicator; cause unconfirmed (S1) | Pending |
+| Initial lab status is Idle | Pass — user-reported (S1) | Pending |
 | Deny camera access: actionable error and no active stream | Pending | Pending |
 | Restore permission and retry without stale error/hang | Pending | Pending |
 | Grant permission: actual live camera preview | Pending | Pending |
@@ -69,7 +70,38 @@ that individual check. A pass must cite an observation in the session log below.
 
 ## Session log
 
-No test observations yet. Append records with:
+### S1 — Initial iPhone report (2026-10-24)
+
+Source: **user-reported physical observation**, not independently observed. Device context: iPhone
+15 Pro, iOS 27.0.1, Safari as previously supplied. Requested preview/build: the URL and main SHA above.
+Exact on-device timestamp was not supplied.
+
+Verbatim response:
+
+```text
+Lab page opens: yes
+Status says Idle: yes
+Camera permission prompt appeared automatically: yes
+Green camera indicator before Start: yes
+Any error, exact wording:
+```
+
+Interpretation: page access and Idle are user-reported passes. The pre-start camera check is a
+user-reported failure requiring investigation. Blank error text means no wording was supplied;
+it is not proof no error occurred. The prompt's wording/requesting domain, whether the indicator
+was already active, and reproducibility in a clean tab are not established. Do not attribute the
+indicator to this app or claim an application privacy defect is confirmed until those boundaries
+are checked. Do not infer footage upload or recording from this report.
+
+Source inspection of the targeted code finds camera acquisition behind the explicit Start handler;
+no initial-load acquisition call was found. This does not override the Safari observation. A
+supplemental Chromium acquisition-gate test passed: zero getUserMedia calls and no video stream
+on initial Idle, then exactly one acquisition call after an explicit Start click. This is automated
+Chromium evidence only and does not establish Safari behavior or resolve the report.
+No speculative runtime fix is made before root cause is established. Next action: clean Safari
+retest with prompt wording and indicator state before page open, still without pressing Start.
+
+Append subsequent records with:
 
 - Device, date/time and exact preview/build.
 - Check and steps performed.
