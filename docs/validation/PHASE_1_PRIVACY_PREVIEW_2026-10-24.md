@@ -1,6 +1,6 @@
 # Phase 1 privacy preview validation — 2026-10-24
 
-Status: **in progress; latest prompt clarified as after Start; indicator/request timing and current device identity unconfirmed**. This ledger is separate from the earlier
+Status: **in progress; latest prompt, indicator and request clarified as after Start; device identity and remaining checks pending**. This ledger is separate from the earlier
 [device walkthrough](PHASE_1_DEVICES_2026-10-24.md). A clean retest cannot explain S1/S2.
 
 ## Authorization and exact build
@@ -157,6 +157,21 @@ needed for the corrected prompt observation.
 Next: clarify whether the indicator/request were also observed after Start and whether the same
 iPhone/OS/browser is still in use, then obtain actual diagnostic entries before interpreting the
 sequence or marking the fresh-tab gate passed.
+
+### P3 — Indicator and request timing corrected (2026-10-24)
+
+Source: **user-reported clarification** of P1/P2. Asked whether the green camera indicator and
+single camera-request entry also appeared only after tapping Start, the user answered: "Yes".
+
+Together with P2, this corrects the session: permission prompt, indicator and camera request all
+followed Start. The initially reported pre-Start activity in P1 is superseded by explicit timing
+clarifications and is **not a confirmed failure**. Record a user-reported pass for acquisition
+sequence in this session, with actual JSON and current device identity still unprovided. Do not
+assign it to an iPhone/iPad matrix row until the changed-device answer is clarified. No application
+bug was reproduced or fixed, and no redeployment occurred. The distinct historical S1/S2 reports
+remain documented; this session's clarification does not automatically resolve them.
+
+Next: establish current device/OS/browser, then continue the remaining focused device checks.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
