@@ -48,8 +48,8 @@ that individual check. A pass must cite an observation in the session log below.
 | Initial lab status is Idle | Pass — user-reported (S1) | Pass — user-reported (S12) |
 | Deny camera access: actionable error and no active stream | Pass for reported error and inactive indicator (S9); track internals not inspected | Pending |
 | Restore permission and retry without stale error/hang | Pass — user reports preview and detections restored after allowing (S9) | Pending |
-| Grant permission: actual live camera preview | Pass — user-reported live preview after allowing (S9) | Fail — user reports no live preview; appearance/cause awaiting clarification (S12) |
-| Model loads; objects show labels, boxes and scores | Pass — user reports labelled boxes and confidence scores (S5); class correctness not evaluated | Pass for reported labelled boxes/scores (S12); live preview issue unresolved |
+| Grant permission: actual live camera preview | Pass — user-reported live preview after allowing (S9) | Pass — live video confirmed in clarification (S13); initial S12 answer superseded |
+| Model loads; objects show labels, boxes and scores | Pass — user reports labelled boxes and confidence scores (S5); class correctness not evaluated | Pass for reported labelled boxes/scores (S12); live video confirmed (S13) |
 | Inference time and processing FPS shown; record actual values | Pass — displayed 48 ms / 10 FPS, user-reported S4 | Pass — reported 65 ms / 10 FPS (S12) |
 | Threshold 5%–100% changes visible results | Pass — counts 8 at 5%, 0 at 90%, 0 at 100%; no slider freeze reported (S5) | Pending |
 | Empty scene and multiple objects handled | Pending | Pending |
@@ -373,6 +373,17 @@ otherwise), reproducibility and cause require clarification before any fix. The 
 does not establish an error-free session. No automated reproduction or runtime change has been
 made. All other iPad checks remain pending. Next: clarify the video area's appearance and whether
 it changes when the camera moves.
+
+### S13 — iPad live-preview clarification (2026-10-24)
+
+Source: **user-reported physical observation**, same iPad and requested preview/build context.
+Asked whether moving the iPad shows moving live video, a frozen image or a blank/black area,
+the user answered: "Live video".
+
+Record the live-preview check as passed based on this clarification, superseding the initial
+"no" in S12 while preserving the original report. No missing-preview failure is currently
+established, no runtime fix was made and no automated test was run for this clarification.
+Remaining iPad checks and physical-session network inspection remain pending.
 
 Append subsequent records with:
 
