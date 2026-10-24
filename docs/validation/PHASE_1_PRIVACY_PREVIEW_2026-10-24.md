@@ -93,7 +93,8 @@ User-reported metadata carried forward, not independently inspected:
 | Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Pending |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
 | Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending |
-| Background while permission/model loading pending | Partial — left Safari with permission pending; popup persisted on return; post-Allow inference state unclear (P6) | Pending |
+| Background while permission pending | Pass — popup persisted on return; manual Resume required for inference, user-reported (P6/P7) | Pending |
+| Background while model loading pending | Pending — loading window not exercised | Pending |
 | Permission-denied message, inactive indicator and recovery | Pending | Pending |
 | Navigate away and return inactive until Start | Pending | Pending |
 | Empty/plain surface and multiple objects | Pending | Pending |
@@ -231,6 +232,19 @@ passed. If detections began after Allow without Resume, investigate against the 
 pause requirement; do not claim a source-level reproduction or fix from this ambiguous wording.
 Model-loading background behavior remains untested. No runtime changes or deployments were made.
 Next: obtain the precise post-Allow lab state and whether Resume was needed.
+
+### P7 — Manual Resume required after permission-background sequence (2026-10-24)
+
+Source: **user-reported clarification**, same iPhone and requested preview/build as P6.
+Asked whether labelled detections appeared after Allow without Resume or required explicit
+Resume, the user answered: "Had to manually resume inference".
+
+This resolves P6's completion-state ambiguity: inference required explicit manual Resume after
+the permission-pending background/return sequence. Record a user-reported pass for that sequence;
+no exact displayed status or diagnostic JSON was supplied, so do not fabricate those details.
+This does not exercise backgrounding during model loading; that separate check remains Pending.
+No runtime fix, automated test or redeployment was needed for this clarification. Next: plain-scene
+and multiple-object behavior in the iPhone preview, then remaining feasible checks.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
