@@ -43,14 +43,14 @@ that individual check. A pass must cite an observation in the session log below.
 
 | Check | iPhone | iPad |
 | --- | --- | --- |
-| Open the exact preview in Safari; authenticate successfully | Pass — user reports lab opens (S1) | Pending |
-| Before Start: camera inactive and no permission prompt | Mixed — prompt only after Start in recovery test (S10); earlier pre-start prompt/indicator reports remain unexplained (S1/S2) | Pending |
-| Initial lab status is Idle | Pass — user-reported (S1) | Pending |
+| Open the exact preview in Safari; authenticate successfully | Pass — user reports lab opens (S1) | Pass — lab opens, user-reported (S12) |
+| Before Start: camera inactive and no permission prompt | Mixed — prompt only after Start in recovery test (S10); earlier pre-start prompt/indicator reports remain unexplained (S1/S2) | Pass for reported indicator off and prompt after Start (S12) |
+| Initial lab status is Idle | Pass — user-reported (S1) | Pass — user-reported (S12) |
 | Deny camera access: actionable error and no active stream | Pass for reported error and inactive indicator (S9); track internals not inspected | Pending |
 | Restore permission and retry without stale error/hang | Pass — user reports preview and detections restored after allowing (S9) | Pending |
-| Grant permission: actual live camera preview | Pass — user-reported live preview after allowing (S9) | Pending |
-| Model loads; objects show labels, boxes and scores | Pass — user reports labelled boxes and confidence scores (S5); class correctness not evaluated | Pending |
-| Inference time and processing FPS shown; record actual values | Pass — displayed 48 ms / 10 FPS, user-reported S4 | Pending |
+| Grant permission: actual live camera preview | Pass — user-reported live preview after allowing (S9) | Fail — user reports no live preview; appearance/cause awaiting clarification (S12) |
+| Model loads; objects show labels, boxes and scores | Pass — user reports labelled boxes and confidence scores (S5); class correctness not evaluated | Pass for reported labelled boxes/scores (S12); live preview issue unresolved |
+| Inference time and processing FPS shown; record actual values | Pass — displayed 48 ms / 10 FPS, user-reported S4 | Pass — reported 65 ms / 10 FPS (S12) |
 | Threshold 5%–100% changes visible results | Pass — counts 8 at 5%, 0 at 90%, 0 at 100%; no slider freeze reported (S5) | Pending |
 | Empty scene and multiple objects handled | Pending | Pending |
 | Pause clears results, retains preview; Resume updates | Pass — user confirms described Pause and resumed detections (S4) | Pending |
@@ -343,6 +343,36 @@ explain the earlier S1/S2 reports. No automated test or runtime change was made 
 All unperformed checks remain pending, including startup interruption, external camera interruption,
 empty-scene handling, restricted storage, download failure and physical-session network inspection.
 Next: begin the iPad initial permission and detection checks; iPhone validation is not declared complete.
+
+### S12 — Initial iPad permission and detection observations (2026-10-24)
+
+Source: **user-reported physical observation**, iPad Pro 11-inch (3rd generation), iPadOS 26.6.2,
+Safari; the user confirms these details unchanged. Requested URL/build is the main-pinned preview
+above; exact on-device timestamp and independent address/build inspection were not supplied.
+
+Verbatim response:
+
+```text
+Device/OS/browser unchanged: yes
+Lab opens and initially says Idle: yes
+Camera indicator off before Start: yes
+Permission prompt timing: after start
+Live camera preview appears: no
+Boxes show labels and confidence scores: yes
+Inference time: 65
+Processing FPS: 10
+Any error, exact wording:
+```
+
+Record passes for reported page/Idle, indicator off before Start, prompt after Start, labelled
+boxes/scores and displayed metrics (65 interpreted in the requested inference-time unit, ms;
+10 FPS). These are single observations, not a benchmark or accuracy evidence. The user reports
+**no live camera preview** despite labelled boxes; preserve both observations. Do not infer live
+video visibility from detections or mark this preview check passed. Appearance (blank, frozen or
+otherwise), reproducibility and cause require clarification before any fix. The blank error field
+does not establish an error-free session. No automated reproduction or runtime change has been
+made. All other iPad checks remain pending. Next: clarify the video area's appearance and whether
+it changes when the camera moves.
 
 Append subsequent records with:
 
