@@ -64,7 +64,7 @@ that individual check. A pass must cite an observation in the session log below.
 | Background during startup remains paused after loading | Pending | Pending |
 | Navigate away: camera stops | Pass for visible indicator off; return remained inactive until Start, user-reported (S11) | Pass for reported indicator off (S15); inactive-until-Start on return unanswered |
 | External camera interruption and recovery, where feasible | Pending | Pending |
-| Several-minute session: responsiveness and observed heat/battery | Pass for reported five-minute usability — battery 44%→38%, warmth unchanged, no warnings; conditions incomplete (S8) | Partial — battery 90%→88%, warmth unchanged, no errors; duration/responsiveness/Low Power Mode unanswered (S16) |
+| Several-minute session: responsiveness and observed heat/battery | Pass for reported five-minute usability — battery 44%→38%, warmth unchanged, no warnings; conditions incomplete (S8) | Pass for reported five-minute usability — battery 90%→88%, warmth unchanged, controls responsive, Low Power Mode off (S16/S17) |
 | No user-visible recording or saved footage | Pending | Pending |
 | Physical-session network inspection for frame uploads | Pending | Pending |
 | Restricted storage behavior, where testable | Pending | Pending |
@@ -472,6 +472,65 @@ energy attributable solely to inference. No network inspection, runtime change o
 was performed. Navigation-return camera inactivity, actionable denial-error behavior and other
 unperformed checks remain pending. Next: clarify the three unanswered sustained-session fields,
 then summarize evidence and outstanding checks for review without claiming full validation.
+
+### S17 — iPad sustained-session clarification (2026-10-24)
+
+Source: **user-reported physical observation**, same iPad and requested preview/build context.
+
+Verbatim response:
+
+```text
+Actual duration: 5 minutes
+Low Power Mode: off
+Controls stayed responsive: yes
+```
+
+This resolves the three unanswered S16 fields. Record a five-minute unplugged session with Low
+Power Mode off and responsive controls. Combined with S16, this is a user-reported five-minute
+usability pass: battery 90% to 88%, inference 65 to 69 ms, processing 10 FPS at both endpoints,
+subjective warmth unchanged, no reported errors and visible camera indicator off after lab Stop.
+The originally requested threshold remains unconfirmed. This is not a controlled battery,
+thermal or comparative performance benchmark. No runtime changes or automated tests were made.
+
+## Walkthrough summary for review
+
+The planned basic walkthrough has been performed on both user-reported devices. Confirmed
+observations include live labelled detections, threshold response, portrait/landscape alignment,
+Pause/Resume/Stop, background pause and explicit recovery, navigation-away indicator cleanup,
+permission recovery and five-minute responsive sessions. This does **not** mean all checklist
+items passed or physical validation is complete.
+
+| Five-minute observation | iPhone 15 Pro | iPad Pro 11-inch (3rd generation) |
+| --- | --- | --- |
+| Charging / Low Power Mode | No / off | No / off |
+| Battery | 44% to 38% | 90% to 88% |
+| Reported inference time | 48 to 55 ms | 65 to 69 ms |
+| Reported processing speed | 10 to 10.5 FPS | 10 to 10 FPS |
+| Subjective warmth | Unchanged | Unchanged |
+| Controls | Responsive | Responsive |
+| Freezes, warnings or errors | None reported | None reported |
+
+These are user-reported endpoints from separate uncontrolled sessions, not a device comparison.
+The iPhone rate above the nominal 10 FPS scheduling cap is preserved without a causal claim.
+
+Outstanding evidence includes:
+
+- Earlier iPhone pre-Start prompt/indicator reports remain unexplained, although later recovery
+  and return tests behaved correctly. Do not claim a reproduced source-level defect or resolution.
+- iPad camera inactivity until Start after navigation return is unanswered; the permission-denied
+  error field was blank, so an actionable denial message remains unverified there.
+- Exact Safari builds, independent on-device URL/commit inspection and exact session timestamps
+  were not supplied. Device/OS/browser and observations are user-reported.
+- Physical-session network privacy inspection has not occurred. Camera indicators do not establish
+  absence of uploads; no network-privacy pass is claimed.
+- Remaining matrix items marked Pending were not exercised, including startup interruptions,
+  external camera interruption, zoom, restricted storage, empty-scene handling and device model-load
+  failure. No untested behavior is inferred from automated Chromium tests.
+
+Recommended next action: Claude reviews this ledger, the existing automated evidence and unresolved
+checks, then identifies any additional evidence or reproduced failures needed before a merge or
+Phase 2 decision. No material application failure was reproduced and fixed during this walkthrough.
+The validation PR remains unmerged; no production deployment or Phase 2 work is authorized.
 
 Append subsequent records with:
 
