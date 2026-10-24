@@ -55,14 +55,14 @@ that individual check. A pass must cite an observation in the session log below.
 | Empty scene and multiple objects handled | Pending | Pending |
 | Pause clears results, retains preview; Resume updates | Pass — user confirms described Pause and resumed detections (S4) | Pending |
 | Stop releases camera (visible indicator off) | Pass — user reports green indicator off (S4); track internals not inspected | Pending |
-| Repeated Start/Pause/Resume/Stop cycles | Pending | Pending |
+| Repeated Start/Pause/Resume/Stop cycles | Pass — three cycles and indicator off after each Stop, user-reported (S11) | Pending |
 | Stop during permission/model loading does not activate later | Pending | Pending |
 | Portrait/landscape box alignment and return to portrait | Pass — user-reported alignment in all three states (S6) | Pending |
 | Zoom behavior | Pending | Pending |
 | Touch controls and scrolling remain responsive | Pass — user reports usability in portrait and landscape (S6); sustained use pending | Pending |
 | Background/return remains paused until explicit Resume | Pass — returned paused, explicit Resume restored detections (S7), user-reported | Pending |
 | Background during startup remains paused after loading | Pending | Pending |
-| Navigate away: camera stops | Pending | Pending |
+| Navigate away: camera stops | Pass for visible indicator off; return remained inactive until Start, user-reported (S11) | Pending |
 | External camera interruption and recovery, where feasible | Pending | Pending |
 | Several-minute session: responsiveness and observed heat/battery | Pass for reported five-minute usability — battery 44%→38%, warmth unchanged, no warnings; conditions incomplete (S8) | Pending |
 | No user-visible recording or saved footage | Pending | Pending |
@@ -318,6 +318,31 @@ It does not retroactively change the earlier S1/S2 reports or independently esta
 indicator state before Start. The earlier discrepancy remains unexplained; no source-level cause
 has been reproduced and no runtime fix is claimed. Network inspection and iPad checks remain
 pending. Next: repeated lifecycle controls and navigation-away cleanup on the iPhone.
+
+### S11 — iPhone repeated lifecycle and navigation cleanup (2026-10-24)
+
+Source: **user-reported physical observation**, same iPhone and requested preview/build context.
+Exact on-device timestamp was not supplied. Requested steps: three cycles using the lab's
+Start/Pause/Resume/Stop buttons, then Start, navigate to example.com in the same tab, and return.
+
+Verbatim response:
+
+```text
+All three cycles worked: yes
+Camera indicator off after each Stop: yes
+Camera indicator off after navigating away: yes
+On return, camera stayed inactive until Start: yes
+Any errors or unexpected behavior:
+```
+
+Record user-reported passes for the three lifecycle cycles, visible camera indicator off after
+each Stop and after navigation away, and inactive camera on return until explicit Start. Camera
+track internals and network traffic were not inspected. The blank error field supplies no
+additional detail. This supports correct acquisition gating in this return sequence but does not
+explain the earlier S1/S2 reports. No automated test or runtime change was made for this report.
+All unperformed checks remain pending, including startup interruption, external camera interruption,
+empty-scene handling, restricted storage, download failure and physical-session network inspection.
+Next: begin the iPad initial permission and detection checks; iPhone validation is not declared complete.
 
 Append subsequent records with:
 
