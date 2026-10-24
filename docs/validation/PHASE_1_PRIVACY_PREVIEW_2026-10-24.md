@@ -97,7 +97,7 @@ User-reported metadata carried forward, not independently inspected:
 | Background while model loading pending | Pending — loading window not exercised | Pending |
 | Permission-denied message, inactive indicator and recovery | Pending | Pending |
 | Navigate away and return inactive until Start | Pending | Pending |
-| Empty/plain surface and multiple objects | Pending | Pending |
+| Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pending |
 | Private Browsing operation; distinguish actual storage restriction | Pending | Pending |
 | Cold-cache network/model failure and recovery | Pending | Pending |
 | Feasible external camera interruption | Pending | Pending |
@@ -245,6 +245,32 @@ no exact displayed status or diagnostic JSON was supplied, so do not fabricate t
 This does not exercise backgrounding during model loading; that separate check remains Pending.
 No runtime fix, automated test or redeployment was needed for this clarification. Next: plain-scene
 and multiple-object behavior in the iPhone preview, then remaining feasible checks.
+
+### P8 — iPhone plain surface and multiple objects (2026-10-24)
+
+Source: **user-reported physical observation**, same iPhone context and requested privacy preview
+above. Requested threshold was 50%, with about 30 seconds per scene; actual threshold and durations
+were not separately confirmed. Exact timestamp and class names were not supplied.
+
+Verbatim response:
+
+```text
+Plain surface: detected labels/count:0
+Multiple objects: detected labels/count:4
+Boxes updated as objects moved out of view:yes
+Slider and scrolling remained responsive: yes
+Any error or frozen boxes: no
+```
+
+Record a user-reported behavioral pass: zero detections reported on the plain surface, four with
+multiple objects, boxes updating as objects left view, responsive slider/scrolling and no reported
+errors/frozen boxes. Individual labels, true object counts and ground truth were not supplied;
+these observations do not establish accuracy, class correctness or recall. No runtime fix,
+automated test or deployment was made. Next: Private Browsing operation; actual storage denial
+must not be inferred merely from use of a private tab.
+
+User preference for subsequent guidance: include the current Vercel preview link with every test
+request so it remains easy to find.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
