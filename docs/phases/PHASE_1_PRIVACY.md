@@ -116,6 +116,13 @@ verification, not deployed-header verification or physical Safari evidence. Diag
 failed without instrumentation; policy tests first failed without response headers. Development
 browser suite: 25 passed, including lifecycle regressions and real-worker inference.
 
+Independent Codex static review found that the real-model test's camera mock was non-writable,
+which prevented instrumentation installation. A new installed assertion reproduced the gap (RED);
+the mock is now writable and assertions require a camera-request and resolved settlement alongside
+real detections. No other Critical/Important or minor findings were reported. This is not Claude
+review. The reviewer could not independently rerun with the default missing browser executable;
+the implementer's runs explicitly use system Chromium.
+
 No new physical observations have been collected for this build. No claim is made that the old
 pre-Start report was reproduced, explained or fixed.
 

@@ -11,6 +11,7 @@ for (const diagnosticQuery of ["", "?diag=1"]) {
     await page.addInitScript(
       (bytes) => {
         Object.defineProperty(navigator.mediaDevices, "getUserMedia", {
+          writable: true,
           value: async () => {
             const img = await createImageBitmap(
               new Blob([new Uint8Array(bytes)], { type: "image/jpeg" }),
@@ -35,6 +36,11 @@ for (const diagnosticQuery of ["", "?diag=1"]) {
       Array.from(readFileSync("tests/fixtures/cat-and-dog.jpg")),
     );
     await page.goto("/" + diagnosticQuery);
+    if (diagnosticQuery) {
+      await expect(page.locator("#camera-diagnostics-log")).toContainText(
+        '"event": "installed"',
+      );
+    }
     await page
       .getByRole("button", { name: "Start camera", exact: true })
       .click();
@@ -45,6 +51,12 @@ for (const diagnosticQuery of ["", "?diag=1"]) {
       timeout: 30000,
     });
     await expect(page.getByTestId("detections")).toContainText("dog");
+    if (diagnosticQuery) {
+      const log = page.locator("#camera-diagnostics-log");
+      await expect(log).toContainText('"event": "camera-request"');
+      await expect(log).toContainText('"outcome": "resolved"');
+      await expect(log).not.toContainText('"event": "unavailable"');
+    }
     await expect(page.locator("#inference-time")).not.toContainText("—");
     await expect(page.locator("#processing-fps")).not.toContainText("—");
     const overlay = await page
