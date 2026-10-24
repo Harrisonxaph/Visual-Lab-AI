@@ -101,6 +101,31 @@ Chromium evidence only and does not establish Safari behavior or resolve the rep
 No speculative runtime fix is made before root cause is established. Next action: clean Safari
 retest with prompt wording and indicator state before page open, still without pressing Start.
 
+### S2 — User-reported clean-tab retest (2026-10-24)
+
+Source: **user-reported physical observation**, iPhone context as in S1. No independent device
+inspection or exact on-device timestamp is available.
+
+Verbatim response:
+
+```text
+Green dot remained after closing the tabs: no
+Prompt appeared again without pressing Start: yes
+Exact prompt wording and website named: allow it to access camera
+Did you previously choose Allow, Don’t Allow, or neither?
+```
+
+The user reports that closing the tabs cleared the indicator and that the prompt appeared again
+without Start. This retains the unresolved pre-start failure; it does not establish which origin
+requested camera access. The supplied wording contains no website identifier. The earlier prompt
+choice was left unanswered and is **unknown**, not interpreted as Allow or Deny. Indicator state
+before answering the second prompt is also unknown.
+
+Next evidence needed: full permission popup/site identity, preferably a cropped screenshot with no
+live camera footage or personal information; alternatively the complete website-bearing prompt line.
+Do not infer consent, origin, live-stream acquisition, upload or root cause from the partial wording.
+No application fix has been made without a reproducible source-level cause.
+
 Append subsequent records with:
 
 - Device, date/time and exact preview/build.
