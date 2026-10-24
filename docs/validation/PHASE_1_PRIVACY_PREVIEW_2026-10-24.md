@@ -99,7 +99,7 @@ User-reported metadata carried forward, not independently inspected:
 | Navigate away and return inactive until Start | Pending | Pending |
 | Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pending |
 | Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pending |
-| Cold-cache network/model failure and recovery | Pending | Pending |
+| Cold-cache network/model failure and recovery | Partial — offline worker-stop error reported; failed resource, camera cleanup and recovery details unconfirmed (P10) | Pending |
 | Feasible external camera interruption | Pending | Pending |
 | Live preview, detections, threshold, rotation and lifecycle under new policy | Pending | Pending |
 | Zoom, or explicit Not applicable reason | Pending | Pending |
@@ -294,6 +294,30 @@ reported errors. Private Browsing does not establish actual storage access denia
 restriction case remains untested and separate from automated mocked-storage evidence. No runtime
 fix, automated test or deployment was made. Next: attempt cold-session model/network failure if
 feasible, retaining cached-success cases as untested failure paths rather than failures.
+
+### P10 — iPhone offline attempt: worker-stop error (2026-10-24)
+
+Source: **user-reported physical observation**, same iPhone context and requested privacy preview.
+The requested procedure was a fresh Private Browsing session, shell loaded online before Start,
+Airplane Mode with Wi-Fi off, then Start, followed by reconnect/retry. Actual cache state, full
+step compliance, time to error and failing resource were not independently inspected.
+
+Verbatim response:
+
+```text
+The inference worker stopped. This browser may not support the model. Try starting again.
+
+Camera did not change until aeroplane mode disabled and reconnected
+```
+
+Record the exact worker-stop error as an observed offline-attempt error, not proof of browser/model
+incompatibility. Without resource/network inspection, it is unknown whether worker code, a loader,
+WASM or model retrieval failed; do not label this specifically a model-download failure. "Camera
+did not change" does not establish live versus frozen/absent preview or camera indicator/track
+state. Error cleanup and post-reconnection recovery remain **unconfirmed**. This may warrant
+investigation if camera access remained active after the error, but no source-level failure is
+reproduced from the present wording. No fix, automated test or redeployment was made. Next: clarify
+indicator state after the error and whether recovery required Start after reconnection.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
