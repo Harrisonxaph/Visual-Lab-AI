@@ -1,6 +1,6 @@
 # Phase 1 privacy preview validation — 2026-10-24
 
-Status: **in progress; new physical checks Pending**. This ledger is separate from the earlier
+Status: **in progress; reported pre-Start camera activity requires diagnostic evidence; device identity unconfirmed**. This ledger is separate from the earlier
 [device walkthrough](PHASE_1_DEVICES_2026-10-24.md). A clean retest cannot explain S1/S2.
 
 ## Authorization and exact build
@@ -106,7 +106,41 @@ User-reported metadata carried forward, not independently inspected:
 
 ## Session log
 
-No new physical observations yet. Begin with the iPhone fresh-tab gate without pressing Start.
+### P1 — Reported pre-Start activity; changed device details unknown (2026-10-24)
+
+Source: **user-reported physical observation**, following the requested fresh-tab iPhone sequence.
+However, the user explicitly answered that device/OS details were not unchanged. The actual current
+device/OS/browser is **unknown**; do not assign this result to either carried-forward device row.
+Requested preview/source is recorded above; on-device URL and exact timestamp were not supplied.
+
+The user pasted the diagnostic panel's heading/explanation, then:
+
+```text
+Device/OS unchanged: no
+Lab status:
+Camera indicator before Start: yes
+Permission prompt before Start: yes
+Diagnostic panel shows installed or unavailable: yes
+Number of camera-request entries: 1
+CSP-violation entries: none
+```
+
+This is a reported pre-Start gate failure requiring investigation, not a reproduced source-level
+cause. Diagnostic explanatory text was visible, but "yes" does not establish whether installation
+status was installed or unavailable. The camera-request count is user-reported; the actual request
+record, stack, elapsed time, activation, sinceStartMs and any start-click records were not supplied.
+Lab status is unanswered. No CSP violations were reported, which cannot exclude earlier events or
+unobserved contexts. Prompt site identity, whether any Start interaction occurred before the copied
+state, and baseline indicator state before opening the page remain unconfirmed. Do not claim the
+new report explains S1/S2 or that the app/runtime caused the prompt before reading actual records.
+
+Next evidence: current device/OS/browser, complete visible diagnostic JSON (installation,
+start-click, camera-request/stack and settlement), permission prompt site identity and explicit
+confirmation of no Start interaction. No screenshots containing camera footage are requested.
+No runtime change, redeployment or speculative fix was made. Carried-forward device matrix rows
+remain Pending until session identity and records are clarified.
+
+For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
 prompt identity, exact errors, result and evidence source. Screenshots must exclude live footage
 and unnecessary personal data. If a permission prompt blocks panel rendering, capture it safely,
