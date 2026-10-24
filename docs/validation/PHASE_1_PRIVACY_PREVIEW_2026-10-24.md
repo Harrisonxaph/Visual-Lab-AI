@@ -1,6 +1,6 @@
 # Phase 1 privacy preview validation — 2026-10-24
 
-Status: **in progress; latest prompt, indicator and request clarified as after Start; device identity and remaining checks pending**. This ledger is separate from the earlier
+Status: **in progress; iPhone acquisition sequence clarified as expected; diagnostic JSON and remaining checks pending**. This ledger is separate from the earlier
 [device walkthrough](PHASE_1_DEVICES_2026-10-24.md). A clean retest cannot explain S1/S2.
 
 ## Authorization and exact build
@@ -88,9 +88,9 @@ User-reported metadata carried forward, not independently inspected:
 
 | Check | iPhone | iPad |
 | --- | --- | --- |
-| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Pending | Pending |
+| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Pending |
 | Non-diagnostic fresh-tab comparison | Pending | Pending |
-| Prompt site identity and post-Start acquisition | Pending | Pending |
+| Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Pending |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
 | Stop while model loading; no late activation, explicit recovery | Pending | Pending |
 | Background while permission/model loading pending | Pending | Pending |
@@ -172,6 +172,18 @@ bug was reproduced or fixed, and no redeployment occurred. The distinct historic
 remain documented; this session's clarification does not automatically resolve them.
 
 Next: establish current device/OS/browser, then continue the remaining focused device checks.
+
+### P4 — Device identity corrected (2026-10-24)
+
+Source: **user-reported clarification**. Asked whether the session still uses iPhone 15 Pro,
+iOS 27.0.1 and Safari or those details changed, the user answered: "I haven't changed anything."
+
+Attribute P1–P3 to that same user-reported iPhone setup, superseding P1's unchanged-details "no".
+The current session's prompt, indicator and camera request are explicitly confirmed after Start;
+no CSP entries were reported. The actual diagnostic JSON, installed/unavailable state, initial
+Idle and prompt website identity remain unprovided, so the full fresh-tab evidence check stays
+partial. No runtime fix or redeployment was made. Earlier S1/S2 are preserved as separate reports.
+Next: Stop during model loading, where the loading state can actually be observed.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
