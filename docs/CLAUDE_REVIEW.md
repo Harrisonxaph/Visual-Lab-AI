@@ -1,9 +1,11 @@
 # Phase 1 handoff for Claude
 
 Status: the user supplied the designated Phase 1 review in this conversation. Its findings are
-recorded in docs/reviews/PHASE_1_RESPONSE.md and addressed on the existing Phase 1 branch.
+recorded in docs/reviews/PHASE_1_RESPONSE.md and addressed in the merged Phase 1 changes.
 This records receipt of the supplied review, not a new Claude invocation or merge approval.
-Real iPhone/iPad validation and the user's merge decision remain pending.
+PR #1 merged into main on **2026-10-23 at 23:17:42 UTC** as
+`a5bb085627c226b4c4a9bd768dfa12ba6133c408`, before real iPhone/iPad testing.
+Device validation remains pending; merging is not evidence of device compatibility.
 
 Review phase-1/live-object-detection against main, with ARCHITECTURE.md and the approved design
 in docs/superpowers/specs/2026-10-23-visual-labs-phase-1-design.md as context.
@@ -20,4 +22,5 @@ Focus on:
 
 Run README checks. Real iPhone/iPad camera/inference checks remain required before declaring support.
 Remote CI and Claude review status must be verified from their actual results.
-No merge or deployment is authorized by opening the PR.
+The completed merge is recorded above. Opening any follow-up PR does not authorize its merge
+or a deployment. Phase 2 must wait for documented device results, fixes and explicit authorization.

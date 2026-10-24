@@ -71,3 +71,16 @@ it("derives every displayed model field from supplied metadata", () => {
     stageLabel: "Different detector · CPU",
   });
 });
+
+it.each([
+  [0.07, "7%"],
+  [0.29, "29%"],
+  [0.075, "7.5%"],
+])(
+  "formats a %s output floor without floating-point artifacts",
+  (floor, expected) => {
+    expect(modelDetails({ ...MODEL, floor }).outputNotes).toContain(
+      `Output floor: ${expected};`,
+    );
+  },
+);

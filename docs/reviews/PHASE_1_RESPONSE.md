@@ -2,8 +2,11 @@
 
 Source: the review supplied by the user in this conversation, following PR #1 at `63b5d98`.
 This records the designated review's receipt, not a new Claude invocation or final approval.
-Scope remains Phase 1 on its existing branch and PR. Phase 2 must wait for device testing and
-an explicit merge decision.
+This response describes Phase 1 changes merged in [PR #1](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1)
+on **2026-10-23 at 23:17:42 UTC**, merge commit `a5bb085627c226b4c4a9bd768dfa12ba6133c408`.
+The merge happened before the recommended device testing. The user reported the merge;
+completion or waiver of device checks is not inferred. Phase 2 must wait for written-up device
+results, any resulting fixes and explicit authorization.
 
 | Finding | Response |
 | --- | --- |
@@ -14,7 +17,7 @@ an explicit merge decision.
 | 5. Hidden camera | Considered; automatic hidden-tab shutdown is deferred. Keep the approved behavior: backgrounding pauses inference and requires Resume, but retains camera until Stop/page exit. This remains disclosed; no shutdown timer is claimed. |
 | 6a. Rounded certainty | Shared score formatter caps displayed detection scores at 99%; raw scores drive filtering. UI/overlay use the same formatter and explain the cap. |
 | 6b. Visible count | List/count/overlay use the same filtered and clipped drawable results. Off-frame/invalid boxes do not inflate the count. |
-| 6c. Duplicate CI | CI now triggers on pull_request or workflow_dispatch, with no redundant push trigger. |
+| 6c. Duplicate CI | PR branch updates trigger one pull_request run. The subsequent docs/CI follow-up adds a push trigger limited to main, retaining workflow_dispatch without duplicate PR-branch push runs. |
 | 6d. Browser version | Local evidence remains Chromium 154.0.8037.57. The supplied review reports Chromium 153 for its run and CI. Docs distinguish these environments instead of claiming one version for every run. |
 
 ## Deployment control

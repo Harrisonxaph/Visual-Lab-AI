@@ -50,11 +50,29 @@ record above. The reported cold detection-call times were:
 
 This establishes **compatibility evidence for the existing CPU/WASM worker**, not a speed or
 accuracy benchmark. There was no warmup, repeated-sample distribution or labelled accuracy
-measurement. Full browser patch version, exact hardware/load and Lite2 checksum were not supplied;
+measurement. Full browser patch version, exact hardware/load and the reviewer-run Lite2 checksum were not supplied;
 these timings are attributed to the review and were not independently reproduced in this session.
 No inference speed ratio or accuracy improvement is claimed. Lite0 remains the default asset;
 Lite2 is not downloaded by the app. Controlled side-by-side comparison remains Phase 3 work.
 Model source: https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float32/1/efficientdet_lite2.tflite
+
+## Independently verified Lite2 artifact — 2026-10-24
+
+Downloaded the versioned Google MediaPipe artifact URL below into temporary validation storage;
+no Lite2 asset was added to the application or production build, and inference was not run in
+this checksum check.
+
+- Artifact: EfficientDet-Lite2 float32 / version 1.
+- URL: https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float32/1/efficientdet_lite2.tflite
+- Size: **23,096,891 bytes** (23.096891 MB; approximately 22.0269 MiB).
+- SHA-256: `ad2abbf2b4e10585e15176fd7b5ef03c28dda959ae26fc142549fdd1814db91d`.
+- File identifier: `TFL3` at bytes 4–7.
+- Method: HTTPS download from the versioned source; Python hashlib.sha256 over the complete file.
+
+This independently identifies the artifact retrieved on this date. The reviewer did not supply
+its run's checksum, so this does not retroactively prove byte identity with the artifact used for
+the reported 760 ms cold call. Timing evidence remains attributed to that review; no benchmark,
+accuracy result or additional platform compatibility claim is established by checksum verification.
 
 ## Review-fix configuration checks
 

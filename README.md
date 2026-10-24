@@ -84,4 +84,4 @@ Application source: MIT. Third-party assets retain their own terms and attributi
 Vercel Git integration automatically created previews of earlier branch pushes. `vercel.json` now
 disables automatic Git deployments for refs containing it; no existing preview is removed.
 No manual deployment or production change is authorized by this PR. The CI workflow runs on PR
-events or manual dispatch, avoiding duplicate push/PR jobs.
+events, pushes limited to main, or manual dispatch. PR branch pushes do not also trigger push jobs.

@@ -1,6 +1,8 @@
 # Visual Labs AI roadmap
 
-Phase 1 is implemented on its development branch, updated in response to the supplied review; real-device validation and merge approval pending.
+Phase 1 merged into main through PR #1 on 2026-10-23 at 23:17:42 UTC (`a5bb085`).
+The merge preceded real iPhone/iPad testing; that validation remains pending and Phase 2 is blocked
+until results are written up, issues fixed and Phase 2 explicitly authorized.
 Phases 2–5 and all stretch/exploratory targets remain planned, not implemented.
 Deliver each phase in a separate branch and PR into main.
 Codex develops; Claude reviews. Never merge, deploy or modify production without user approval.

@@ -339,7 +339,7 @@ test("the model panel and stage label use the supplied model configuration", asy
     modelPath: "models/another.tflite",
     bytes: 2097152,
     categories: 4,
-    floor: 0.2,
+    floor: 0.07,
     maxResults: 7,
     source: "Test publisher",
     compatibility: "A test compatibility statement",
@@ -362,13 +362,14 @@ test("the model panel and stage label use the supplied model configuration", asy
   await expect(page.locator("#model-coverage")).toHaveText("4 COCO categories");
   await expect(
     page.getByRole("slider", { name: "Confidence threshold" }),
-  ).toHaveAttribute("min", "0.2");
+  ).toHaveAttribute("min", "0.07");
   await page.getByText("Model & compatibility notes", { exact: true }).click();
   await expect(page.locator("#model-source")).toHaveText("Test publisher");
   await expect(page.locator("#model-compatibility")).toHaveText(
     "A test compatibility statement",
   );
   await expect(page.locator("#model-output-notes")).toContainText(
-    "at most 7 results",
+    "Output floor: 7%; at most 7 results",
   );
+  await expect(page.locator(".range-ends")).toContainText("7% · More results");
 });
