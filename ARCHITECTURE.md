@@ -130,7 +130,7 @@ Vercel's existing Git integration published previews of earlier phase commits. T
 consistent with the no-deployment-without-approval rule. Existing previews are not removed and
 project/production settings are not changed by this configuration addition.
 
-## Proposed Phase 1 privacy follow-up (not deployed)
+## Phase 1 privacy follow-up
 
 An early same-origin classic script activates camera-call instrumentation only for `?diag=1`;
 its bounded metadata log stays in page memory outside the application DOM. It observes this realm
@@ -138,3 +138,8 @@ after installation and cannot cover earlier scripts, other tabs or saved native 
 `vercel.json` defines a response CSP for documents and workers; local Vite preview reuses it for
 production verification. Same-origin connections remain allowed. See
 [privacy notes](docs/phases/PHASE_1_PRIVACY.md) for limitations and pending physical checks.
+
+PR #4 is merged. Its exact merge commit `edea505` has a single authorized temporary preview,
+READY according to Vercel. Production/protection were not changed. Effective authenticated
+response headers and new physical validation remain pending; see the
+[privacy-preview ledger](docs/validation/PHASE_1_PRIVACY_PREVIEW_2026-10-24.md).

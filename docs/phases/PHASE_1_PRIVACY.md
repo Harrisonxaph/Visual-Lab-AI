@@ -1,6 +1,8 @@
 # Phase 1 privacy investigation and focused device retest
 
-Status: implementation under review; **not deployed and not physically validated**.
+Status: PR #4 merged; one temporary preview authorized for merged commit `edea505`.
+Deployment verification and new physical validation are **in progress**, not complete. See the
+[current privacy-preview ledger](../validation/PHASE_1_PRIVACY_PREVIEW_2026-10-24.md).
 Baseline main after ledger PR #3 merge: `6c8fe3761625f37e0ad3003f1cd9357f6c44d6b0`.
 Main push CI [40130225460](https://github.com/Harrisonxaph/Visual-Lab-AI/actions/runs/40130225460)
 passed for that exact commit. Earlier physical results remain in
@@ -8,7 +10,7 @@ passed for that exact commit. Earlier physical results remain in
 
 ## Diagnostic behavior and limits
 
-Append `?diag=1` to an **approved future preview URL**. The same-origin classic script in the head
+Append `?diag=1` to the **approved preview URL recorded in the current ledger**. The same-origin classic script in the head
 executes synchronously before the app module; ordinary mode returns immediately, leaving the
 camera API untouched and adding no panel. Vite development injects its own client; only the built
 preview represents the intended document order. A hosting platform can insert earlier code, so
@@ -78,9 +80,9 @@ cookies, query tokens or raw personal data. Source HTML alone cannot establish r
 
 ## Focused real-device checklist — both devices, one at a time
 
-All items below start **Pending** for this proposed build. Record exact approved preview URL/SHA,
-device/OS/Safari version, date/time, steps, result/error and evidence source. No deployment is
-currently authorized. Never overwrite old observations or mark an unperformed step passed.
+All items below start **Pending** for this preview build. Record exact approved preview URL/SHA,
+device/OS/Safari version, date/time, steps, result/error and evidence source. One preview deployment
+of merged commit `edea505` is authorized; no production deployment is authorized. Never overwrite old observations or mark an unperformed step passed.
 
 1. **Fresh-page camera gate (iPhone blocker):** close other Safari tabs using cameras; verify the
    indicator is off. Open a fresh authenticated diagnostic tab, do not press Start, and wait 15 s.
@@ -148,10 +150,11 @@ the implementer's runs explicitly use system Chromium.
 No new physical observations have been collected for this build. No claim is made that the old
 pre-Start report was reproduced, explained or fixed.
 
-## Deployment plan — requires later approval
+## Deployment plan and current authorization
 
-Review the draft PR and its exact head commit, then explicitly approve **preview only** for that
-SHA. Create a new immutable temporary preview from that commit (do not promote or move production
+The user approved one **preview only** deployment of merged commit `edea505` after successful
+merge CI. Further deployments require separate approval. Create a new immutable temporary preview
+from that commit (do not promote or move production
 aliases). Keep authentication/protection, project settings and disabled automatic Git deployments
 unchanged. Verify deployment source SHA, READY status and effective CSP headers on the page,
 app/diagnostic JS and CSS, worker script, every `/wasm/*.js` loader and WASM binary, and model.
