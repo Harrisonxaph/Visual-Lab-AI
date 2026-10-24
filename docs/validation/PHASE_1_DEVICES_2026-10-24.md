@@ -22,8 +22,8 @@ deployments must remain unchanged. No merge or Phase 2 is authorized.
 
 CI success and Vercel deployment status are automated/service evidence, not physical-device evidence.
 Earlier Chromium tests used a synthetic camera stream and do not establish Safari support.
-Physical results will be labelled **user-reported** unless directly observed. The initial iPhone UI/permission/indicator observations below were supplied by the user. No performance
-figures, exact error/prompt text, network inspection or iPad test observations have been supplied yet.
+Physical results will be labelled **user-reported** unless directly observed. The initial iPhone UI/permission/indicator observations below were supplied by the user. Displayed performance figures and subsequent control/layout observations are recorded below. Complete
+permission prompt text, network inspection and iPad test observations have not been supplied.
 Do not mark untested cases passed or infer network behavior from a camera indicator.
 
 ## User-reported devices
@@ -57,8 +57,9 @@ that individual check. A pass must cite an observation in the session log below.
 | Stop releases camera (visible indicator off) | Pass — user reports green indicator off (S4); track internals not inspected | Pending |
 | Repeated Start/Pause/Resume/Stop cycles | Pending | Pending |
 | Stop during permission/model loading does not activate later | Pending | Pending |
-| Portrait/landscape box alignment, resizing and zoom | Pending | Pending |
-| Touch controls and scrolling remain responsive | Pending | Pending |
+| Portrait/landscape box alignment and return to portrait | Pass — user-reported alignment in all three states (S6) | Pending |
+| Zoom behavior | Pending | Pending |
+| Touch controls and scrolling remain responsive | Pass — user reports usability in portrait and landscape (S6); sustained use pending | Pending |
 | Background/return remains paused until explicit Resume | Pending | Pending |
 | Background during startup remains paused after loading | Pending | Pending |
 | Navigate away: camera stops | Pending | Pending |
@@ -191,6 +192,28 @@ false positives. Actual class names and individual confidence values were not pr
 The earlier pre-start permission report is still unresolved; all unperformed orientation,
 background/startup interruption, sustained performance, network inspection and iPad checks remain
 pending. Next: portrait/landscape alignment and touch/scroll layout on the iPhone.
+
+### S6 — iPhone rotation and layout (2026-10-24)
+
+Source: **user-reported physical observation**, iPhone context and requested main-pinned preview
+as above. Exact on-device timestamp was not supplied.
+
+Verbatim response:
+
+```text
+Portrait boxes align with objects: yes
+Landscape boxes align with objects: yes
+Alignment correct after returning to portrait: yes
+Controls and scrolling usable in both orientations: yes
+Any clipping, persistent offset or other issue:
+```
+
+Record passes for reported box alignment in portrait, landscape and after returning to portrait,
+and control/scroll usability in both orientations. The blank issue field supplies no additional
+detail; it is not an independent confirmation that all clipping cases were tested. Zoom, other
+viewport sizes, sustained responsiveness and iPad behavior remain pending. No automated test was
+run for these physical observations. The S1/S2 pre-start permission report remains unresolved.
+Next: background/return behavior and explicit Resume on the iPhone.
 
 Append subsequent records with:
 
