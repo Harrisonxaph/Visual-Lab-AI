@@ -92,7 +92,7 @@ User-reported metadata carried forward, not independently inspected:
 | Non-diagnostic fresh-tab comparison | Pending | Pending |
 | Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Pending |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
-| Stop while model loading; no late activation, explicit recovery | Pending | Pending |
+| Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending |
 | Background while permission/model loading pending | Pending | Pending |
 | Permission-denied message, inactive indicator and recovery | Pending | Pending |
 | Navigate away and return inactive until Start | Pending | Pending |
@@ -184,6 +184,28 @@ no CSP entries were reported. The actual diagnostic JSON, installed/unavailable 
 Idle and prompt website identity remain unprovided, so the full fresh-tab evidence check stays
 partial. No runtime fix or redeployment was made. Earlier S1/S2 are preserved as separate reports.
 Next: Stop during model loading, where the loading state can actually be observed.
+
+### P5 — iPhone loading-Stop attempt; loading not observed (2026-10-24)
+
+Source: **user-reported physical observation**, same iPhone 15 Pro / iOS 27.0.1 / Safari as P4,
+requested privacy preview and commit above. Exact timestamp was not supplied.
+
+Verbatim response:
+
+```text
+Stopped while Loading was visible: no loading shown, camera turned on straight after approving prompt
+Camera stayed off for 45 seconds:yes
+Start restored live video and detections: yes
+Any error:
+```
+
+The user did not observe Loading; therefore Stop during model loading was **not exercised** and
+remains Pending. Live video appearing after permission does not establish when model initialization
+completed. Record the separately reported 45-second camera-off period and successful Start restoring
+video/detections; do not infer a loading cancellation sequence from those answers. The precise Stop
+interaction was not supplied. Blank error wording is no additional detail, not a blanket error-free
+claim. No runtime failure was reproduced, fix made or preview redeployed. Next: background while
+the permission request is pending, where Safari permits it, retaining untestable steps as Pending.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
