@@ -29,6 +29,29 @@
     if (records.length > 100) records.shift();
     if (output) output.textContent = JSON.stringify(records, null, 2);
   };
+  const cleanAddress = (address) => {
+    if (!address || ["inline", "eval", "wasm-eval"].includes(address))
+      return address;
+    try {
+      const url = new URL(address, location.origin);
+      return ["http:", "https:"].includes(url.protocol)
+        ? (url.origin + url.pathname).slice(0, 1000)
+        : url.protocol + "[address omitted]";
+    } catch {
+      return "[address omitted]";
+    }
+  };
+  document.addEventListener("securitypolicyviolation", (event) => {
+    record("csp-violation", {
+      directive: (event.effectiveDirective || event.violatedDirective).slice(
+        0,
+        200,
+      ),
+      blockedAddress: cleanAddress(event.blockedURI),
+      disposition: event.disposition,
+      trusted: event.isTrusted,
+    });
+  });
   const activation = () => ({
     active: navigator.userActivation?.isActive ?? null,
     hasBeenActive: navigator.userActivation?.hasBeenActive ?? null,
@@ -108,7 +131,7 @@
     title.textContent = "Camera diagnostics — local page memory only";
     const explanation = document.createElement("p");
     explanation.textContent =
-      "Observes calls through this page’s wrapped getUserMedia after installation. Other tabs, frames, earlier calls and saved original references are not covered. Activation and nearby Start clicks do not prove user intent. No footage, device identifiers or constraints are logged. Reload clears records. Screenshots: before Start only, or Stop first and exclude the video area.";
+      "Observes calls through this page’s wrapped getUserMedia after installation. Other tabs, frames, earlier calls and saved original references are not covered. Activation and nearby Start clicks do not prove user intent. CSP violations observed in this document after installation are also logged; earlier events and worker/frame events are not covered. No footage, device identifiers or constraints are logged. Reload clears records. Screenshots: before Start only, or Stop first and exclude the video area.";
     const clear = document.createElement("button");
     clear.type = "button";
     clear.textContent = "Clear diagnostic log";

@@ -52,3 +52,10 @@ MODEL_LIMITATIONS.md, README.md.
 Execution evidence: 24 unit, 25 development browser, 8 production browser checks passed.
 Typecheck, formatting and build passed. Preview inspection pending without existing authentication.
 Draft PR delivery follows the final review; no deployment is authorized.
+
+Review follow-up: in diag mode observe document CSP violations after listener installation, with
+sanitized blocked addresses and directive/disposition/trust metadata. Real blocked-script logging
+test observed RED then GREEN; synthetic events cover URL/data redaction. Production suite now has
+10 checks, including headers across all built assets/loaders/WASM/model/page. Authenticated headers
+remain Pending; the old preview's SSO/login response policies are separate documents. Production
+diagnostic-shipping decision is deferred. Existing media-src blob allowance retained.

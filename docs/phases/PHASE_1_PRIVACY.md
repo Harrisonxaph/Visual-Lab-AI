@@ -16,7 +16,12 @@ preview represents the intended document order. A hosting platform can insert ea
 
 The panel logs installation, captured Start clicks (including trusted flag), each observed
 getUserMedia call's wall-clock/relative time, user activation, time since a Start click and sanitized
-bounded stack, plus settlement outcome name. An active gesture/recent Start is correlation, not
+bounded stack, plus settlement outcome name. In diagnostic mode it also listens for this document's
+`securitypolicyviolation` events after listener installation, recording the effective directive,
+blocked address, enforcement/report disposition and event trust flag. Blocked HTTP(S) addresses
+lose credentials, query and fragment; data/blob payloads are omitted. It does not log policy text,
+source samples or document/referrer URLs. Browser privacy rules may reduce a blocked address to
+its origin, so the exact injected script path may be unavailable. An active gesture/recent Start is correlation, not
 proof of permission or intent. Stacks vary by browser and production minification. URL queries,
 fragments and credentials are omitted; paths/function names may still reveal context. Review any
 screenshot before sharing. No stream, image, constraints, device identifiers or error messages are
@@ -30,6 +35,12 @@ Coverage is this page realm's wrapped API **after installation**, including late
 using that wrapper. Earlier calls, cached original function references, replaced wrappers, legacy
 camera APIs, other tabs/iframes/browser internals/extensions are not covered. A visible unavailable
 entry means instrumentation could not install; an absent log is not proof no acquisition occurred.
+A clean retest cannot explain S1/S2: CSP could suppress a script that previously ran. A logged
+blocked attempt provides evidence of that attempt in the new build, not proof the script requested
+a camera or caused the old report. An empty log cannot exclude earlier events, suppressed browser
+reporting, worker/frame violations or allowed same-origin scripts. Violation logging does not
+replace authenticated HTML/script-order inspection.
+
 A permission popup can block interaction/rendering, so collect observations after dismissing it too.
 The early script itself is still fetched in ordinary mode; its observer activates only with diag=1.
 
@@ -54,7 +65,14 @@ headers after approval rather than assuming Vercel settings from a local server 
 Pending: ordinary read-only access to the old authenticated preview redirected to Vercel login.
 No authenticated browser session or Vercel CLI is available in this workspace. The connector's
 sharing-link fetch path is excluded because it would create public access. Do not classify login
-scripts as injected lab scripts. After an approved authenticated inspection, record response URL,
+scripts as injected lab scripts. A read-only check on 2026-10-24 of the old preview observed a
+302 redirect without a CSP header, then Vercel SSO (307) and login (200), each with one CSP header.
+The login policy belongs to a different document, not an extra policy applied to the app. This
+does not establish the headers on an authenticated app response or whether the proposed CSP
+interferes with that authentication flow. Those checks remain Pending after deployment approval.
+No auth tokens, redirect query values or cookies were recorded.
+
+After an approved authenticated inspection, record response URL,
 source commit, response policy, script src/inline presence and observed order without saving auth
 cookies, query tokens or raw personal data. Source HTML alone cannot establish response injection.
 
@@ -66,7 +84,8 @@ currently authorized. Never overwrite old observations or mark an unperformed st
 
 1. **Fresh-page camera gate (iPhone blocker):** close other Safari tabs using cameras; verify the
    indicator is off. Open a fresh authenticated diagnostic tab, do not press Start, and wait 15 s.
-   Record Idle, indicator state, log installation/no camera-request and any popup's exact site name.
+   Record Idle, indicator state, log installation/no camera-request, any CSP violation entries
+   (directive, sanitized address, disposition and trust flag), and any popup's exact site name.
    If a popup appears, photograph/screenshot only the popup/site identity with no camera image;
    dismiss it, then capture the panel excluding footage. Record any pre-Start call stack. Repeat
    without diagnostics to detect instrumentation effects. Correct any earlier mistaken report only
@@ -110,8 +129,11 @@ Stop before merge/Phase 2. Claude reviews evidence and outstanding limitations b
 ## Automated verification (2026-10-24)
 
 Chromium 154 on Linux, synthetic camera input: 24 unit tests passed; typecheck, formatting and
-production build passed. Production suite: 8 passed, including real Lite0 worker/CPU/WASM inference
-in normal and diagnostic modes and policy enforcement probes. This is local production-build
+production build passed. Production suite: 10 passed, including real Lite0 worker/CPU/WASM inference
+in normal and diagnostic modes and policy enforcement probes. Header coverage checks every built app/worker JS and CSS file,
+both WASM loader JS and WASM binary variants, the diagnostic resources, model and page. A real
+blocked-script event verifies diagnostic violation logging; synthetic events exercise credential,
+query, fragment and non-HTTP payload redaction separately. This is local production-build
 verification, not deployed-header verification or physical Safari evidence. Diagnostic tests first
 failed without instrumentation; policy tests first failed without response headers. Development
 browser suite: 25 passed, including lifecycle regressions and real-worker inference.
@@ -131,6 +153,18 @@ pre-Start report was reproduced, explained or fixed.
 Review the draft PR and its exact head commit, then explicitly approve **preview only** for that
 SHA. Create a new immutable temporary preview from that commit (do not promote or move production
 aliases). Keep authentication/protection, project settings and disabled automatic Git deployments
-unchanged. Verify deployment source SHA, READY status and effective document/worker CSP headers,
-record the new URL, and run the checklist above. Existing old device evidence stays attached to
+unchanged. Verify deployment source SHA, READY status and effective CSP headers on the page,
+app/diagnostic JS and CSS, worker script, every `/wasm/*.js` loader and WASM binary, and model.
+Record every enforcing and report-only CSP header instance, not just the first. Inspect protection
+redirect/login responses separately from the authenticated app; note additional app policies and
+confirm login works. Multiple enforcing policies all apply, so a more permissive added policy does
+not weaken a stricter one. Record conflicts without automatically loosening policy/protection.
+Record the new URL and run the checklist above. Existing old device evidence stays attached to
 its original preview. Do not create a public share/bypass link or begin Phase 2.
+
+## Production release decision — deferred
+
+The early diagnostics asset is currently fetched on every load but activates only with `?diag=1`.
+Before any production release, explicitly decide whether to retain that opt-in capability or remove
+it from the production build. No production-shipping decision or deployment is made in this PR.
+The existing `media-src blob:` allowance is retained; current camera srcObject does not require it.

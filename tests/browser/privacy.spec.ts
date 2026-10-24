@@ -127,3 +127,71 @@ test("same-origin worker response applies CSP to worker-originated connections",
   );
   expect(result).toBe("blocked");
 });
+
+test("diagnostics record real CSP violations and strip sensitive blocked addresses", async ({
+  page,
+}) => {
+  await page.goto("/?diag=1");
+  const log = page.locator("#camera-diagnostics-log");
+  await page.evaluate(() => {
+    const script = document.createElement("script");
+    script.src =
+      "https://privacy-probe.invalid/injected.js?token=secret#fragment";
+    document.head.append(script);
+  });
+  await expect(log).toContainText('"event": "csp-violation"');
+  await expect(log).toContainText('"directive": "script-src-elem"');
+  await expect(log).toContainText("https://privacy-probe.invalid");
+  // Browsers can already reduce cross-origin blockedURI to its origin. Exercise our own redaction too.
+  await page.evaluate(() => {
+    document.dispatchEvent(
+      new SecurityPolicyViolationEvent("securitypolicyviolation", {
+        effectiveDirective: "connect-src",
+        blockedURI:
+          "https://user:password@privacy-probe.invalid/upload?private=value#fragment",
+        disposition: "enforce",
+      }),
+    );
+    document.dispatchEvent(
+      new SecurityPolicyViolationEvent("securitypolicyviolation", {
+        effectiveDirective: "script-src-elem",
+        blockedURI: "data:text/javascript,secretPayload?private=value",
+        disposition: "enforce",
+      }),
+    );
+  });
+  await expect(log).toContainText('"directive": "connect-src"');
+  await expect(log).toContainText("https://privacy-probe.invalid/upload");
+  await expect(log).not.toContainText("secret");
+  await expect(log).not.toContainText("private=value");
+  await expect(log).not.toContainText("password");
+  await expect(log).not.toContainText("fragment");
+});
+
+test("policy headers cover document, app assets, worker, WASM loaders and model", async ({
+  request,
+}) => {
+  const assets = readdirSync("dist/assets").map((name) => "/assets/" + name);
+  const wasm = readdirSync("dist/wasm")
+    .filter((name) => /\.(js|wasm)$/.test(name))
+    .map((name) => "/wasm/" + name);
+  expect(wasm.filter((name) => name.endsWith(".js")).length).toBeGreaterThan(0);
+  expect(wasm.filter((name) => name.endsWith(".wasm")).length).toBeGreaterThan(
+    0,
+  );
+  const policy = config.headers[0].headers.find(
+    (header: any) => header.key === "Content-Security-Policy",
+  ).value;
+  for (const path of [
+    "/",
+    "/camera-diagnostics.js",
+    "/camera-diagnostics.css",
+    ...assets,
+    ...wasm,
+    "/models/efficientdet_lite0.tflite",
+  ]) {
+    const response = await request.get(path);
+    expect(response.ok(), path).toBe(true);
+    expect(response.headers()["content-security-policy"], path).toBe(policy);
+  }
+});
