@@ -49,9 +49,9 @@ that individual check. A pass must cite an observation in the session log below.
 | Deny camera access: actionable error and no active stream | Pending | Pending |
 | Restore permission and retry without stale error/hang | Pending | Pending |
 | Grant permission: actual live camera preview | Pending | Pending |
-| Model loads; supported objects show labels, boxes and scores | Pending | Pending |
+| Model loads; objects show labels, boxes and scores | Pass — user reports labelled boxes and confidence scores (S5); class correctness not evaluated | Pending |
 | Inference time and processing FPS shown; record actual values | Pass — displayed 48 ms / 10 FPS, user-reported S4 | Pending |
-| Threshold 5%–100% changes visible results | Pending | Pending |
+| Threshold 5%–100% changes visible results | Pass — counts 8 at 5%, 0 at 90%, 0 at 100%; no slider freeze reported (S5) | Pending |
 | Empty scene and multiple objects handled | Pending | Pending |
 | Pause clears results, retains preview; Resume updates | Pass — user confirms described Pause and resumed detections (S4) | Pending |
 | Stop releases camera (visible indicator off) | Pass — user reports green indicator off (S4); track internals not inspected | Pending |
@@ -166,6 +166,31 @@ passes for that cycle. Camera-track internals and repeated cycles were not inspe
 detections are reported, but labelled-box visibility/class/score correctness is not inferred.
 The S1/S2 pre-start prompt report remains unresolved. Next: confirm labelled boxes and test the
 confidence threshold, keeping unperformed iPad/network/sustained/orientation checks pending.
+
+### S5 — iPhone labels and threshold response (2026-10-24)
+
+Source: **user-reported physical observation**, iPhone context as above, requested main-pinned
+preview/build. Exact on-device timestamp, lighting and observed object classes were not supplied.
+
+Verbatim response:
+
+```text
+Boxes show an object label and confidence score: yes
+Detection count at 5%: 8
+Detection count at 90%: 0
+Detection count at 100%: 0
+Slider responds without freezing: yes
+```
+
+Record user-reported passes for labelled-box/confidence display, visible-result response to the
+threshold and slider responsiveness. This resolves the unanswered labelled-box field in S4.
+These are observations of separate live frames, not a controlled identical-input comparison.
+They do not establish class correctness, detection accuracy, recall, calibration or absence of
+false positives. Actual class names and individual confidence values were not provided.
+
+The earlier pre-start permission report is still unresolved; all unperformed orientation,
+background/startup interruption, sustained performance, network inspection and iPad checks remain
+pending. Next: portrait/landscape alignment and touch/scroll layout on the iPhone.
 
 Append subsequent records with:
 
