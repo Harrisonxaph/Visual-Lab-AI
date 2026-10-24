@@ -1,0 +1,23 @@
+#camera-diagnostics {
+  position: relative;
+  z-index: 1;
+  margin: 1rem;
+  padding: 1rem;
+  border: 2px solid #758a99;
+  border-radius: 0.5rem;
+  background: #101c28;
+  color: #f2f5f7;
+  overflow-wrap: anywhere;
+}
+#camera-diagnostics button {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  color: #101c28;
+  background: #f2f5f7;
+}
+#camera-diagnostics pre {
+  max-height: 24rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+}
