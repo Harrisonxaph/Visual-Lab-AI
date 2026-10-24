@@ -60,7 +60,7 @@ that individual check. A pass must cite an observation in the session log below.
 | Portrait/landscape box alignment and return to portrait | Pass — user-reported alignment in all three states (S6) | Pending |
 | Zoom behavior | Pending | Pending |
 | Touch controls and scrolling remain responsive | Pass — user reports usability in portrait and landscape (S6); sustained use pending | Pending |
-| Background/return remains paused until explicit Resume | Pending | Pending |
+| Background/return remains paused until explicit Resume | Pass — returned paused, explicit Resume restored detections (S7), user-reported | Pending |
 | Background during startup remains paused after loading | Pending | Pending |
 | Navigate away: camera stops | Pending | Pending |
 | External camera interruption and recovery, where feasible | Pending | Pending |
@@ -214,6 +214,31 @@ detail; it is not an independent confirmation that all clipping cases were teste
 viewport sizes, sustained responsiveness and iPad behavior remain pending. No automated test was
 run for these physical observations. The S1/S2 pre-start permission report remains unresolved.
 Next: background/return behavior and explicit Resume on the iPhone.
+
+### S7 — iPhone background and return (2026-10-24)
+
+Source: **user-reported physical observation**, iPhone context and requested main-pinned preview
+as above. Exact on-device timestamp and actual time spent backgrounded were not supplied.
+The requested sequence was running detections, Home Screen for about 15 seconds, return without
+interaction, explicit Resume, then Stop.
+
+Verbatim response:
+
+```text
+Status on returning: paused
+Detections stayed paused until Resume: yes
+Resume restored detections: yes
+Controls remained responsive: yes
+Stop turned camera indicator off: yes
+Any error or unexpected behavior:
+```
+
+Record user-reported passes for returning paused, no automatic resumption, successful explicit
+Resume, responsive controls and camera indicator off after Stop. The blank error field supplies
+no additional detail. Camera state while backgrounded, network traffic and backgrounding during
+startup were not inspected; these results do not establish those behaviors. No automated test was
+run for this report. Sustained performance, battery/warmth, permission denial/recovery and iPad
+checks remain pending. The S1/S2 pre-start permission report remains unresolved.
 
 Append subsequent records with:
 
