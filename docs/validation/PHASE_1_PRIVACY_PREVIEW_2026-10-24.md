@@ -99,7 +99,7 @@ User-reported metadata carried forward, not independently inspected:
 | Navigate away and return inactive until Start | Pending | Pending |
 | Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pending |
 | Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pending |
-| Cold-cache network/model failure and recovery | Partial — offline worker-stop error; user clarifies camera did not activate and inference restarted; failed resource and recovery trigger unconfirmed (P10/P11) | Pending |
+| Cold-cache network/model failure and recovery | Pass for reported offline error/retry sequence — camera did not activate offline; explicit Start recovered at displayed 50 ms (P10–P12). Specific model-download failure/cache state unverified | Pending |
 | Feasible external camera interruption | Pending | Pending |
 | Live preview, detections, threshold, rotation and lifecycle under new policy | Pending | Pending |
 | Zoom, or explicit Not applicable reason | Pending | Pending |
@@ -331,6 +331,21 @@ context, but whether restart was automatic or followed Start/reload is still unk
 has no specified unit and must not be recorded as 50 ms, 50 FPS or 50% threshold without
 clarification. The failed offline resource remains unknown. No confirmed persistent-camera defect
 is established by this corrected report. No runtime fix, test or deployment was made.
+
+### P12 — Explicit offline recovery and timing clarified (2026-10-24)
+
+Source: **user-reported clarification**, same iPhone and requested privacy preview context.
+Asked whether recovery followed Start and whether "50" meant inference milliseconds or threshold,
+the user answered: "After start, and 50 ms".
+
+Combine P10–P12 as a user-reported offline error/retry sequence: worker-stop error offline,
+camera did not activate in that attempt, and after connectivity returned explicit Start restored
+inference with displayed inference time **50 ms**. No automatic recovery is claimed. This is a
+single display observation, not a sustained benchmark. The exact failed resource and cold-cache
+condition remain unverified; do not call it a specifically reproduced model-download failure.
+No persistent-camera defect was established, and no runtime fix, automated test or redeployment
+was made. Next: feasible external interruption, then page zoom/remaining device smoke checks;
+untested interruption paths stay Pending or receive a justified Not applicable status.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
