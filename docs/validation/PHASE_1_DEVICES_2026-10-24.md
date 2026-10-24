@@ -64,7 +64,7 @@ that individual check. A pass must cite an observation in the session log below.
 | Background during startup remains paused after loading | Pending | Pending |
 | Navigate away: camera stops | Pending | Pending |
 | External camera interruption and recovery, where feasible | Pending | Pending |
-| Several-minute session: responsiveness and observed heat/battery | Pending | Pending |
+| Several-minute session: responsiveness and observed heat/battery | Pass for reported five-minute usability — battery 44%→38%, warmth unchanged, no warnings; conditions incomplete (S8) | Pending |
 | No user-visible recording or saved footage | Pending | Pending |
 | Physical-session network inspection for frame uploads | Pending | Pending |
 | Restricted storage behavior, where testable | Pending | Pending |
@@ -239,6 +239,43 @@ no additional detail. Camera state while backgrounded, network traffic and backg
 startup were not inspected; these results do not establish those behaviors. No automated test was
 run for this report. Sustained performance, battery/warmth, permission denial/recovery and iPad
 checks remain pending. The S1/S2 pre-start permission report remains unresolved.
+
+### S8 — iPhone five-minute sustained session (2026-10-24)
+
+Source: **user-reported physical observation**, iPhone context and requested main-pinned preview
+as above. Requested threshold was 50%; actual threshold was not explicitly confirmed. Exact
+on-device timestamp, ambient conditions, brightness and other device activity were not supplied.
+
+Verbatim response:
+
+```text
+Duration: 5 mins
+Charging: no
+Low Power Mode: on/off
+Battery start → end: 44 - 38
+Inference time start → end: 48 - 55
+Processing FPS start → end: 10 - 10.5
+Warmth: unchanged
+Controls responsive throughout: yes
+Any freezes, warnings or errors: no
+Stop turned camera indicator off: yes, manually to stop timer
+```
+
+Record five minutes unplugged, battery 44% to 38% (six percentage points), inference time reported
+as 48 to 55 ms in the requested units, processing speed 10 to 10.5 FPS, unchanged subjective
+warmth, responsive controls and no reported freezes, warnings or errors. Low Power Mode is
+**unknown** because the template choice was not answered. Do not extrapolate battery life or
+attribute the battery change solely to inference. Warmth is subjective, not a sensor measurement;
+start/end figures do not describe the intermediate performance distribution or establish thermal
+throttling. The reported 10.5 FPS is preserved despite the nominal 10 FPS scheduling cap; no
+on-device display capture or investigation establishes its cause or a sustained rate above the cap.
+
+The user answered yes to the camera indicator turning off, qualified by "manually to stop timer".
+Record that wording without inferring which timer/control was used; precise Stop sequence needs
+clarification. This does not invalidate the explicit Stop observations in S4/S7. This is a
+user-reported five-minute usability pass, not a controlled battery/performance benchmark. No
+automated test was run for this observation. Permission denial/recovery, the S1/S2 pre-start
+report, network inspection and all iPad checks remain unresolved or pending.
 
 Append subsequent records with:
 
