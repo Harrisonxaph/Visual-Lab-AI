@@ -46,8 +46,8 @@ that individual check. A pass must cite an observation in the session log below.
 | Open the exact preview in Safari; authenticate successfully | Pass — user reports lab opens (S1) | Pass — lab opens, user-reported (S12) |
 | Before Start: camera inactive and no permission prompt | Mixed — prompt only after Start in recovery test (S10); earlier pre-start prompt/indicator reports remain unexplained (S1/S2) | Pass for reported indicator off and prompt after Start (S12) |
 | Initial lab status is Idle | Pass — user-reported (S1) | Pass — user-reported (S12) |
-| Deny camera access: actionable error and no active stream | Pass for reported error and inactive indicator (S9); track internals not inspected | Pending |
-| Restore permission and retry without stale error/hang | Pass — user reports preview and detections restored after allowing (S9) | Pending |
+| Deny camera access: actionable error and no active stream | Pass for reported error and inactive indicator (S9); track internals not inspected | Partial — indicator stayed off (S15); actionable error wording/result pending |
+| Restore permission and retry without stale error/hang | Pass — user reports preview and detections restored after allowing (S9) | Pass — Ask prompted after Start; allowing restored video/detections, user-reported (S15) |
 | Grant permission: actual live camera preview | Pass — user-reported live preview after allowing (S9) | Pass — live video confirmed in clarification (S13); initial S12 answer superseded |
 | Model loads; objects show labels, boxes and scores | Pass — user reports labelled boxes and confidence scores (S5); class correctness not evaluated | Pass for reported labelled boxes/scores (S12); live video confirmed (S13) |
 | Inference time and processing FPS shown; record actual values | Pass — displayed 48 ms / 10 FPS, user-reported S4 | Pass — reported 65 ms / 10 FPS (S12) |
@@ -60,9 +60,9 @@ that individual check. A pass must cite an observation in the session log below.
 | Portrait/landscape box alignment and return to portrait | Pass — user-reported alignment in all three states (S6) | Pass — user-reported alignment in both orientations and after return (S14) |
 | Zoom behavior | Pending | Pending |
 | Touch controls and scrolling remain responsive | Pass — user reports usability in portrait and landscape (S6); sustained use pending | Pass — slider/scroll responsive, user-reported (S14); sustained use pending |
-| Background/return remains paused until explicit Resume | Pass — returned paused, explicit Resume restored detections (S7), user-reported | Pending |
+| Background/return remains paused until explicit Resume | Pass — returned paused, explicit Resume restored detections (S7), user-reported | Pass — paused until Resume, detections restored, user-reported (S15) |
 | Background during startup remains paused after loading | Pending | Pending |
-| Navigate away: camera stops | Pass for visible indicator off; return remained inactive until Start, user-reported (S11) | Pending |
+| Navigate away: camera stops | Pass for visible indicator off; return remained inactive until Start, user-reported (S11) | Pass for reported indicator off (S15); inactive-until-Start on return unanswered |
 | External camera interruption and recovery, where feasible | Pending | Pending |
 | Several-minute session: responsiveness and observed heat/battery | Pass for reported five-minute usability — battery 44%→38%, warmth unchanged, no warnings; conditions incomplete (S8) | Pending |
 | No user-visible recording or saved footage | Pending | Pending |
@@ -410,6 +410,32 @@ correctness or a controlled identical-input comparison. The blank issue field su
 additional detail. Camera-track internals were not inspected. No automated test or runtime change
 was made for these observations. Next: iPad permission recovery, backgrounding and navigation.
 All unperformed checks remain pending.
+
+### S15 — iPad backgrounding, navigation and permission recovery (2026-10-24)
+
+Source: **user-reported physical observation**, same iPad and requested preview/build context.
+Exact on-device timestamp and actual background duration were not supplied.
+
+Verbatim response:
+
+```text
+Returned from Home Screen paused until Resume: yes
+Resume restored detections: yes
+Navigating away turned camera indicator off: yes
+Returning left camera inactive until Start: yes/no
+With permission denied, exact error:
+Camera indicator stayed off when denied: yes
+After restoring Ask, prompt timing: after Start
+Allowing restored live video and detections: yes
+```
+
+Record passes for reported background-return pause until explicit Resume, restored detections,
+visible indicator off on navigation away and when permission was denied, permission prompt after
+Start when Ask was restored, and recovery of live video/detections after allowing. The unchanged
+"yes/no" for camera inactivity on returning is unanswered and remains pending. No denial-error
+wording was supplied, so an actionable denied-permission message is not established. No camera
+track or network inspection was performed. No runtime changes or automated tests were made for
+this report. Next: five-minute iPad session, with the two unanswered checks retained as pending.
 
 Append subsequent records with:
 
