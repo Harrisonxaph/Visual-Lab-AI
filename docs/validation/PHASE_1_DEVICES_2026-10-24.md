@@ -1,6 +1,6 @@
 # Phase 1 physical-device validation — 2026-10-24
 
-Status: **in progress; iPhone metrics and lifecycle observations received; pre-start camera report and remaining device checks unresolved**.
+Status: **in progress; iPhone and iPad physical observations recorded; unanswered checks and earlier iPhone pre-start report remain unresolved**.
 This is a results ledger, not evidence that Safari or physical cameras work.
 
 ## Scope and build
@@ -64,7 +64,7 @@ that individual check. A pass must cite an observation in the session log below.
 | Background during startup remains paused after loading | Pending | Pending |
 | Navigate away: camera stops | Pass for visible indicator off; return remained inactive until Start, user-reported (S11) | Pass for reported indicator off (S15); inactive-until-Start on return unanswered |
 | External camera interruption and recovery, where feasible | Pending | Pending |
-| Several-minute session: responsiveness and observed heat/battery | Pass for reported five-minute usability — battery 44%→38%, warmth unchanged, no warnings; conditions incomplete (S8) | Pending |
+| Several-minute session: responsiveness and observed heat/battery | Pass for reported five-minute usability — battery 44%→38%, warmth unchanged, no warnings; conditions incomplete (S8) | Partial — battery 90%→88%, warmth unchanged, no errors; duration/responsiveness/Low Power Mode unanswered (S16) |
 | No user-visible recording or saved footage | Pending | Pending |
 | Physical-session network inspection for frame uploads | Pending | Pending |
 | Restricted storage behavior, where testable | Pending | Pending |
@@ -436,6 +436,42 @@ Start when Ask was restored, and recovery of live video/detections after allowin
 wording was supplied, so an actionable denied-permission message is not established. No camera
 track or network inspection was performed. No runtime changes or automated tests were made for
 this report. Next: five-minute iPad session, with the two unanswered checks retained as pending.
+
+### S16 — iPad sustained-session observations, duration unconfirmed (2026-10-24)
+
+Source: **user-reported physical observation**, same iPad and requested preview/build context.
+Five minutes at 50% threshold were requested, but actual duration and threshold were not confirmed.
+Exact on-device timestamp, ambient conditions, screen brightness and other device activity were
+not supplied.
+
+Verbatim response:
+
+```text
+Duration:
+Charging: no
+Low Power Mode: on/off/unknown
+Battery start → end: 90, 88
+Inference time start → end: 65,69
+Processing FPS start → end: 10, 10
+Warmth: unchanged
+Controls responsive throughout: yes/no
+Any freezes, warnings or errors: no
+Lab Stop turned camera indicator off: yes
+```
+
+Record an unplugged session, battery 90% to 88% (two percentage points), reported inference time
+65 to 69 ms in the requested units, 10 FPS at both endpoints, unchanged subjective warmth, no
+reported freezes/warnings/errors, and camera indicator off after the lab Stop button. Duration is
+**not supplied**. Low Power Mode and sustained control responsiveness are **unanswered template
+choices**, not passes or confirmed settings. Do not infer duration from the requested five-minute
+procedure, or responsive controls solely from the absence of freezes. The sustained-session check
+remains partial pending clarification.
+
+These endpoint observations are not a controlled benchmark, a measured thermal assessment or
+energy attributable solely to inference. No network inspection, runtime change or automated test
+was performed. Navigation-return camera inactivity, actionable denial-error behavior and other
+unperformed checks remain pending. Next: clarify the three unanswered sustained-session fields,
+then summarize evidence and outstanding checks for review without claiming full validation.
 
 Append subsequent records with:
 
