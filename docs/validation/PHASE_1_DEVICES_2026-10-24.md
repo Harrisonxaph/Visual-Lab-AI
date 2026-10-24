@@ -51,15 +51,15 @@ that individual check. A pass must cite an observation in the session log below.
 | Grant permission: actual live camera preview | Pass — user-reported live preview after allowing (S9) | Pass — live video confirmed in clarification (S13); initial S12 answer superseded |
 | Model loads; objects show labels, boxes and scores | Pass — user reports labelled boxes and confidence scores (S5); class correctness not evaluated | Pass for reported labelled boxes/scores (S12); live video confirmed (S13) |
 | Inference time and processing FPS shown; record actual values | Pass — displayed 48 ms / 10 FPS, user-reported S4 | Pass — reported 65 ms / 10 FPS (S12) |
-| Threshold 5%–100% changes visible results | Pass — counts 8 at 5%, 0 at 90%, 0 at 100%; no slider freeze reported (S5) | Pending |
+| Threshold 5%–100% changes visible results | Pass — counts 8 at 5%, 0 at 90%, 0 at 100%; no slider freeze reported (S5) | Pass — counts 30 / 0 / 0 at 5% / 90% / 100%, user-reported (S14) |
 | Empty scene and multiple objects handled | Pending | Pending |
-| Pause clears results, retains preview; Resume updates | Pass — user confirms described Pause and resumed detections (S4) | Pending |
-| Stop releases camera (visible indicator off) | Pass — user reports green indicator off (S4); track internals not inspected | Pending |
+| Pause clears results, retains preview; Resume updates | Pass — user confirms described Pause and resumed detections (S4) | Pass — cleared boxes/live video and restored detections, user-reported (S14) |
+| Stop releases camera (visible indicator off) | Pass — user reports green indicator off (S4); track internals not inspected | Pass for reported indicator off (S14); track internals not inspected |
 | Repeated Start/Pause/Resume/Stop cycles | Pass — three cycles and indicator off after each Stop, user-reported (S11) | Pending |
 | Stop during permission/model loading does not activate later | Pending | Pending |
-| Portrait/landscape box alignment and return to portrait | Pass — user-reported alignment in all three states (S6) | Pending |
+| Portrait/landscape box alignment and return to portrait | Pass — user-reported alignment in all three states (S6) | Pass — user-reported alignment in both orientations and after return (S14) |
 | Zoom behavior | Pending | Pending |
-| Touch controls and scrolling remain responsive | Pass — user reports usability in portrait and landscape (S6); sustained use pending | Pending |
+| Touch controls and scrolling remain responsive | Pass — user reports usability in portrait and landscape (S6); sustained use pending | Pass — slider/scroll responsive, user-reported (S14); sustained use pending |
 | Background/return remains paused until explicit Resume | Pass — returned paused, explicit Resume restored detections (S7), user-reported | Pending |
 | Background during startup remains paused after loading | Pending | Pending |
 | Navigate away: camera stops | Pass for visible indicator off; return remained inactive until Start, user-reported (S11) | Pending |
@@ -384,6 +384,32 @@ Record the live-preview check as passed based on this clarification, superseding
 "no" in S12 while preserving the original report. No missing-preview failure is currently
 established, no runtime fix was made and no automated test was run for this clarification.
 Remaining iPad checks and physical-session network inspection remain pending.
+
+### S14 — iPad thresholds, rotation and lifecycle controls (2026-10-24)
+
+Source: **user-reported physical observation**, same iPad and requested preview/build context.
+Exact on-device timestamp, scene and individual object classes were not supplied.
+
+Verbatim response:
+
+```text
+Detection counts at 5% / 90% / 100%:30, 0,0
+Slider and scrolling responsive: yes
+Boxes align in both orientations and after rotating back: yes
+Pause clears boxes while video stays live: yes
+Resume restores detections: yes
+Stop turns camera indicator off: yes
+Any issue:
+```
+
+Record passes for reported threshold response (30, 0 and 0 detections at 5%, 90% and 100%),
+responsive slider/scrolling, box alignment in portrait/landscape and after returning, Pause
+clearing boxes while retaining live video, Resume restoring detections, and camera indicator off
+after Stop. Counts from separate live frames do not establish accuracy, calibration, class
+correctness or a controlled identical-input comparison. The blank issue field supplies no
+additional detail. Camera-track internals were not inspected. No automated test or runtime change
+was made for these observations. Next: iPad permission recovery, backgrounding and navigation.
+All unperformed checks remain pending.
 
 Append subsequent records with:
 
