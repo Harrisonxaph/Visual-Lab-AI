@@ -46,9 +46,9 @@ that individual check. A pass must cite an observation in the session log below.
 | Open the exact preview in Safari; authenticate successfully | Pass — user reports lab opens (S1) | Pending |
 | Before Start: camera inactive and no permission prompt | Fail — user reports automatic prompt and green indicator; cause unconfirmed (S1) | Pending |
 | Initial lab status is Idle | Pass — user-reported (S1) | Pending |
-| Deny camera access: actionable error and no active stream | Pending | Pending |
-| Restore permission and retry without stale error/hang | Pending | Pending |
-| Grant permission: actual live camera preview | Pending | Pending |
+| Deny camera access: actionable error and no active stream | Pass for reported error and inactive indicator (S9); track internals not inspected | Pending |
+| Restore permission and retry without stale error/hang | Pass — user reports preview and detections restored after allowing (S9) | Pending |
+| Grant permission: actual live camera preview | Pass — user-reported live preview after allowing (S9) | Pending |
 | Model loads; objects show labels, boxes and scores | Pass — user reports labelled boxes and confidence scores (S5); class correctness not evaluated | Pending |
 | Inference time and processing FPS shown; record actual values | Pass — displayed 48 ms / 10 FPS, user-reported S4 | Pending |
 | Threshold 5%–100% changes visible results | Pass — counts 8 at 5%, 0 at 90%, 0 at 100%; no slider freeze reported (S5) | Pending |
@@ -264,18 +264,48 @@ Stop turned camera indicator off: yes, manually to stop timer
 Record five minutes unplugged, battery 44% to 38% (six percentage points), inference time reported
 as 48 to 55 ms in the requested units, processing speed 10 to 10.5 FPS, unchanged subjective
 warmth, responsive controls and no reported freezes, warnings or errors. Low Power Mode is
-**unknown** because the template choice was not answered. Do not extrapolate battery life or
+initially unknown because the template choice was not answered; subsequently confirmed **off**
+by the user (S9). Do not extrapolate battery life or
 attribute the battery change solely to inference. Warmth is subjective, not a sensor measurement;
 start/end figures do not describe the intermediate performance distribution or establish thermal
 throttling. The reported 10.5 FPS is preserved despite the nominal 10 FPS scheduling cap; no
 on-device display capture or investigation establishes its cause or a sustained rate above the cap.
 
 The user answered yes to the camera indicator turning off, qualified by "manually to stop timer".
-Record that wording without inferring which timer/control was used; precise Stop sequence needs
-clarification. This does not invalidate the explicit Stop observations in S4/S7. This is a
+Record that wording without inferring which timer/control was used; the user subsequently confirmed the lab Stop button was **not** used (S9). Do not count S8
+as an explicit lab Stop test. This does not invalidate the explicit Stop observations in S4/S7. This is a
 user-reported five-minute usability pass, not a controlled battery/performance benchmark. No
 automated test was run for this observation. Permission denial/recovery, the S1/S2 pre-start
 report, network inspection and all iPad checks remain unresolved or pending.
+
+### S9 — iPhone permission denial/recovery and sustained-session clarification (2026-10-24)
+
+Source: **user-reported physical observation**, iPhone context and requested main-pinned preview
+as above. Exact on-device timestamp was not supplied.
+
+The user separately clarified: "Low power mode was off" for S8.
+
+Verbatim subsequent response:
+
+```text
+Did you use the lab’s Stop button at the end: no
+With permission denied, exact error: camera access was denied, allow in your browser settings then try again.
+Camera indicator stayed off when denied: yes
+After restoring Ask, prompt appeared before or after Start: yes
+After allowing, live preview and detections returned: yes
+```
+
+Record user-reported passes for an actionable permission-denied message, the visible camera
+indicator remaining off when denied, and live preview/detections returning after permission was
+allowed. Camera-track internals were not inspected. The answer "yes" to "before or after Start"
+does not establish prompt timing; the S1/S2 pre-start report remains unresolved and requires an
+explicit before/after answer. Do not infer that startup acquisition behavior is correct from the
+successful recovery.
+
+S8 Low Power Mode is now confirmed off. The lab Stop button was not used at the end of S8;
+therefore its indicator report is not evidence for an explicit lab Stop action. Earlier explicit
+Stop observations in S4/S7 remain recorded. No runtime changes or automated tests were made for
+these physical reports. Network inspection and all iPad checks remain pending.
 
 Append subsequent records with:
 
