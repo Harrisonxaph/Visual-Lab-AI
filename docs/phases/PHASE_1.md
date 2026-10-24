@@ -126,3 +126,11 @@ check `a5bb085`. The PR-head CI evidence is not relabelled as merge-commit CI ev
 not evidence that CI ran when the merge occurred.
 The docs/CI follow-up adds a push trigger limited to `main`, retaining PR checks without a second
 branch-push run on each PR update.
+
+## Current physical-device validation session
+
+See [the 2026-10-24 device ledger](../validation/PHASE_1_DEVICES_2026-10-24.md) for the
+exact current main/preview, CI provenance, device metadata and per-check results. The user
+authorized refreshing only the temporary preview for this session. Historical access constraints
+above describe the earlier state; current authentication/access and observations are recorded in
+the ledger. No physical-device pass is claimed until an observation is collected.
