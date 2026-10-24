@@ -44,7 +44,7 @@ that individual check. A pass must cite an observation in the session log below.
 | Check | iPhone | iPad |
 | --- | --- | --- |
 | Open the exact preview in Safari; authenticate successfully | Pass — user reports lab opens (S1) | Pending |
-| Before Start: camera inactive and no permission prompt | Fail — user reports automatic prompt and green indicator; cause unconfirmed (S1) | Pending |
+| Before Start: camera inactive and no permission prompt | Mixed — prompt only after Start in recovery test (S10); earlier pre-start prompt/indicator reports remain unexplained (S1/S2) | Pending |
 | Initial lab status is Idle | Pass — user-reported (S1) | Pending |
 | Deny camera access: actionable error and no active stream | Pass for reported error and inactive indicator (S9); track internals not inspected | Pending |
 | Restore permission and retry without stale error/hang | Pass — user reports preview and detections restored after allowing (S9) | Pending |
@@ -306,6 +306,18 @@ S8 Low Power Mode is now confirmed off. The lab Stop button was not used at the 
 therefore its indicator report is not evidence for an explicit lab Stop action. Earlier explicit
 Stop observations in S4/S7 remain recorded. No runtime changes or automated tests were made for
 these physical reports. Network inspection and all iPad checks remain pending.
+
+### S10 — iPhone permission-prompt timing clarification (2026-10-24)
+
+Source: **user-reported physical observation**, same iPhone and requested preview/build context.
+Asked whether the prompt appeared before Start or only after Start following restoration of Ask
+and reload, the user answered: "After start".
+
+This establishes a user-reported pass for permission-prompt timing in the S9 recovery sequence.
+It does not retroactively change the earlier S1/S2 reports or independently establish the camera
+indicator state before Start. The earlier discrepancy remains unexplained; no source-level cause
+has been reproduced and no runtime fix is claimed. Network inspection and iPad checks remain
+pending. Next: repeated lifecycle controls and navigation-away cleanup on the iPhone.
 
 Append subsequent records with:
 
