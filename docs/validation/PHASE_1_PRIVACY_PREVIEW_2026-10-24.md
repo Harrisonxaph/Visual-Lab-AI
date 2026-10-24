@@ -101,8 +101,8 @@ User-reported metadata carried forward, not independently inspected:
 | Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pending |
 | Cold-cache network/model failure and recovery | Pass for reported offline error/retry sequence — camera did not activate offline; explicit Start recovered at displayed 50 ms (P10–P12). Specific model-download failure/cache state unverified | Pending |
 | Feasible external camera interruption | Pending | Pending |
-| Live preview, detections, threshold, rotation and lifecycle under new policy | Pending | Pending |
-| Zoom, or explicit Not applicable reason | Pending | Pending |
+| Live preview, detections, threshold, rotation and lifecycle under new policy | Pass for user-reported behavior across P8/P9/P12/P13; effective deployed headers still uninspected | Pending |
+| Zoom, or explicit Not applicable reason | Pass for reported pinch zoom (P13); Safari Page Zoom setting not tested | Pending |
 | Physical-session network inspection | Pending | Pending |
 
 ## Session log
@@ -346,6 +346,30 @@ condition remain unverified; do not call it a specifically reproduced model-down
 No persistent-camera defect was established, and no runtime fix, automated test or redeployment
 was made. Next: feasible external interruption, then page zoom/remaining device smoke checks;
 untested interruption paths stay Pending or receive a justified Not applicable status.
+
+### P13 — iPhone rotation, pinch zoom and lifecycle smoke check (2026-10-24)
+
+Source: **user-reported physical observation**, same iPhone 15 Pro / iOS 27.0.1 / Safari and
+requested privacy preview/build above. Exact timestamp and actual threshold were not supplied.
+
+Verbatim response:
+
+```text
+Boxes aligned after both rotations: yes
+Page zoom: tested with pinch zoom, worked
+Pause and Resume worked: yes
+Stop turned camera indicator off: yes
+Any issue: no
+```
+
+Record reported passes for box alignment after landscape/portrait rotations, pinch zoom operation,
+Pause/Resume and visible camera indicator off after Stop, with no reported issue. Pinch zoom is
+the mechanism actually tested; Safari's Page Zoom setting and exact scale were not tested or
+supplied. This is physical UI evidence, not inspection of effective response headers or network
+privacy. No runtime fix, automated test or deployment was made. Remaining iPhone gaps (including
+actual diagnostic JSON, model-loading interruptions, feasible external interruption and
+network/header inspection) retain their recorded status. Next: iPad fresh-tab diagnostic gate on
+the same approved preview; do not reuse old-preview iPad observations as passes for this build.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
