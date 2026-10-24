@@ -1,6 +1,6 @@
 # Phase 1 privacy preview validation — 2026-10-24
 
-Status: **in progress; reported pre-Start camera activity requires diagnostic evidence; device identity unconfirmed**. This ledger is separate from the earlier
+Status: **in progress; latest prompt clarified as after Start; indicator/request timing and current device identity unconfirmed**. This ledger is separate from the earlier
 [device walkthrough](PHASE_1_DEVICES_2026-10-24.md). A clean retest cannot explain S1/S2.
 
 ## Authorization and exact build
@@ -139,6 +139,24 @@ start-click, camera-request/stack and settlement), permission prompt site identi
 confirmation of no Start interaction. No screenshots containing camera footage are requested.
 No runtime change, redeployment or speculative fix was made. Carried-forward device matrix rows
 remain Pending until session identity and records are clarified.
+
+### P2 — Permission prompt timing corrected (2026-10-24)
+
+Source: **user-reported clarification** of P1. After an explanation distinguishing expected
+post-Start permission from unexpected pre-Start permission, the user was asked whether the popup
+appeared before or after tapping Start and answered: "After tapping".
+
+Correct the P1 prompt interpretation: this session's permission prompt followed Start and is
+expected. P1 is **not evidence of a pre-Start prompt**. Preserve the original answers above as
+history, not a confirmed failure. The indicator and single request may have been observed after
+Start too, but their actual timing was not explicitly corrected; keep that distinction pending.
+The visible JSON and current device details remain unprovided. This clarification does not
+retroactively settle the separate historical S1/S2 reports. No runtime fix or redeployment was
+needed for the corrected prompt observation.
+
+Next: clarify whether the indicator/request were also observed after Start and whether the same
+iPhone/OS/browser is still in use, then obtain actual diagnostic entries before interpreting the
+sequence or marking the fresh-tab gate passed.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
