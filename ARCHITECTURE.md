@@ -129,3 +129,12 @@ Vercel's existing Git integration published previews of earlier phase commits. T
 `vercel.json` now disables automatic Git deployments for refs containing that configuration,
 consistent with the no-deployment-without-approval rule. Existing previews are not removed and
 project/production settings are not changed by this configuration addition.
+
+## Proposed Phase 1 privacy follow-up (not deployed)
+
+An early same-origin classic script activates camera-call instrumentation only for `?diag=1`;
+its bounded metadata log stays in page memory outside the application DOM. It observes this realm
+after installation and cannot cover earlier scripts, other tabs or saved native references.
+`vercel.json` defines a response CSP for documents and workers; local Vite preview reuses it for
+production verification. Same-origin connections remain allowed. See
+[privacy notes](docs/phases/PHASE_1_PRIVACY.md) for limitations and pending physical checks.

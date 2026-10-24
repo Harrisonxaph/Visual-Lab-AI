@@ -85,3 +85,5 @@ Vercel Git integration automatically created previews of earlier branch pushes. 
 disables automatic Git deployments for refs containing it; no existing preview is removed.
 No manual deployment or production change is authorized by this PR. The CI workflow runs on PR
 events, pushes limited to main, or manual dispatch. PR branch pushes do not also trigger push jobs.
+
+Phase 1 privacy follow-up: [diagnostics, policy limits and pending device checklist](docs/phases/PHASE_1_PRIVACY.md).

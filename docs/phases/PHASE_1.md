@@ -134,3 +134,8 @@ exact current main/preview, CI provenance, device metadata and per-check results
 authorized refreshing only the temporary preview for this session. Historical access constraints
 above describe the earlier state; current authentication/access and observations are recorded in
 the ledger. No physical-device pass is claimed until an observation is collected.
+
+## Pending privacy investigation
+
+See [diagnostic/CSP implementation and focused retest checklist](PHASE_1_PRIVACY.md).
+The proposed change is not deployed; existing physical results do not validate its CSP or diagnostics.

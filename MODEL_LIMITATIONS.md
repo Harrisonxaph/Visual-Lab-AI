@@ -56,3 +56,11 @@ The model is served locally after initial setup; no offline/PWA guarantee exists
 
 No tracking, identity persistence, active learning, training, retraining, ground-truth evaluation
 or model comparison is implemented. Corrections cannot improve this detector in Phase 1.
+
+## Proposed diagnostic and CSP change
+
+This branch adds opt-in local camera-call metadata diagnostics and a restrictive response CSP.
+It has not been deployed or checked on physical Safari devices. Same-origin requests are allowed,
+so CSP is not proof of no uploads. WASM execution requires the explicit `wasm-unsafe-eval` allowance;
+older browsers may reject compilation and must fail visibly. See
+[privacy investigation](docs/phases/PHASE_1_PRIVACY.md) for coverage and retest requirements.
