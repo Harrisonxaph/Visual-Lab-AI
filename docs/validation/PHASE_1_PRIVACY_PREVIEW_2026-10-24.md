@@ -93,7 +93,7 @@ User-reported metadata carried forward, not independently inspected:
 | Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Pending |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
 | Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending |
-| Background while permission/model loading pending | Pending | Pending |
+| Background while permission/model loading pending | Partial — left Safari with permission pending; popup persisted on return; post-Allow inference state unclear (P6) | Pending |
 | Permission-denied message, inactive indicator and recovery | Pending | Pending |
 | Navigate away and return inactive until Start | Pending | Pending |
 | Empty/plain surface and multiple objects | Pending | Pending |
@@ -206,6 +206,31 @@ video/detections; do not infer a loading cancellation sequence from those answer
 interaction was not supplied. Blank error wording is no additional detail, not a blanket error-free
 claim. No runtime failure was reproduced, fix made or preview redeployed. Next: background while
 the permission request is pending, where Safari permits it, retaining untestable steps as Pending.
+
+### P6 — iPhone background during permission request; completion state unclear (2026-10-24)
+
+Source: **user-reported physical observation**, same iPhone context as P4/P5 and requested preview
+above. Actual background duration and exact timestamp were not supplied.
+
+Verbatim response:
+
+```text
+Could leave Safari while permission was pending: yes
+Popup still present on return: yes
+Lab status after allowing access: still at prompt
+Did detections start automatically: following prompt
+Any error or unexpected behavior: no
+```
+
+Record that leaving Safari with permission pending was feasible, the permission popup remained on
+return and no error/unexpected behavior was reported. Do not interpret "still at prompt" as a
+lab state, or "following prompt" as either explicit Resume or automatic inference. Whether Allow
+was completed, whether labelled detections then started without Resume, and the displayed lab
+status are unclear. Background-startup completion remains **partial/pending clarification**, not
+passed. If detections began after Allow without Resume, investigate against the documented startup
+pause requirement; do not claim a source-level reproduction or fix from this ambiguous wording.
+Model-loading background behavior remains untested. No runtime changes or deployments were made.
+Next: obtain the precise post-Allow lab state and whether Resume was needed.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
