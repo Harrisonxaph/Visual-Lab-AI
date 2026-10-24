@@ -98,7 +98,7 @@ User-reported metadata carried forward, not independently inspected:
 | Permission-denied message, inactive indicator and recovery | Pending | Pending |
 | Navigate away and return inactive until Start | Pending | Pending |
 | Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pending |
-| Private Browsing operation; distinguish actual storage restriction | Pending | Pending |
+| Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pending |
 | Cold-cache network/model failure and recovery | Pending | Pending |
 | Feasible external camera interruption | Pending | Pending |
 | Live preview, detections, threshold, rotation and lifecycle under new policy | Pending | Pending |
@@ -271,6 +271,29 @@ must not be inferred merely from use of a private tab.
 
 User preference for subsequent guidance: include the current Vercel preview link with every test
 request so it remains easy to find.
+
+### P9 — iPhone Private Browsing operation (2026-10-24)
+
+Source: **user-reported physical observation**, same iPhone context and requested privacy preview.
+Exact on-device timestamp and independent browser mode inspection were not supplied.
+
+Verbatim response:
+
+```text
+Preview opened in Private Browsing: yes
+Live video and detections worked: yes
+Threshold slider worked: yes
+After reload, Start worked again: yes
+Stop turned camera indicator off: yes
+Any error: no
+```
+
+Record user-reported passes for preview operation in Private Browsing, live video/detections,
+threshold control, startup after reload and visible camera indicator off after Stop, with no
+reported errors. Private Browsing does not establish actual storage access denial; that physical
+restriction case remains untested and separate from automated mocked-storage evidence. No runtime
+fix, automated test or deployment was made. Next: attempt cold-session model/network failure if
+feasible, retaining cached-success cases as untested failure paths rather than failures.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
