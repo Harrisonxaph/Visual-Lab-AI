@@ -1,7 +1,7 @@
 # Phase 1 physical-device validation — 2026-10-24
 
 Status: **in progress; iPhone and iPad physical observations recorded; unanswered checks and earlier iPhone pre-start report remain unresolved**.
-This is a results ledger, not evidence that Safari or physical cameras work.
+This ledger contains user-reported physical observations, not a complete Safari/device validation.
 
 ## Scope and build
 
@@ -12,6 +12,9 @@ This is a results ledger, not evidence that Safari or physical cameras work.
 - Vercel reports **READY** and the expected source SHA; this is service evidence, not a device pass.
 - Read-only before/after comparison confirmed project deployment-protection settings unchanged.
 - Authentication: existing Vercel sign-in. No public share link or protection change is requested.
+- Preview caveat: device results come from an authenticated Vercel preview of the application
+  build, not the production deployment. Preview-specific scripts (for example a toolbar) may
+  differ from production; injection has not been confirmed or excluded.
 - Validation branch: `validation/phase-1-physical-devices`.
 - Reference checklist: [Phase 1 notes](../phases/PHASE_1.md).
 
@@ -23,7 +26,8 @@ deployments must remain unchanged. No merge or Phase 2 is authorized.
 CI success and Vercel deployment status are automated/service evidence, not physical-device evidence.
 Earlier Chromium tests used a synthetic camera stream and do not establish Safari support.
 Physical results will be labelled **user-reported** unless directly observed. The initial iPhone UI/permission/indicator observations below were supplied by the user. Displayed performance figures and subsequent control/layout observations are recorded below. Complete
-permission prompt text, network inspection and iPad test observations have not been supplied.
+permission prompt text and physical-session network inspection have not been supplied. iPad
+observations and clarifications are recorded in S12–S17.
 Do not mark untested cases passed or infer network behavior from a camera indicator.
 
 ## User-reported devices
@@ -542,6 +546,41 @@ Append subsequent records with:
   sensor measurement is implied.
 - Pass / Fail / Pending / Blocked / Not applicable (reason required for the last two).
 - Evidence source: user-reported physical observation / direct observation / automated.
+
+## Review follow-up — ledger corrections and preview inspection (2026-10-24)
+
+The user supplied a further Claude review. Physical validation remains **in progress**, with the
+review's unresolved device checks and privacy questions retained. No new device pass is inferred.
+
+### Rolling FPS interpretation
+
+Source inspection of `ProcessingMeter.complete` in `src/detections.ts` shows completed frames
+counted over a rolling two-second window (elapsed session time initially). `src/lab.ts` spaces
+inference **starts** by at least 100 ms. Variable inference/transfer completion delays can put
+21 completions within a two-second window even though starts are spaced at least 100 ms apart;
+21 / 2 = 10.5 FPS. Window boundaries and startup denominator also affect the displayed rate.
+Thus S8's reported 10.5 FPS is compatible with this estimator and is not proof of sustained
+inference starts above the nominal 10 FPS cap. This explains a possible mechanism from the code,
+not a reconstruction of that device session or a newly measured result.
+
+### Read-only preview HTML inspection
+
+An ordinary unauthenticated HTTPS GET of the recorded preview followed a redirect to
+`vercel.com/login` and returned HTTP 200 for the **Vercel login page**, not the lab HTML. The
+scripts in that response belong to the login page and are not evidence of scripts injected into
+the lab. Authenticated lab HTML inspection remains **pending**. No protection setting, sharing
+link, bypass credential, deployment or production configuration was changed. Source/build HTML
+alone would not establish which scripts Vercel adds to an authenticated response.
+
+### Scope and privacy-policy limitation
+
+No diagnostic build or CSP change was implemented or deployed in this follow-up. Those require
+a separately scoped implementation and verification. A `connect-src 'self'` policy would restrict
+cross-origin connections but still permit same-origin requests, including potential uploads.
+It cannot establish that frames cannot be uploaded. Script, worker and WebAssembly directives
+must also be tested against the actual runtime; no CSP enforcement or device compatibility is
+claimed here. A future camera-call wrapper can observe calls after installation in its own
+execution context; it must not be described as covering earlier scripts or every frame/context.
 
 ## Current gate
 
