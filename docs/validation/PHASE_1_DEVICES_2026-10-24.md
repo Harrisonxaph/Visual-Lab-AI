@@ -1,6 +1,6 @@
 # Phase 1 physical-device validation — 2026-10-24
 
-Status: **in progress; first iPhone observations received; unexpected pre-start camera activity under investigation**.
+Status: **in progress; iPhone metrics and lifecycle observations received; pre-start camera report and remaining device checks unresolved**.
 This is a results ledger, not evidence that Safari or physical cameras work.
 
 ## Scope and build
@@ -50,11 +50,12 @@ that individual check. A pass must cite an observation in the session log below.
 | Restore permission and retry without stale error/hang | Pending | Pending |
 | Grant permission: actual live camera preview | Pending | Pending |
 | Model loads; supported objects show labels, boxes and scores | Pending | Pending |
-| Inference time and processing FPS shown; record actual values | Pending | Pending |
+| Inference time and processing FPS shown; record actual values | Pass — displayed 48 ms / 10 FPS, user-reported S4 | Pending |
 | Threshold 5%–100% changes visible results | Pending | Pending |
 | Empty scene and multiple objects handled | Pending | Pending |
-| Pause clears results, retains preview; Resume updates | Pending | Pending |
-| Stop releases camera; repeat Start/Pause/Resume/Stop | Pending | Pending |
+| Pause clears results, retains preview; Resume updates | Pass — user confirms described Pause and resumed detections (S4) | Pending |
+| Stop releases camera (visible indicator off) | Pass — user reports green indicator off (S4); track internals not inspected | Pending |
+| Repeated Start/Pause/Resume/Stop cycles | Pending | Pending |
 | Stop during permission/model loading does not activate later | Pending | Pending |
 | Portrait/landscape box alignment, resizing and zoom | Pending | Pending |
 | Touch controls and scrolling remain responsive | Pending | Pending |
@@ -136,6 +137,35 @@ sequence, displayed objects/labels/boxes, timing/FPS, or lifecycle/rotation/priv
 retroactively clear the S1/S2 pre-start report or mark individual unspecified checks passed.
 The requesting origin and earlier prompt choice remain unknown. Continue with concrete observable
 checks while keeping the startup report unresolved pending clarification.
+
+### S4 — iPhone metrics and lifecycle controls (2026-10-24)
+
+Source: **user-reported physical observation**, iPhone context as above. Preview/build context is
+the requested main-pinned deployment; no on-device address/commit inspection or exact timestamp
+was supplied.
+
+Verbatim response:
+
+```text
+Labelled boxes visible: yes/no
+Inference time: 48ms
+Processing speed: 10FPS
+Pause behaved as described: yes
+Resume restored detections: yes
+Stop turned the camera indicator off: yes
+```
+
+Record displayed values **48 ms inference time** and **10 FPS processing speed** as a single
+reported observation. No sampling interval, timing distribution, sustained rate, battery or heat
+measurement was supplied. This is not a benchmark, accuracy result or thermal evaluation.
+
+The user confirms the described Pause behavior (results clear while preview stays live), Resume
+restoring detections, and the green camera indicator going off after Stop. These are user-reported
+passes for that cycle. Camera-track internals and repeated cycles were not inspected or tested.
+"Labelled boxes visible: yes/no" was left as a template choice and is **unanswered**; resumed
+detections are reported, but labelled-box visibility/class/score correctness is not inferred.
+The S1/S2 pre-start prompt report remains unresolved. Next: confirm labelled boxes and test the
+confidence threshold, keeping unperformed iPad/network/sustained/orientation checks pending.
 
 Append subsequent records with:
 
