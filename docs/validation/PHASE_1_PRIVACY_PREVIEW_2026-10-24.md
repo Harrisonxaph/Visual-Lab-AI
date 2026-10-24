@@ -99,7 +99,7 @@ User-reported metadata carried forward, not independently inspected:
 | Navigate away and return inactive until Start | Pending | Pending |
 | Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pending |
 | Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pending |
-| Cold-cache network/model failure and recovery | Partial — offline worker-stop error reported; failed resource, camera cleanup and recovery details unconfirmed (P10) | Pending |
+| Cold-cache network/model failure and recovery | Partial — offline worker-stop error; user clarifies camera did not activate and inference restarted; failed resource and recovery trigger unconfirmed (P10/P11) | Pending |
 | Feasible external camera interruption | Pending | Pending |
 | Live preview, detections, threshold, rotation and lifecycle under new policy | Pending | Pending |
 | Zoom, or explicit Not applicable reason | Pending | Pending |
@@ -318,6 +318,19 @@ state. Error cleanup and post-reconnection recovery remain **unconfirmed**. This
 investigation if camera access remained active after the error, but no source-level failure is
 reproduced from the present wording. No fix, automated test or redeployment was made. Next: clarify
 indicator state after the error and whether recovery required Start after reconnection.
+
+### P11 — Offline camera wording corrected; inference restart reported (2026-10-24)
+
+Source: **user-reported clarification**, same iPhone and requested preview context.
+Verbatim: "Inference started again at 50. Camera did not activate, I meant".
+
+Correct P10's ambiguous camera wording: the user meant the camera **did not activate**, not that
+it remained active or that the image froze. No independent track inspection or explicit indicator
+state was supplied; do not fabricate one. Record that inference restarted in the reconnection
+context, but whether restart was automatic or followed Start/reload is still unknown. "At 50"
+has no specified unit and must not be recorded as 50 ms, 50 FPS or 50% threshold without
+clarification. The failed offline resource remains unknown. No confirmed persistent-camera defect
+is established by this corrected report. No runtime fix, test or deployment was made.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
