@@ -4,7 +4,7 @@ import { captureFrame } from "./capture";
 import { visibleDetections, formatScore } from "./detections";
 import { WorkerDetector } from "./inference/client";
 import { MODEL } from "./inference/types";
-import { modelDetails } from "./model-info";
+import { modelDetails, formatPercentage } from "./model-info";
 import { Lab, type Snapshot } from "./lab";
 import { drawDetections } from "./overlay";
 const icon = (name: string, size = 20) => {
@@ -52,7 +52,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
           <div class="metrics"><div><span class="metric-label">${icon("pulse", 15)} Inference time</span><strong id="inference-time">—<small> ms</small></strong></div><div><span class="metric-label">Processing speed</span><strong id="processing-fps">—<small> FPS</small></strong></div><div><span class="metric-label">Visible detections</span><strong data-testid="detection-count">0</strong></div></div>
         </section>
         <aside class="inspector">
-          <section class="panel threshold-panel" aria-labelledby="threshold-title"><div class="panel-heading"><h2 id="threshold-title">Confidence threshold</h2>${icon("scan", 17)}</div><div class="threshold-body"><div class="threshold-value"><strong id="threshold-value">50<span>%</span></strong><span>Minimum score<br>to display</span></div><label class="sr-only" for="threshold">Confidence threshold</label><input id="threshold" type="range" min="${MODEL.floor}" max="1" step="0.01" value="0.5"><div class="range-ends"><span>${MODEL.floor * 100}% · More results</span><span>100% · Fewer results</span></div><p>Move the threshold to investigate which detections stay and which disappear.</p></div></section>
+          <section class="panel threshold-panel" aria-labelledby="threshold-title"><div class="panel-heading"><h2 id="threshold-title">Confidence threshold</h2>${icon("scan", 17)}</div><div class="threshold-body"><div class="threshold-value"><strong id="threshold-value">50<span>%</span></strong><span>Minimum score<br>to display</span></div><label class="sr-only" for="threshold">Confidence threshold</label><input id="threshold" type="range" min="${MODEL.floor}" max="1" step="0.01" value="0.5"><div class="range-ends"><span>${formatPercentage(MODEL.floor)} · More results</span><span>100% · Fewer results</span></div><p>Move the threshold to investigate which detections stay and which disappear.</p></div></section>
           <section class="panel results-panel" aria-labelledby="results-title"><div class="panel-heading"><h2 id="results-title">Detected objects</h2><span class="subtle-tag">THIS FRAME</span></div><div data-testid="detections" class="detections"><div class="empty-results">${icon("layers", 28)}<strong>Waiting to observe</strong><p>Detected objects and their scores<br>will appear here.</p></div></div></section>
           <div class="privacy-note">${icon("shield", 20)}<p><strong>Private by design</strong>Frames stay in your browser. No image uploads, recordings or paid APIs. Model assets download before inference.</p></div>
         </aside>

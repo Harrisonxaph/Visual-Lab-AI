@@ -20,7 +20,8 @@ The user-supplied Phase 1 review reports successful EfficientDet-Lite2 float32 /
 in the same worker without code changes: both cat and dog were detected in the fixed image.
 The review's single cold runs were 760 ms (Lite2) and 316 ms (Lite0), on Chromium 153 as reported.
 This is compatibility evidence only, not a benchmark or evidence of comparative accuracy.
-See EXPERIMENTS.md for provenance and missing hardware/checksum details. Lite0 remains the
+See EXPERIMENTS.md for provenance and the independently verified versioned-artifact checksum.
+The review run’s hardware details and original artifact checksum were not supplied. Lite0 remains the
 shipped default; no Lite2 asset, model selector or comparison lab is added to Phase 1. No Lite2
 claim is made for Safari, iOS, other devices, sustained performance or accuracy.
 

@@ -1,9 +1,13 @@
 # Phase 1 implementation and testing
 
-Implemented on `phase-1/live-object-detection`; baseline main `cafa8c7`. No merge or explicit deployment command.
+Implemented on `phase-1/live-object-detection`; baseline main `cafa8c7`.
+**Merged into main in [PR #1](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1) on 2026-10-23
+at 23:17:42 UTC**, merge commit `a5bb085627c226b4c4a9bd768dfa12ba6133c408`.
+This merge preceded the recommended real iPhone/iPad testing. The user reported the merge;
+no device-test completion or waiver is inferred. No explicit deployment command was issued.
 The existing Vercel Git integration did publish branch previews; see the review follow-up below.
 The designated review has now been supplied through the user; fixes and response are recorded
-in docs/reviews/PHASE_1_RESPONSE.md. Real-device testing and merge approval remain pending.
+in docs/reviews/PHASE_1_RESPONSE.md. Real-device testing remains pending. Merge approval for any follow-up PR is separate.
 
 ## Delivered
 
@@ -71,30 +75,54 @@ Controlled model comparison remains Phase 3. No accuracy benchmark, tracking, re
 training, PWA, offline guarantee or advanced module is included. Vendor module-worker compatibility
 adaptations need device scrutiny. First load requires asset acquisition; slow devices can time out.
 
-Recommended next action: inspect the review fixes and remote CI, then complete real-device testing above. Resolve material findings before requesting approval to merge. Do not
-start Phase 2, merge or deploy merely because Phase 1 tests pass.
+Recommended next action: inspect the review fixes and remote CI, then complete real-device testing above. Write up device results and fix material findings before requesting approval to start Phase 2.
+Opening a follow-up PR does not authorize merging it or deploying the app.
 
 ## Pull request and supplemental review
 
-Draft PR: https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1
+Merged PR: https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1 (2026-10-23; commit `a5bb085`).
 Fresh Codex audit found a startup/background pause gap and noted stale-worker errors and transient
 aspect mismatch. Regression tests reproduced each; fixes preserve startup suspension, ignore
 obsolete worker errors and clear mismatched boxes on video resize. Full local suites passed after
 fixes. That audit was not Claude review. The subsequent user-supplied designated review is now recorded
-in docs/reviews/PHASE_1_RESPONSE.md; merge approval remains pending.
+in docs/reviews/PHASE_1_RESPONSE.md; real-device validation remains pending despite the merge.
 
 ## Review follow-up and device gate
 
 The supplied review's findings are tracked in docs/reviews/PHASE_1_RESPONSE.md. Model configuration
 is now injected, FPS uses a 2-second rolling window, externally ended cameras show reconnect
 guidance, score display is capped at 99%, and only drawable results contribute to counts.
-CI uses PR events/manual dispatch only. Vercel automatic Git deployments are disabled in vercel.json
-for refs containing that config; earlier previews remain untouched. No merge or manual deployment
-is authorized.
+CI runs on PR events, pushes limited to main, and manual dispatch. Vercel automatic Git deployments are disabled in vercel.json
+for refs containing that config; earlier previews remain untouched. The completed Phase 1 merge is recorded above;
+any further merge or manual deployment still requires approval.
 
 | Required physical-device check | Status |
 | --- | --- |
-| Real iPhone Safari camera/inference/rotation/background checklist | Not run: no physical device attached |
-| Real iPad Safari camera/inference/rotation/background checklist | Not run: no physical device attached |
+| Real iPhone Safari camera/inference/rotation/background checklist | Pending: no HTTPS access to the merged build |
+| Real iPad Safari camera/inference/rotation/background checklist | Pending: no HTTPS access to the merged build |
 
-Phase 2 must not start before these checks and the user's merge decision.
+Phase 2 must not start until device results are written up, resulting issues are fixed, and
+the user explicitly authorizes Phase 2. The earlier merge does not waive this gate.
+
+## Physical-device access status (2026-10-24)
+
+User-reported devices: iPhone 15 Pro / iOS 27.0.1 / Safari, and iPad Pro 11-inch (3rd generation) /
+iPadOS 26.6.2 / Safari. OS versions are recorded as supplied, not independently inspected.
+No camera, permission, alignment, performance, heat, battery or privacy observations have been
+collected from these devices. The user has no computer available for local HTTPS serving and no
+HTTPS URL for the merged build. Older existing previews predate the final fixes and cannot
+validate merged main. All physical-device results remain pending, not failed.
+
+Testing needs a local HTTPS origin accessible from the devices (with a trusted certificate) or an
+explicitly approved temporary preview. Neither an HTTP LAN URL nor an old preview satisfies the
+merged-build camera test. No preview deployment is authorized by this documentation update.
+
+## Merge-commit CI coverage
+
+The original workflow ran on PR events/manual dispatch only, so merging PR #1 did not automatically
+check `a5bb085`. The PR-head CI evidence is not relabelled as merge-commit CI evidence. A test-only
+[manual main run on 2026-10-24](https://github.com/Harrisonxaph/Visual-Lab-AI/actions/runs/40081289803)
+**passed** for exact commit `a5bb085627c226b4c4a9bd768dfa12ba6133c408`. This is a later check,
+not evidence that CI ran when the merge occurred.
+The docs/CI follow-up adds a push trigger limited to `main`, retaining PR checks without a second
+branch-push run on each PR update.
