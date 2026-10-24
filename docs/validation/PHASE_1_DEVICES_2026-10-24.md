@@ -126,6 +126,17 @@ live camera footage or personal information; alternatively the complete website-
 Do not infer consent, origin, live-stream acquisition, upload or root cause from the partial wording.
 No application fix has been made without a reproducible source-level cause.
 
+### S3 — General running-status update (2026-10-24)
+
+Source: **user-reported physical observation**, iPhone context as in S1/S2.
+Verbatim: "It is running as expected".
+
+Record this as a positive overall running-status report. It does not specify the Start/permission
+sequence, displayed objects/labels/boxes, timing/FPS, or lifecycle/rotation/privacy checks. Do not
+retroactively clear the S1/S2 pre-start report or mark individual unspecified checks passed.
+The requesting origin and earlier prompt choice remain unknown. Continue with concrete observable
+checks while keeping the startup report unresolved pending clarification.
+
 Append subsequent records with:
 
 - Device, date/time and exact preview/build.
