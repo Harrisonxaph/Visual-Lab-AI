@@ -143,3 +143,8 @@ PR #4 is merged. Its exact merge commit `edea505` has a single authorized tempor
 READY according to Vercel. Production/protection were not changed. Effective authenticated
 response headers and new physical validation remain pending; see the
 [privacy-preview ledger](docs/validation/PHASE_1_PRIVACY_PREVIEW_2026-10-24.md).
+
+The separate offline-message follow-up uses WorkerDetector's ready state to distinguish
+initialization errors from active-inference worker crashes. It changes guidance only, keeps
+reported detector detail and existing cleanup/retry semantics, and does not add connectivity
+probes or automatic retry. See [follow-up notes](docs/phases/PHASE_1_OFFLINE_ERROR.md).
