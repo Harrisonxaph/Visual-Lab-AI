@@ -62,8 +62,8 @@ User-reported device metadata carried forward; confirm changes before recording 
 
 | Check | iPhone | iPad |
 | --- | --- | --- |
-| Initialization failure reproduced offline | Pass — user-reported offline result with initialization wording supplied (O2/O3); failed resource unverified | Pending |
-| Exact actionable initialization error wording | Pass — supplied wording matches revised message (O3) | Pending |
+| Initialization failure reproduced offline | Pass — user-reported offline result with initialization wording supplied (O2/O3); failed resource unverified | Pass for reported same initialization error in requested offline sequence (O4); failed resource unverified |
+| Exact actionable initialization error wording | Pass — supplied wording matches revised message (O3) | Pass by user reference to same revised iPhone message (O4), not a fresh transcription |
 | Camera indicator and preview state after failure | Pass for reported green indicator off (O2); preview state not supplied | Pending |
 | Remains stopped after reconnecting, before Start | Pass — user-reported (O2) | Pending |
 | Explicit Start restores live video/detections | Pass — user-reported (O2) | Pending |
@@ -174,6 +174,18 @@ were not inspected; no browser incompatibility or specific model-download failur
 This is not an independent on-device build inspection or a guarantee across Safari versions.
 No runtime fix, automated test or deployment was made. Next: the same focused check on iPad,
 without replaying unrelated earlier tests.
+
+### O4 — iPad same error wording reported by reference (2026-10-25)
+
+Source: **user-reported physical observation**, following the requested iPad Pro 11-inch
+(3rd generation) / iPadOS 26.6.2 / Safari offline sequence. Verbatim: "iPad displayed the same".
+
+Record the iPad's initialization message as matching the revised iPhone wording in O3 **by user
+reference**, not a fresh verbatim transcription or independent screen inspection. The failed
+resource and network/cache conditions remain unverified. Do not interpret "the same" as confirming
+all other requested fields: camera indicator after failure, state before Start after reconnecting
+and successful explicit retry remain Pending until clarified. No runtime fix, test or deployment
+was made. Next: confirm those three observable iPad results without requiring another full run.
 
 For subsequent records, preserve user-reported results, device/date/time if supplied, exact
 preview/commit, error text and unanswered fields. Mark unperformed steps Pending. Reproduce
