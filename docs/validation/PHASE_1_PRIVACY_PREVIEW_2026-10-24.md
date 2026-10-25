@@ -88,9 +88,9 @@ User-reported metadata carried forward, not independently inspected:
 
 | Check | iPhone | iPad |
 | --- | --- | --- |
-| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Partial — Idle/indicator off reported; pasted log contains no camera-request, blocked Vercel script and later Start; prompt timing still unclear (P14/P15) |
+| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Pass for user-reported pre-Start Idle/indicator off and prompt only after Start; supplied log has no camera-request before Start and records blocked Vercel script (P14–P16); coverage limits apply |
 | Non-diagnostic fresh-tab comparison | Pending | Pending |
-| Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Pending |
+| Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Partial — prompt after Start confirmed (P16); site identity and successful acquisition unprovided |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
 | Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending |
 | Background while permission pending | Pass — popup persisted on return; manual Resume required for inference, user-reported (P6/P7) | Pending |
@@ -445,6 +445,21 @@ The user has not yet answered whether the permission popup was before or after t
 click. That remains unresolved; there is also no post-Start camera-request or settlement record
 to establish acquisition. Next: clarify prompt timing relative to Start and, if needed, whether
 video/detections began. No runtime fix, test or deployment was made.
+
+### P16 — iPad prompt timing corrected to after Start (2026-10-25)
+
+Source: **user-reported clarification**, same iPad and requested privacy preview context.
+Asked whether the popup appeared before or after the logged Start tap, and whether live
+video/detections then appeared, the user answered: "After".
+
+This explicitly corrects P14's prompt timing: permission appeared **after Start**, as expected.
+Combined with reported Idle/indicator off and the supplied log lacking a pre-Start camera-request,
+record a user-reported fresh-tab gate pass within the diagnostic coverage limits. P14 is not a
+confirmed pre-Start permission failure. The separate live-video/detections question was not
+answered; successful acquisition, prompt site identity and post-Start camera records remain
+unprovided. A blocked Vercel script remains evidenced by P15, without any claim about historical
+camera causation. No runtime change, test or deployment was made. Next: confirm post-Allow live
+video/detections, then continue iPad startup-interruption checks.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
