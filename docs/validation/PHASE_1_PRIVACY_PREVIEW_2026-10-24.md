@@ -88,7 +88,7 @@ User-reported metadata carried forward, not independently inspected:
 
 | Check | iPhone | iPad |
 | --- | --- | --- |
-| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Partial — Idle/indicator off reported; prompt and one request reportedly before Start, diagnostic JSON/timing clarification needed (P14) |
+| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Partial — Idle/indicator off reported; pasted log contains no camera-request, blocked Vercel script and later Start; prompt timing still unclear (P14/P15) |
 | Non-diagnostic fresh-tab comparison | Pending | Pending |
 | Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Pending |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
@@ -397,6 +397,54 @@ is **unanswered**, not a report of no violations. This is a possible gate discre
 confirmed source-level failure or an explanation of historical S1/S2. Next: explain the event
 field and obtain visible JSON without reloading/clearing, plus prompt site identity and explicit
 Start timing. No runtime change, test or deployment was made.
+
+### P15 — iPad pasted diagnostic entries: blocked Vercel script, later Start (2026-10-25)
+
+Source: **user-supplied diagnostic text from the physical session**, not independently retrieved
+or inspected. Same iPad context and requested preview/build as P14. User pasted three entries:
+
+```json
+[
+  {
+    "event": "installed",
+    "at": "2026-10-25T00:26:51.360Z",
+    "elapsedMs": 0,
+    "active": false,
+    "hasBeenActive": false,
+    "context": "top-level page"
+  },
+  {
+    "event": "csp-violation",
+    "at": "2026-10-25T00:26:51.363Z",
+    "elapsedMs": 3,
+    "directive": "script-src-elem",
+    "blockedAddress": "https://vercel.live/_next-live/feedback/feedback.js",
+    "disposition": "enforce",
+    "trusted": true
+  },
+  {
+    "event": "start-click",
+    "at": "2026-10-25T00:28:15.580Z",
+    "elapsedMs": 84222,
+    "trusted": true,
+    "active": true,
+    "hasBeenActive": true
+  }
+]
+```
+
+The pasted text establishes reported installation and a browser-trusted enforcing script-src-elem
+violation naming Vercel's feedback script at +3 ms, followed by a trusted Start click at +84,222 ms.
+There is **no camera-request entry in the supplied text**, so P14's count of one cannot currently
+be treated as evidence of a camera request. Do not infer omitted entries or that this was the full
+session log. This is evidence of a blocked script attempt in the present iPad session, not proof
+that the script requested camera access, caused historical S1/S2, or ran in the earlier preview.
+It does not replace authenticated HTML inspection or prove all deployed asset headers.
+
+The user has not yet answered whether the permission popup was before or after the actual Start
+click. That remains unresolved; there is also no post-Start camera-request or settlement record
+to establish acquisition. Next: clarify prompt timing relative to Start and, if needed, whether
+video/detections began. No runtime fix, test or deployment was made.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
