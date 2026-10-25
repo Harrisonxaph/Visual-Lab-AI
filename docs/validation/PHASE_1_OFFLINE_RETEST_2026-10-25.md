@@ -198,6 +198,23 @@ Combined O4/O5 confirms the same revised initialization message by reference plu
 camera-off state and explicit recovery on iPad. No track/network inspection or new runtime fix,
 automated test or deployment was performed.
 
+### O6 — Plain-link fresh-tab check without diagnostics (2026-10-25)
+
+Source: **user-reported physical observation**, on the preview of source `063a97a`
+(https://visual-lab-2co40dr92-harrisonjbailey-3896.vercel.app), opened **without** `?diag=1`.
+Requested steps: close all Safari tabs; open the plain link; before tapping anything, check Idle,
+camera indicator off and no permission prompt; tap Start and allow; confirm the prompt appeared only
+after Start and that live video and detections appeared; tap Stop and confirm the indicator turned off.
+
+Verbatim response: "Everything worked as expected, no errors."
+
+Record a user-reported pass for the non-diagnostic fresh-tab comparison: Idle before Start, indicator
+off before Start, prompt only after Start, live video and detections, and indicator off after Stop.
+The reply did not specify which device(s) were used, did not answer each step separately and does
+not confirm that all other tabs were closed. The diagnostics were not loaded, so there is no
+camera-request record. This is the comparison requested in P1/P27, not an explanation of S1/S2 or
+evidence about network traffic. No runtime change, test or deployment was made.
+
 ## Focused retest checkpoint
 
 Both devices have user-reported passes for the requested offline initialization error/retry
@@ -208,6 +225,10 @@ This completes the **focused guided retest**, not full Phase 1 validation or ind
 inspection. The exact failed resource/cache state remains unknown; no specific model-download
 failure or browser incompatibility is inferred. The separate preview/context limitations and
 unaccepted gaps above remain unchanged. No additional deployment or Phase 2 is authorized.
+
+O6 adds a user-reported non-diagnostic comparison pass on the same source preview. Its device
+identity and tab-closure limitations are retained; it is not a second per-device pass or Phase 2
+evidence, and supplies no camera-request/network record.
 
 For subsequent records, preserve user-reported results, device/date/time if supplied, exact
 preview/commit, error text and unanswered fields. Mark unperformed steps Pending. Reproduce
