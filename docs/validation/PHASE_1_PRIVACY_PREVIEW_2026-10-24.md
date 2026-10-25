@@ -105,6 +105,12 @@ User-reported metadata carried forward, not independently inspected:
 | Zoom, or explicit Not applicable reason | Pass for reported pinch zoom (P13); Safari Page Zoom setting not tested | Pass for reported pinch zoom (P20); Safari Page Zoom setting not tested |
 | Physical-session network inspection | Pending | Pending |
 
+Supplementary comparison: [O6 in the later focused ledger](PHASE_1_OFFLINE_RETEST_2026-10-25.md)
+records a user-reported plain-link pass on source `063a97a` without diagnostics. Device(s) were
+not specified and all-tab closure was not confirmed. The per-device comparison rows above remain
+unassigned; do not convert this one unspecified report into two device passes or a request log.
+P1/P27 and their original evidence are preserved below.
+
 ## Session log
 
 ### P1 — Reported pre-Start activity; changed device details unknown (2026-10-24)

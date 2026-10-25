@@ -51,6 +51,9 @@ The test suite combines mocked lifecycle/error tests with **actual CPU/WASM infe
 a fixed test image. Production smoke tests exercise the built worker with GPU acceleration disabled.
 CI runs these checks on PRs. [Manual device checks and results](docs/phases/PHASE_1.md) distinguish
 simulated camera tests from real hardware testing. A build is local verification, not deployment.
+The [recorded plain-link comparison](docs/validation/PHASE_1_OFFLINE_RETEST_2026-10-25.md#o6--plain-link-fresh-tab-check-without-diagnostics-2026-10-25)
+used https://visual-lab-2co40dr92-harrisonjbailey-3896.vercel.app without `?diag=1` (source `063a97a`).
+It is a user-reported Phase 1 pass with device/tab-closure limits, not a Phase 2 test.
 
 ## Compatibility and interpretation
 

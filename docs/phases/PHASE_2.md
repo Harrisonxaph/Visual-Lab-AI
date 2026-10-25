@@ -74,5 +74,6 @@ no proposed runtime tests were executed.
 [Findings 1–3 and optional follow-ups](../reviews/PHASE_2_PLANNING_RESPONSE.md) are recorded with
 proposed fixes: distinct tracking floor, confirmed-only IDs/churn fixture, mandatory Task 3 review
 stop, localStorage, paired phone layout, on-video segment notices and diagnostic Copy log. The
-optional Checks-section plain-link wording still needs exact clarification. All changes remain
+user-supplied O6 plain-link comparison is now preserved in the Phase 1 focused ledger and linked
+from README Checks, with its device/tab-closure limits; it is not Phase 2 evidence. All changes remain
 planning only; no proposed test has been executed as a Phase 2 runtime test.
