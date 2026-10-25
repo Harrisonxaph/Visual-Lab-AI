@@ -7,7 +7,7 @@ to bypass the later Task 3 review stop.
 | Finding | Planning correction |
 | --- | --- |
 | 1. Low-score track pressure | Added TrackerConfig.trackingFloor default .25, distinct from .05 model floor and display slider. Both association and births require the tracking floor; raw lower-score results remain honestly inspectable. Internal tentative keys never consume public IDs; IDs allocate on two-match confirmation. Counts expose below-floor exclusions, candidate churn, public IDs and capacity. Above-floor false tracks remain possible. |
-| 2. Late lifecycle risk / incremental UI | Same Phase 2 branch/PR, mandatory push-and-review stop after Task 3 with exact SHA, Phase 1/lifecycle regressions and CI. No Tasks 4–6 until checkpoint approval is supplied; CI alone/self-review is not that approval. Task 3 already delivers tracked video/list. Phone paired-row order: video/list, inspector/chart, then explorer, notes, benchmark; readable side-by-side minima with stacking below them and 44px controls. |
+| 2. Late lifecycle risk / incremental UI | Same Phase 2 branch/PR, mandatory push-and-review stop after Task 3 with exact SHA, Phase 1/lifecycle regressions and CI. No Tasks 4–6 until checkpoint approval is supplied; CI alone/self-review is not that approval. Task 3 already delivers tracked video/list. Reading order: video/list, inspector/chart, then explorer, notes, benchmark. Phone-width viewports (≤600 CSS px) stack full-width views; wider screens pair only with ≥616 CSS px available content and readable minimum widths. Controls remain ≥44px. |
 | 3. Storage implementation | Chose localStorage under `visual-labs.phase2.failure-notes.v1`, guarded property/getItem/setItem/removeItem, no blanket clear of unrelated settings. Same 100-entry/256KiB logical bounds apply to RAM, loaded and unsaved fallback, and persistence. Safari refusal remains accepted but physically untested; Phase 2 automated store tests are its only planned refusal-path evidence. |
 | 4. Segment surprises | Planned prominent on-video New tracking segment notice with actual reason and a segment chip on Resume/intrinsic geometry/analysis gap, not only an inspector message. It must not obscure camera controls or suggest re-identification. |
 | 5. Synthetic benchmark | Retained numeric labelled fixtures, no bundled clips. Current Phase 1 production smoke runs a real fixed image through detector/overlay; a tracker does not yet exist. Task 6 explicitly extends that smoke through tracking. Recorded clips/replay remain stretch scope, not an existing test or Phase 2 commitment. |
@@ -20,3 +20,10 @@ References: [design](../superpowers/specs/2026-10-25-phase-2-tracking-design.md)
 
 No application/test code, assets, dependencies, CI or deployment settings change in this response.
 Proposed regression cases must be implemented and run only after explicit implementation approval.
+
+## Portrait-phone correction
+
+The user deferred runtime Tasks 1–3 until after PR #9. This correction is documentation only:
+full-width stacked video/list and inspector/chart on phone-width viewports replace the earlier
+338 px pairing rule. The optional continuing-track floor is not introduced; the reviewed .25
+floor still applies to births and associations. Runtime work requires the later implementation step.

@@ -157,7 +157,9 @@ central lifecycle boundaries; `Lab.geometryChanged(width,height): void`; control
   expiry deadline/segment closure. A running UI age >2000 ms since last completion hides live-box
   claims without tracker updates; Pause/destroy stops that timer and first-frame wait is explicit.
 - [ ] Deliver a usable tracked-video + compact-list pair at this checkpoint; select/highlight from
-  the list without pretending the later inspector exists. Keep controls and display/tracking/model
+  the list without pretending the later inspector exists. On viewports ≤600 CSS px, put the list
+  below the full-width video; on wider screens pair only with ≥616 CSS px available content,
+  using the design's minimum widths. Keep controls and display/tracking/model
   threshold explanations adjacent. Unconfirmed raw boxes have no public ID badge.
 - [ ] Draw current matched boxes/IDs and confirmed visible trajectories using shared unit geometry.
   Keep Phase 1 raw visible detection count consistent with clipped/filtered boxes, including
@@ -190,8 +192,9 @@ modify `public/camera-diagnostics.js`, `.css` and `tests/browser/diagnostics.spe
   the model floor or omitted by cap cannot be invented. Invalid/clipped-away boxes aren't counted.
 - [ ] Alternative scores unavailable displays a clear unavailable state with no percentages.
   Only a capability backed by Task 1 runtime evidence may expose actual same-box alternatives.
-- [ ] Preserve paired-row phone order: video/list; inspector/chart; then explorer, notes, benchmark.
-  Test side-by-side content minima from the design and stacked fallback below them; no cramped
+- [ ] Preserve reading order: video/list; inspector/chart; then explorer, notes, benchmark.
+  Phone-width viewports (≤600 CSS px) stack each pair at full width. Test 390 px portrait and
+  wider paired/stacked transitions using actual content width and the design's 616 px minimum; no cramped
   controls or horizontal overflow. Use existing row1 list, don't replace it with a dead placeholder.
 - [ ] Implement selectable list/stage taps, event timeline/association evidence, configurable
   trails and confidence chart. Stage taps never swallow scroll/pinch; keyboard list is equivalent.
