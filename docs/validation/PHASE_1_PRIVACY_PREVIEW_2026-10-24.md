@@ -88,7 +88,7 @@ User-reported metadata carried forward, not independently inspected:
 
 | Check | iPhone | iPad |
 | --- | --- | --- |
-| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Pending |
+| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Partial — Idle/indicator off reported; prompt and one request reportedly before Start, diagnostic JSON/timing clarification needed (P14) |
 | Non-diagnostic fresh-tab comparison | Pending | Pending |
 | Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Pending |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
@@ -370,6 +370,33 @@ privacy. No runtime fix, automated test or deployment was made. Remaining iPhone
 actual diagnostic JSON, model-loading interruptions, feasible external interruption and
 network/header inspection) retain their recorded status. Next: iPad fresh-tab diagnostic gate on
 the same approved preview; do not reuse old-preview iPad observations as passes for this build.
+
+### P14 — Initial iPad fresh-tab report; diagnostic details unclear (2026-10-25)
+
+Source: **user-reported physical observation**, iPad Pro 11-inch (3rd generation), iPadOS 26.6.2,
+Safari; device/OS/browser confirmed unchanged. Requested privacy preview/build as above; exact
+on-device timestamp and address inspection were not supplied.
+
+Verbatim response:
+
+```text
+Device/OS/browser unchanged: unchanged
+Lab status before Start: idle
+Camera indicator before Start: off
+Permission prompt before Start:present
+Diagnostic JSON event: unsure - please clarify
+Camera-request entries before Start: number 1
+CSP-violation entries: none, or paste directive and blockedAddress
+```
+
+Record reported Idle and camera indicator off before Start. A permission prompt and one request
+are reportedly before Start, requiring actual diagnostic records and sequence clarification.
+Do not interpret a single entry count as a camera request without its event name; the installation
+record can be mistaken for a request. The installation state is unknown. The unchanged CSP template
+is **unanswered**, not a report of no violations. This is a possible gate discrepancy, not a
+confirmed source-level failure or an explanation of historical S1/S2. Next: explain the event
+field and obtain visible JSON without reloading/clearing, plus prompt site identity and explicit
+Start timing. No runtime change, test or deployment was made.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
