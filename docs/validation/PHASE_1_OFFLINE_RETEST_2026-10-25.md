@@ -64,9 +64,9 @@ User-reported device metadata carried forward; confirm changes before recording 
 | --- | --- | --- |
 | Initialization failure reproduced offline | Pending | Pending |
 | Exact actionable initialization error wording | Pending | Pending |
-| Camera indicator and preview state after failure | Pending | Pending |
-| Remains stopped after reconnecting, before Start | Pending | Pending |
-| Explicit Start restores live video/detections | Pending | Pending |
+| Camera indicator and preview state after failure | Pass for reported green indicator off (O2); preview state not supplied | Pending |
+| Remains stopped after reconnecting, before Start | Pass — user-reported (O2) | Pending |
+| Explicit Start restores live video/detections | Pass — user-reported (O2) | Pending |
 
 Cached resources may prevent a failure. Record that outcome as failure-path **untested**, not a
 pass or a failure. Without inspection, do not identify the failing resource or conclude browser
@@ -131,6 +131,31 @@ the app's error text or establish network state. Offline reproduction, visible e
 camera indicator state and explicit retry recovery all remain Pending. No runtime change,
 automated test or deployment was made. Next: obtain the actual visible offline error/result and
 camera state without requiring another full run.
+
+### O2 — Reported camera-off state and explicit recovery; error wording blank (2026-10-25)
+
+Source: **user-reported physical observations**, ongoing requested iPhone-first sequence. Device
+context is the requested iPhone 15 Pro / iOS 27.0.1 / Safari, not independently inspected. Exact
+on-device time/address and the failed offline resource were not supplied.
+
+Verbatim response:
+
+```text
+Exact offline error:
+After error, green camera indicator was off: yes
+After reconnecting, stayed stopped until Start: yes
+Start restored live video and detections: yes
+Any other issue:
+```
+
+Record reported passes for visible camera indicator off after the referenced error, staying
+stopped after reconnecting until explicit Start, and Start restoring live video/detections. The
+exact error field is blank: no initialization-message text was supplied, so verification of the
+revised wording remains **Pending**. The answers reference an error, but without text or inspection
+its category/cause is not established. Blank issue text adds no detail. Do not treat O1's diagnostic
+excerpt as the missing app error or infer camera-track internals from the indicator. No runtime
+fix, automated test or deployment was made. Next: obtain the visible error wording if available,
+or preserve it as not recorded rather than invent a result.
 
 For subsequent records, preserve user-reported results, device/date/time if supplied, exact
 preview/commit, error text and unanswered fields. Mark unperformed steps Pending. Reproduce
