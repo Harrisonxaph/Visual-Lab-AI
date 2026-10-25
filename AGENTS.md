@@ -1,7 +1,10 @@
 # Assistant instructions
 
 Build Visual Labs AI as a private, educational computer-vision laboratory. Read ARCHITECTURE.md,
-PROJECT_ROADMAP.md and MODEL_LIMITATIONS.md before changes. Current authorised scope is Phase 1.
+PROJECT_ROADMAP.md and MODEL_LIMITATIONS.md before changes. Phase 1 is closed with documented
+accepted limitations. Current authorised scope is Phase 2 planning only: design/plan documents
+and their draft PR. Runtime implementation requires separate explicit approval of the reviewed
+plan. No merge/deployment/protection change or Phase 3 is authorized.
 
 Use one development branch and PR per phase. Never push to main, merge, deploy or modify production
 without approval. Preserve working functionality. Codex implements; Claude is the intended reviewer.

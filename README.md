@@ -92,3 +92,7 @@ No manual deployment or production change is authorized by this PR. The CI workf
 events, pushes limited to main, or manual dispatch. PR branch pushes do not also trigger push jobs.
 
 Phase 1 privacy follow-up: [diagnostics, policy limits and pending device checklist](docs/phases/PHASE_1_PRIVACY.md).
+
+Phase 2 is authorized for **planning only**: [proposal and implementation plan](docs/phases/PHASE_2.md).
+Tracking, inspector histories and the failure log are not implemented yet; runtime work needs
+separate approval of the reviewed plan.
