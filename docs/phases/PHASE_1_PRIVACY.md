@@ -56,8 +56,9 @@ compilation; JavaScript `unsafe-eval` and `unsafe-inline` are absent. Workers ar
 this runtime uses a file worker, so blob workers are not allowed. Media allows local/blob resources
 for camera compatibility. Objects, embedding, base URLs and forms are forbidden.
 
-Local production tests verify off-origin script/connection blocking. The user-supplied iPad log
-also records an enforcing CSP event blocking Vercel's feedback script in the preview. It does not
+Local production tests verify off-origin script/connection blocking. The user-supplied shared diagnostic log
+also records an enforcing CSP event blocking Vercel's feedback script in the preview; P27 records
+that raw device identity was not captured and other-device equivalence is user-reported. It does not
 change Deployment Protection. A blocked toolbar is not evidence that it previously requested a
 camera. The policy does **not** block same-origin uploads, all navigation-based exfiltration or
 trusted same-origin code. No claim of universal no-upload enforcement or physical network audit is

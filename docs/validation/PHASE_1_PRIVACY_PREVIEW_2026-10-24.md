@@ -1,6 +1,6 @@
 # Phase 1 privacy preview validation — 2026-10-24
 
-Status: **in progress; observations from both devices recorded; review corrections and outstanding validation limits remain**. This ledger is separate from the earlier
+Status: **in progress; fresh-tab checks Pass on both devices within stated evidence limits; remaining validation gaps and offline-message fix outstanding**. This ledger is separate from the earlier
 [device walkthrough](PHASE_1_DEVICES_2026-10-24.md). A clean retest cannot explain S1/S2.
 
 ## Authorization and exact build
@@ -88,7 +88,7 @@ User-reported metadata carried forward, not independently inspected:
 
 | Check | iPhone | iPad |
 | --- | --- | --- |
-| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Pass for user-reported pre-Start Idle/indicator off and prompt only after Start; supplied log has no camera-request before Start and records blocked Vercel script (P14–P16); coverage limits apply |
+| Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Pass — user-reported sequence, shared diagnostic log and other-device equivalence in P27; blocked Vercel script replaces initial no-CSP report; coverage limits apply | Pass — reported Idle/indicator off, prompt after Start, shared log/other-device equivalence (P14–P17/P27); coverage limits apply |
 | Non-diagnostic fresh-tab comparison | Pending | Pending |
 | Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Partial — prompt after Start and live video/labelled detections after allowing confirmed (P16/P17); site identity unprovided |
 | Stop during permission request, if Safari permits interaction | Pending — accessibility not checked on this device | Blocked — permission modal prevents page interaction (P25); cancellation path not exercised |
@@ -448,8 +448,8 @@ video/detections began. No runtime fix, test or deployment was made.
 
 Review annotation (2026-10-25): P15 was **likely cut short when copied**, according to the supplied
 review correction. This is an inference, not proven; preserve the pasted entries as supplied and
-do not invent missing camera-request/settlement records. The additional log requested for P27
-has not yet been supplied to Codex and is needed before completing that evidence correction.
+do not invent missing camera-request/settlement records. The user subsequently identified the same pasted log as the evidence intended for P27; see that
+entry for provenance and cross-device reporting limits.
 
 ### P16 — iPad prompt timing corrected to after Start (2026-10-25)
 
@@ -650,6 +650,63 @@ established; do not mark Not applicable without a reason or infer success from o
 backgrounding. No call was arranged, runtime fix made or deployment performed. This closes the
 current guided session with the outstanding evidence explicitly retained for review.
 
+### P27 — Review correction: shared diagnostic log and other-device report (2026-10-25)
+
+Source: **user-supplied diagnostic text, reaffirmed by reference**, plus user-supplied review
+corrections. The review requested a P27 log entry with device not recorded and the other device
+reported as the same. Asked for that log, the user clarified: "Same diagnostic log reported above".
+The following is the same text already preserved in P15, not a newly captured session or a second
+independent device log. Its device identity is **not recorded in the log**. P15 was originally
+associated with iPad from conversational context; no new device attribution is invented here.
+The other device's equivalent behavior is **user-reported**, not independently logged.
+
+```json
+[
+  {
+    "event": "installed",
+    "at": "2026-10-25T00:26:51.360Z",
+    "elapsedMs": 0,
+    "active": false,
+    "hasBeenActive": false,
+    "context": "top-level page"
+  },
+  {
+    "event": "csp-violation",
+    "at": "2026-10-25T00:26:51.363Z",
+    "elapsedMs": 3,
+    "directive": "script-src-elem",
+    "blockedAddress": "https://vercel.live/_next-live/feedback/feedback.js",
+    "disposition": "enforce",
+    "trusted": true
+  },
+  {
+    "event": "start-click",
+    "at": "2026-10-25T00:28:15.580Z",
+    "elapsedMs": 84222,
+    "trusted": true,
+    "active": true,
+    "hasBeenActive": true
+  }
+]
+```
+
+The supplied entries show installation at +0 ms with no user activation, an enforcing trusted
+script-src-elem violation blocking Vercel feedback code at +3 ms, and a trusted Start click at
++84,222 ms. They show no camera-request before that click. No post-click request/settlement is
+included; P15 was **likely cut short during copying**, an inference rather than a proven fact.
+Do not invent missing records or use their absence to contradict the reported successful video.
+
+Per the review correction and the user's confirmation of the shared log, mark the fresh-tab
+check **Pass on both devices**, based on the corrected user-reported sequences and reported
+other-device equivalence. Supersede the iPhone's initial "no CSP entries" summary with the
+reported blocked Vercel feedback-script observation, without claiming two independently supplied
+CSP captures or assigning this raw log to a specific device.
+
+Coverage remains this page's wrapped API/events after installation. Earlier calls, cached
+references and other contexts are not observed. No historical S1/S2 causation, complete injection
+inventory, deployed-header inventory or absence of uploads is established. No runtime change,
+automated test or redeployment was made for this documentation correction.
+
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
 prompt identity, exact errors, result and evidence source. Screenshots must exclude live footage
@@ -659,8 +716,10 @@ dismiss it and then inspect the panel. Do not interpret missing information as a
 ## Current evidence checkpoint
 
 Both devices have reported live detections, scene/control/layout checks, private-tab operation
-and manual Resume after backgrounding while permission was pending. The iPad also supplies a
-user-copied trusted CSP event blocking Vercel feedback code, post-Start permission timing and
+and manual Resume after backgrounding while permission was pending. Fresh-tab checks are Pass
+on both devices with P27's shared-log/other-device reporting limits. The user-copied log records a
+trusted CSP event blocking Vercel feedback code; raw device identity is unrecorded, and equivalent
+behavior on the other device is user-reported. The iPad also has post-Start permission timing and
 navigation-return/denial recovery evidence. Offline error/retry is reported on both devices;
 the iPad photo corroborates the app camera-off/error presentation, not its system indicator.
 
