@@ -91,7 +91,7 @@ User-reported metadata carried forward, not independently inspected:
 | Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Pass for user-reported pre-Start Idle/indicator off and prompt only after Start; supplied log has no camera-request before Start and records blocked Vercel script (P14–P16); coverage limits apply |
 | Non-diagnostic fresh-tab comparison | Pending | Pending |
 | Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Partial — prompt after Start and live video/labelled detections after allowing confirmed (P16/P17); site identity unprovided |
-| Stop during permission request, if Safari permits interaction | Pending | Pending |
+| Stop during permission request, if Safari permits interaction | Pending — accessibility not checked on this device | Blocked — permission modal prevents page interaction (P25); cancellation path not exercised |
 | Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending — loading too brief to interrupt (P24) |
 | Background while permission pending | Pass — popup persisted on return; manual Resume required for inference, user-reported (P6/P7) | Pass — popup persisted; paused after Allow, manual Resume required (P18), user-reported |
 | Background while model loading pending | Pending — loading window not exercised | Pending |
@@ -623,6 +623,33 @@ attempt. Model-loading background interruption also remains untested. Do not inf
 or brief initialization covers those lifecycle paths. No runtime fix, automated test or redeployment
 was made. Next: establish whether Safari's permission modal permits the pending-permission Stop
 check, without assuming it is accessible or forcing repeated attempts.
+
+### P25 — iPad permission modal blocks pending-request Stop (2026-10-25)
+
+Source: **user-reported physical observation**, current iPad context. Asked whether Stop camera
+was accessible while Safari's permission popup was open or the popup blocked page controls,
+the user answered: "Could not interact".
+
+Record the pending-permission Stop test as **Blocked by the browser permission modal** on iPad.
+The cancellation path was not exercised; this is neither an application failure nor a cleanup
+pass. Do not generalize the observation to iPhone, where control accessibility remains untested.
+No runtime fix, automated test or deployment was made.
+
+## Current evidence checkpoint
+
+Both devices have reported live detections, scene/control/layout checks, private-tab operation
+and manual Resume after backgrounding while permission was pending. The iPad also supplies a
+user-copied trusted CSP event blocking Vercel feedback code, post-Start permission timing and
+navigation-return/denial recovery evidence. Offline error/retry is reported on both devices;
+the iPad photo corroborates the app camera-off/error presentation, not its system indicator.
+
+These observations do not complete validation. Loading-Stop could not be timed on either device;
+backgrounding during model loading is untested; iPad pending-permission Stop is blocked by Safari's
+modal, and that accessibility was not checked on iPhone. External interruption feasibility/testing,
+non-diagnostic fresh-tab comparison, actual storage denial, effective authenticated app/asset
+headers, HTML inspection and physical-session network inspection remain Pending. Earlier iPhone
+S1/S2 remain separate historical reports; current explicit corrections cannot reconstruct them.
+No material runtime defect has been reproduced or fixed during this preview walkthrough.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
