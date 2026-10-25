@@ -99,7 +99,7 @@ User-reported metadata carried forward, not independently inspected:
 | Navigate away and return inactive until Start | Pending on new preview; older-preview evidence retained separately | Pass — indicator off on leaving and return until Start, user-reported (P19) |
 | Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pass for reported behavior — counts 0 / 2, boxes updated; labels unprovided (P20) |
 | Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pass for Private Browsing operation, user-reported (P21); actual storage denial untested |
-| Cold-cache network/model failure and recovery | Pass for reported offline error/retry sequence — camera did not activate offline; explicit Start recovered at displayed 50 ms (P10–P12). Specific model-download failure/cache state unverified | Pending |
+| Cold-cache network/model failure and recovery | Pass for reported offline error/retry sequence — camera did not activate offline; explicit Start recovered at displayed 50 ms (P10–P12). Specific model-download failure/cache state unverified | Partial — error reported same as iPhone and explicit Start recovered; indicator state unclear (P22); resource/cache unverified |
 | Feasible external camera interruption | Pending | Pending |
 | Live preview, detections, threshold, rotation and lifecycle under new policy | Pass for user-reported behavior across P8/P9/P12/P13; effective deployed headers still uninspected | Pass for reported video/detections, responsive slider, rotation and lifecycle (P17/P20); effective headers uninspected |
 | Zoom, or explicit Not applicable reason | Pass for reported pinch zoom (P13); Safari Page Zoom setting not tested | Pass for reported pinch zoom (P20); Safari Page Zoom setting not tested |
@@ -566,6 +566,31 @@ Start after reload and visible camera indicator off after Stop, with no reported
 establishes user-reported operation in Private Browsing, not behavior under actual storage denial.
 No runtime fix, automated test or deployment was made. Next: iPad offline-attempt/recovery check,
 with cache state and failing-resource uncertainty retained as needed.
+
+### P22 — iPad offline error/recovery; indicator answer unclear (2026-10-25)
+
+Source: **user-reported physical observation**, same iPad and requested privacy preview context.
+Requested procedure was shell loaded online in a fresh private session, then Airplane Mode with
+Wi-Fi off before Start, followed by reconnection and explicit Start. Actual cache state, failed
+resource, time to error and exact timestamp were not independently inspected.
+
+Verbatim response:
+
+```text
+Offline result or exact error: as with iPhone
+Camera indicator while offline: yes
+After reconnecting and tapping Start, detections worked: yes
+Any other issue:
+```
+
+Record an offline error reported by reference to the iPhone error ("The inference worker stopped.
+This browser may not support the model. Try starting again.") and successful explicit Start
+recovery after reconnecting. This is not a fresh verbatim transcription or proof of browser/model
+incompatibility. The indicator question requested on/off/not checked; "yes" is ambiguous and
+must not be interpreted as either on or off. Blank issue wording adds no detail. Camera cleanup
+remains unconfirmed pending an explicit indicator answer; if it remained on after the error,
+investigate that sequence before claiming a cleanup pass. Specific model-download failure and
+cold-cache conditions remain unverified. No runtime fix, automated test or deployment was made.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
