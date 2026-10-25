@@ -158,8 +158,10 @@ probes or automatic retry. See [follow-up notes](docs/phases/PHASE_1_OFFLINE_ERR
 
 The user authorized a design/plan, not runtime work. The proposed pure tracker consumes accepted
 Lab frames exactly once, separately from display threshold filtering; an inspection controller
-owns session/geometry boundaries and bounded history. UI, supported labels, metadata-only failure
-notes and labelled synthetic evaluation remain separate modules. Current inference still emits
+owns session/geometry boundaries and bounded history. Proposed model floor .05, tracker floor .25
+and display threshold are separate; public IDs are allocated on confirmation only. UI, supported
+labels, metadata-only failure
+notes (explicit localStorage save) and labelled synthetic evaluation remain separate modules. Current inference still emits
 primary label/score/pixel box only. See the [Phase 2 entry](docs/phases/PHASE_2.md) and linked design
 for alternatives, defaults, capability limits, memory/privacy rules and approval gates. No proposed
 module or runtime behavior is implemented by the planning PR.

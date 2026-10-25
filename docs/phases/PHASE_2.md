@@ -21,30 +21,37 @@ Read the [proposed design](../superpowers/specs/2026-10-25-phase-2-tracking-desi
 | Checkpoint | Deliverable | Reviewable evidence after implementation |
 | --- | --- | --- |
 | 1 | Typed frames/geometry/capabilities, supported-label provenance | Geometry/capability/catalog tests and honest unavailable states. |
-| 2 | Bounded deterministic association and lifecycle/history | Known synthetic motion/loss/gates/expiry/capacity outcomes; no ground-truth claims on live data. |
-| 3 | Accepted-frame/lifecycle bridge and tracked overlay | No duplicate processing on threshold/render; cancellation, geometry and Pause/Stop retain privacy. |
-| 4 | Selectable inspector, trajectory/confidence chart, explorer/near-band view | Real observed histories, gaps and accessible mobile controls; no fabricated predictions. |
+| 2 | Bounded deterministic association with tracking floor .25, confirmed-only IDs and lifecycle/history | Known motion/loss/expiry/capacity outcomes and defined 300-frame low-score noise/churn counts; no live ground-truth claims. |
+| 3 | Accepted-frame/lifecycle bridge, tracked overlay/list and on-video segment notice | No duplicate processing; Phase 1 regression/lifecycle evidence. **Push exact commit and stop for review before Tasks 4–6.** |
+| 4 | Inspector/chart, explorer/near-band view and opt-in diagnostic Copy log | Genuine histories/results, full JSON copy/fallback and usable paired-row phone layout; no fabricated predictions. |
 | 5 | Local metadata failure notes and consent/storage handling | Default memory-only, explicit save, validated bounds/corruption/quota/deletion, no footage. |
 | 6 | Labelled synthetic tracking benchmark and final device/evidence gate | Independent metric tests, actual worker/CSP smoke, profiling and separately attributed device results. |
 
 Future runtime work stays in one Phase 2 branch/PR with staged commits; this explicit planning PR
-is separate. No checkpoint is authority to merge/deploy, change accepted limitations or add Phase 3.
+is separate. **After Task 3, Codex pushes and waits for the designated reviewer's approval of that
+exact commit before Tasks 4–6.** Initial implementation approval does not waive this stop. No
+checkpoint authorizes merge/deploy, changes to accepted limitations or Phase 3.
 
 ## Key proposed choices for Claude/user review
 
 - Gated one-to-one minimum-cost association with bounded motion prediction, rather than greedy
   matching or an appearance/re-identification stack. Proposed numeric defaults are not validated
   tuning; review their gate, tie, expiry and capacity behavior before implementation.
-- Track returned valid detections independently of the display threshold. Two consecutive matches
-  confirm an ID; a brief loss can reassociate, expiry/control/intrinsic-geometry boundaries break
+- Keep model floor .05, tracking floor .25 and display slider separate. Only tracking-eligible
+  results associate/birth; all valid returned results remain inspectable. Two consecutive matches
+  confirm and allocate a public ID; a brief loss can reassociate, expiry/control/intrinsic-geometry boundaries break
   continuity explicitly. No claim of stable identity across every crossing or pause.
-- Local notes default to memory; saving metadata requires explicit opt-in, with 100-entry/256 KiB
+- Local notes default to memory; explicit opt-in saves metadata to localStorage, with 100-entry/256 KiB
   bounds and deletion/error handling. No media, uploads, dataset/training or import/export workflow.
 - Current adapter exposes no alternatives. Genuine returned near-threshold results are available
   within model floor/cap; do not invent discarded boxes or class rankings.
 - Live duration/loss/variability are descriptive. Fragmentation/ID changes/occlusion recovery need
   labelled evidence; bundled synthetic numeric sequences evaluate association separately from
   real inference. No detector-accuracy or held-out improvement claim.
+
+Phone order is video/list side by side, then inspector/chart side by side, then explorer, notes
+and benchmark. Narrow content falls back to stacking within each pair without changing that order.
+Controls remain usable; New tracking segment notices are prominent on video after continuity resets.
 
 ## Planning verification and next gate
 
@@ -61,3 +68,11 @@ A separate Codex static builder check found two planning gaps: explicit RAM-note
 deterministic evaluator/recovery definitions. The design/plan now specify both, plus event/stale
 time semantics and benchmark cancellation before Start/Resume. This was not Claude review and
 no proposed runtime tests were executed.
+
+## User-supplied planning review response
+
+[Findings 1–3 and optional follow-ups](../reviews/PHASE_2_PLANNING_RESPONSE.md) are recorded with
+proposed fixes: distinct tracking floor, confirmed-only IDs/churn fixture, mandatory Task 3 review
+stop, localStorage, paired phone layout, on-video segment notices and diagnostic Copy log. The
+optional Checks-section plain-link wording still needs exact clarification. All changes remain
+planning only; no proposed test has been executed as a Phase 2 runtime test.

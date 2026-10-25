@@ -87,8 +87,13 @@ Keep camera/inference/scheduling ownership in existing modules. Add:
   `Tracker.startSession(sessionId)`; `Tracker.snapshot(): TrackingSnapshot`. New session resets IDs
   and bounded memory; segments never reuse an issued track ID within a session.
 - `TrackingFrame`: source sequence/geometry, readonly track snapshots, `detectionIndex → trackId`
-  associations and exact association evidence. No transfer of frames/images to tracking/storage.
-- `TrackSnapshot`: scoped ID, segment, state, first/last matched times, matched-frame count, latest
+  associations and exact association evidence. Tentative/filtered detections map to null public ID;
+  aggregate candidate counts may be shown, not candidate keys. No frames/images reach storage.
+- `TrackerConfig.trackingFloor`: default **0.25**, separate from model.floor (0.05) and display
+  threshold. Require finite value in [model.floor,1]; a default for another model is
+  `max(0.25, model.floor)`. Record all three thresholds in the inspector, notes and benchmark config.
+- `TrackSnapshot`: **confirmed public ID only**, segment, state (active/lost/ended), first/last
+  matched times, matched-frame count, latest
   observed label/score/box, bounded samples and optional terminal reason. A sample has time, raw
   score/label/box; an explicit gap marker has null score/box, never invented zero confidence.
 - `TrackEvent`: event ID, track ID, segment/time, kind, reason and observed/association evidence.
@@ -103,12 +108,17 @@ Keep camera/inference/scheduling ownership in existing modules. Add:
 
 ### Input, threshold and association
 
-1. Consume each committed result once, **before display filtering**, with the existing 0.05 model
-   floor/cap 50 unchanged. Reject scores outside [model.floor,1] and nonfinite/invalid boxes;
-   clip boxes then normalize. Preserve
-   returned indices for overlay association and expose invalid/capacity counts, not phantom tracks.
-2. Slider remains a display threshold: changing it neither reruns inference nor creates/losses
-   tracks. Thus a hidden low-score track may still be updated. Explain this in the controls.
+1. Consume each committed result once, **before display filtering**, with model floor **0.05**
+   and cap **50** unchanged. Validate/clip/normalize returned results for the raw/near-threshold
+   views, rejecting invalid scores/boxes. Separately admit only `score >= trackingFloor` (**0.25**
+   by default) to **both** association and tentative births. This includes updates/reacquisition:
+   lower scores do not keep an existing track alive. Count below-tracking-floor exclusions,
+   invalid outputs and capacity drops separately.
+2. Slider remains only the display threshold: changing it neither reruns inference nor changes
+   tracker input/state. A detection at .10 may be visible at 5% or near threshold, but is labelled
+   untracked below the tracking floor and consumes no track slot or ID. A confirmed object's score
+   dipping below .25 can cause loss; explain that tradeoff, retaining its actual raw returned result
+   in the inspector without fabricating track samples. Threshold settings are not model accuracy.
 3. Use at most **100 live (tentative/active/lost) tracks**. Predict the center from the last two
    matched samples, using actual time difference and at most **500 ms prediction horizon**; retain
    last box size. Clip the predicted rectangle to the unit frame; if it degenerates, fall back to
@@ -121,15 +131,21 @@ Keep camera/inference/scheduling ownership in existing modules. Add:
    Labels are a soft penalty so primary-class fluctuations can remain inspectable, not an absolute
    identity gate. Unmatched-row choice cost **1.10**; invalid pairs are forbidden. Minimize total
    cost including unmatched options, not a claim of maximum cardinality or true identity.
-5. Use deterministic row order (track birth order) and source-index column order, with explicit
+5. Use deterministic row order (internal candidate creation order) and source-index column order, with explicit
    tie behavior. Unmatched detections can start tentative tracks until capacity; drop additional
    births with visible capacity counters, not silent eviction of an active track.
 
 ### State and event semantics
 
-- New track is tentative; **two consecutive accepted-frame matches** confirm it and emit entry.
-  A tentative track missing its next frame is discarded, without a confirmed-object exit claim.
-  Entry means "track first confirmed", not proof the physical object just entered the scene.
+- A new eligible observation creates an internal tentative candidate, with a private creation key
+  **but no public/displayed track ID**. Two consecutive eligible accepted-frame matches confirm it;
+  only then allocate the next public ID and emit entry. A tentative miss discards the candidate
+  without consuming a public ID or generating a confirmed exit. Raw boxes remain visible when
+  the display threshold allows them, with no ID badge until confirmation. Entry means "track first
+  confirmed", not proof the physical object just entered the scene.
+- Track churn counters distinguish candidate births/drops, confirmations, public IDs allocated,
+  losses/expiry, below-floor exclusions and peak live slots. The tracking floor reduces low-score
+  pressure; noise at/above .25 can still confirm false tracks. No universal no-churn claim.
 - A confirmed track unmatched on an accepted frame becomes lost and emits temporary-loss once.
   No fake confidence/position samples are added. Missing outputs may reflect occlusion, score floor,
   cap, association or model error; don't assert occlusion as the cause.
@@ -148,7 +164,11 @@ Keep camera/inference/scheduling ownership in existing modules. Add:
   claim these explain the model's internal visual reasoning.
 - Pause, hidden-tab pause, Stop, error, camera end and intrinsic-geometry change close the segment
   with an analysis-boundary reason, not fabricated object exits/losses. Preserve Phase 1 camera
-  behavior. Resume starts a new segment with new track IDs and an explicit continuity notice.
+  behavior. Resume starts a new segment with new track IDs. Show **"New tracking segment — IDs
+  restart after Resume"** prominently on the video, not only in the inspector. Intrinsic geometry
+  changes and analysis gaps use the same notice pattern with the actual reason. Keep a visible
+  segment chip near the video; the reason notice remains until the user dismisses it or stops.
+  It must not cover Start/Pause/Stop controls or imply an object was re-identified.
 - CSS resize/zoom alone preserves tracks. Actual intrinsic image dimensions/orientation change
   invalidates in-flight old geometry, ends the segment, clears live overlays and starts a new
   segment on a matching frame. IDs/history from incompatible coordinates are never joined.
@@ -179,10 +199,20 @@ handle short single-pointer taps on the stage, movement ≤ **8 CSS px**, smalle
 box wins, tie by track birth order. Do not prevent default scrolling/pinch zoom or require hover.
 Lost tracks are selectable from the list/history, not presented as current detections on video.
 
-Keep the camera above the inspector on narrow phones, use a collapsible below-video panel (not a
-modal covering camera controls), and a side inspector on desktop/tablet where space permits.
-Touch controls ≥44 CSS px; keyboard focus and text equivalents for charts; no per-frame screen
-reader announcements. Model info and permission/error/retry controls remain reachable.
+Use the following paired-row order, including phones: **tracked video/overlay + compact track
+list**, then **inspector + confidence chart**, then full-width **explorer**, **notes**, **benchmark**.
+Pair views side by side where readable; camera controls, threshold and status stay adjacent to
+row 1 and span its width. At ≥338 CSS px of available content, allocate at least 220 px to video
+and 110 px to list with an 8 px gap; row 2 uses ≥170 px inspector and ≥160 px chart. Below those
+content minima, stack within each pair in the same reading order rather than shrink touch/text
+or introduce horizontal scrolling. This is a responsive fallback, not a different feature order.
+Desktop/tablet may give the paired views more width. Task 3 already delivers a usable tracked
+video + minimal list; later milestones progressively add the rows rather than dead placeholder
+controls. Model info and permission/error/retry controls remain reachable.
+
+Touch controls ≥44 CSS px, keyboard focus and text equivalents for charts; no per-frame screen
+reader announcements. Compact list buttons wrap ID/class/score as needed. Keep scroll/pinch
+available and test paired/stacked transitions at the actual available content width.
 
 Pure tracking runs on the main thread after each accepted frame, bounded by the 100×50 candidate
 limit. No second inference worker or new runtime dependency. Render overlay on accepted frames
@@ -226,6 +256,11 @@ Provide missed / incorrect / unstable note actions. A missed object needs no det
 chooses a supported expected class or Unknown. Incorrect/unstable can reference selected history.
 These are **user reports**, not verified ground truth, corrections applied to the model or training.
 
+Choose **localStorage**, key **`visual-labs.phase2.failure-notes.v1`**, for serialized metadata
+(single guarded getItem/setItem/removeItem; no IndexedDB or new storage dependency). The bounded
+256 KiB payload is suitable for this small log, but browser quota/availability is not guaranteed.
+Accessing the localStorage property itself may throw. Delete only this key, never localStorage.clear().
+
 Default notes stay in page memory. Explicit "Save notes on this device" opts into metadata-only
 persistence for this page session; it does not enable image capture. Previously saved notes may be
 read as saved data; disabling saving stops new writes and does not falsely claim old notes deleted.
@@ -236,7 +271,7 @@ clearing is a separate action and does not claim to delete failure notes. No exp
 file import, screenshot/video/audio, hidden upload, analytics or backend is added.
 
 Schema v1: note ID/type/created UTC, session/segment and optional scoped track ID, model/version/hash,
-score floor/display threshold, observed sample time/age/label/score/unit box if actually available,
+model floor/tracking floor/display threshold, observed sample time/age/label/score/unit box if available,
 user-selected expected class and optional text ≤**500 characters**. No hardware identifiers, page
 URLs, stack traces or media. An ended selection uses its actual historical sample, not a fake
 current-frame observation. Cross-session notes preserve their provenance.
@@ -249,8 +284,29 @@ logical/serialized bounds, not a claim that JS heap overhead equals the encoded 
 enums, finite scores/boxes and supported labels; render text via textContent, never raw HTML.
 Catch denied storage, corruption and quota errors; keep RAM notes and accurately report unsaved
 status. Preserve unreadable saved data until explicit Clear/reset rather than silently overwriting.
-Browser storage is not encrypted or guaranteed durable. Real Safari storage refusal remains an
-accepted Phase 1 gap; add synthetic exception/corruption/quota tests for the new store nonetheless.
+Browser storage is not encrypted or guaranteed durable. Real Safari storage refusal stays an
+accepted Phase 1 limitation. Phase 2's automated store tests are the only planned refusal-path
+evidence, not evidence of actual Safari denial; Private Browsing/Block All Cookies success cannot
+supply it. Run normal device save/reload/delete checks separately.
+
+## Defined low-score-noise / ID-churn fixture
+
+This is a developer unit/profiling fixture, separate from the shorter built-in UI benchmark.
+Use an explicitly **synthetic** 300-frame sequence at 100 ms intervals (30 seconds at 10 Hz): one
+stationary cup, score **0.80**, plus **49** deterministic varying valid noise boxes per frame,
+scores **0.05–0.24**. This represents the model's output-cap pressure, not a claim that the
+reviewer's real probe produced these exact counts. With trackingFloor **0.25**, require:
+
+- Exactly one internal candidate birth, one confirmation and one public ID allocated.
+- No public ID in frame 1; one unchanged public ID from frame 2 through frame 300.
+- Zero temporary losses, expiry, tentative drops or additional public IDs for this fixture.
+- Peak live slots **1**, eligible detections **1/frame**, excluded noise **49/frame** (14,700 total).
+- Display-slider changes 5%→50%→100%→5% alter projection only and leave these counts unchanged.
+
+Record churn as these explicit counts, not an undefined quality percentage. Separately test
+scores just below .25 and exactly .25, and bounded above-floor one-frame noise. The latter can
+create/drop candidates; discarded tentative candidates must not advance the public ID counter.
+Do not require zero false tracks for arbitrary above-floor noise or ambiguous real scenes.
 
 ## Tracking quality laboratory: live description versus labelled evaluation
 
@@ -296,6 +352,26 @@ inference **not run** for synthetic fixtures; this measures association behavior
 accuracy. Include moving single object, two competing objects/crossing, class flip, brief occlusion,
 expiry and empty/invalid-input cases. Report failures; do not tune against a hidden test then claim
 held-out performance. No saved experiment/dataset/split/import system is promised in Phase 2.
+
+## Required implementation review stop
+
+Keep one Phase 2 development branch/PR. After **Task 3**, Codex must push the exact commit and
+its passing Phase 1/regression evidence, then **stop before Tasks 4–6**. The designated reviewer
+reviews that commit; continue only after approval of that exact checkpoint is supplied. This is
+an intermediate review, not permission to merge/deploy. Later changes to the core lifecycle still
+need relevant tests and final review. Current planning approval does not execute any task.
+
+## Diagnostic usability follow-up (future Task 4)
+
+Add **Copy log** to the existing diagnostic panel, only in `?diag=1` mode. Capture one complete
+bounded JSON snapshot at the click, including all current records, then use clipboard.writeText
+from that user action. Show copied entry count/success only on actual success. If unavailable or
+rejected, expose the complete snapshot in a read-only selectable text field for manual copy;
+never silently copy only the viewport or truncate to three entries. No file export/upload or
+new camera request. Copy is an explicit clipboard action beyond page memory; device clipboard
+handling/sync is outside the app. Update the panel explanation accordingly. Preserve redaction,
+100-record bound, Clear behavior and inactive-by-default installation. Add success/fallback and
+snapshot-consistency browser tests; these are planned, not already executed.
 
 ## Acceptance and inherited decisions
 

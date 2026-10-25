@@ -104,7 +104,10 @@ Planning proposes geometric, session-scoped association, not appearance/person r
 IDs may change at control/geometry boundaries or when motion/occlusion prevents matching. Current
 Detection output has one primary class/score; alternative scores are unavailable unless a verified
 adapter capability later exposes genuine same-box outputs. Near-threshold inspection can show
-only returned detections within the fixed output floor/cap. Live tracking counters/variability
+only returned detections within the fixed output floor/cap. The proposed separate .25 tracking
+floor excludes lower scores from association/birth even when the display slider shows them;
+confirmation, not tentative creation, allocates public IDs. Above-floor false tracks remain possible.
+Live tracking counters/variability
 are not accuracy; labelled synthetic identity metrics evaluate association, not detector quality
 or real-camera identities. See the [proposed design](docs/superpowers/specs/2026-10-25-phase-2-tracking-design.md).
 Accepted Phase 1 limitations remain in force and are not new Phase 2 device passes.

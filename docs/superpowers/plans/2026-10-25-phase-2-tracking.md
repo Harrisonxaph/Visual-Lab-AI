@@ -17,7 +17,9 @@ no framework migration, paid API, backend or additional ML model.
 - Planning baseline `19fd168bee3c22f8c2723d3be75f43ff8b922d50`; merge CI 40241503562 passed.
 - Phase 2 only. No merge/deploy/protection/automatic-deployment change or Phase 3.
 - Existing camera consent, cleanup, worker/capture limits and one-frame scheduling remain intact.
-- Existing output floor **0.05**, result cap **50**, CPU delegate and score presentation stay honest.
+- Model floor **0.05**, tracker config floor **0.25** and display slider are separate. Only scores
+  at/above the tracking floor enter association/birth; raw returned-result inspection retains .05+.
+  Result cap **50**, CPU delegate and score presentation stay honest. Public IDs start at confirmation.
 - No footage persistence/upload, fabricated alternatives, re-identification or confidence-as-accuracy.
 - Preserve approved [Phase 1 closeout](../../phases/PHASE_1_CLOSEOUT.md); new Phase 2 evidence is separate.
 - Proposed tracker constants, state/event meanings, history/storage caps and evaluation definitions
@@ -39,12 +41,14 @@ Task 1 defines `CommittedFrame`, `NormalizedFrame`, `TrackingBoundary`, `TrackSn
 `DetectorCapabilities` in `src/tracking/types.ts`. Keep existing `Detection`/worker protocol valid.
 A frame has session/segment/geometry/sequence, monotonic sampled/completed times, intrinsic size
 and returned detections. Samples and events follow the design; boundary events may have null
-track ID and apply to the segment. IDs are scoped, never reused within a session.
+track ID and apply to the segment. Public IDs are scoped, allocated only on confirmation and never
+reused within a session; tentative candidates use private keys and aggregate counts only.
 
 Task 2 produces `Tracker(config)`, `.startSession(sessionId)`, `.update(frame: NormalizedFrame)`,
 `.endSegment(reason, timeMs)` and `.snapshot()`. The controller starts a session explicitly; a
 frame from another session or an older/equal sequence cannot silently restart the tracker.
-Task 3 produces the Lab observer bridge and `TrackingController`; Tasks 4–6 consume it.
+Task 3 produces the Lab observer bridge, `TrackingController` and a usable video/track-list pair;
+Tasks 4–6 consume it only after the review stop is approved.
 Task 5's store is independent of tracker internals and persists only copied validated metadata.
 
 ## Milestones and delivery
@@ -52,7 +56,10 @@ Task 5's store is independent of tracker internals and persists only copied vali
 These are sequential implementation checkpoints within a future **Phase 2 development branch/PR**,
 not separate approvals to merge subsets or start later roadmap phases. The current documentation
 planning PR is separate as explicitly requested. At each milestone run its tests and commit the
-reviewable result; do not move on with known failures. Claude reviews the plan and final Phase 2 PR.
+reviewable result; do not move on with known failures. **Mandatory review stop after Task 3:** push
+that exact checkpoint, provide passing Phase 1/lifecycle/tracking tests and CI, then wait for the
+designated reviewer to approve that commit before starting Tasks 4–6. Do not merge at the stop.
+Claude reviews the plan, this risky integration checkpoint and the final Phase 2 PR.
 
 ### Task 1 — Frame/geometry/capability/catalog contracts
 
@@ -60,13 +67,13 @@ reviewable result; do not move on with known failures. Claude reviews the plan a
 create `tests/tracking-geometry.test.ts`, `tests/category-catalog.test.ts`;
 extend `tests/browser/runtime.spec.ts` only as needed for capability evidence.
 **Consumes:** existing `Box`, `Detection`, `DetectorConfiguration`, pinned label documentation.
-**Produces:** `normalizeDetections(detections, width, height, floor): NormalizedDetection[]`,
+**Produces:** `normalizeDetections(detections, width, height, modelFloor): NormalizedDetection[]`,
 `intersectionOverUnion(a: UnitBox,b: UnitBox): number`,
 `containedVideoRect(rect, width, height): ContentRect`,
 `hitTestTracks(point, contentRect, tracks): TrackId | null`, and versioned 80-label catalog.
 
 - [ ] Write failing tests: normalize 100×50 box `(10,5,20,10)` to `(0.1,0.1,0.2,0.2)`;
-  clip a partly off-frame box; reject scores below configured floor or above 1,
+  clip a partly off-frame box; reject scores below the model floor or above 1,
   NaN/Infinity/zero area and invalid frame sizes. Identical IoU
   is 1, disjoint is 0. Reject touches in a contain-fit letterbox; map portrait/landscape/DPR cases
   to the same unit coordinates. Nested hits choose smallest area, then stable birth order.
@@ -93,10 +100,12 @@ create `tests/tracking-assignment.test.ts`, `tracking-lifecycle.test.ts`, `track
 - [ ] Implement deterministic bounded minimum-cost assignment and the documented geometry/class
   cost. Verify gates at IoU 0.10, normalized distance 0.15 and area-ratio 0.25/4, including just-outside
   cases. Test class flips can keep a geometrically supported ID and expose the observed label change.
-- [ ] Write/run RED state tests: first observation tentative, second consecutive match emits one
-  entry; lost after first unmatched committed frame; repeated empty frames do not repeat loss;
+- [ ] Write/run RED state tests: first eligible observation is an internal candidate with no public ID; second consecutive
+  eligible match confirms, allocates public ID 1 and emits one entry; lost after first unmatched committed frame; repeated empty frames do not repeat loss;
   same ID reacquired within retention; at 1500 ms eligible, after 1500 ms expired before matching.
-  A new ID after expiry is not re-identification. Tentative miss creates no confirmed exit.
+  A new ID after expiry is not re-identification. Tentative miss creates no confirmed exit and
+  consumes no public ID. Validate trackingFloor .25 independently of model floor/display threshold;
+  just-below-floor detections cannot associate, birth or consume slots, while exactly .25 is eligible.
 - [ ] Implement these transitions and exact association explanations. Add gaps with null scores,
   never zeros/predicted detections. Test confidence values remain raw and history bounds are real.
 - [ ] Test duplicate/decreasing sequence and nonmonotonic timestamps are ignored/rejected with no
@@ -110,13 +119,19 @@ create `tests/tracking-assignment.test.ts`, `tracking-lifecycle.test.ts`, `track
 - [ ] Live quality tests: span and matched-frame count, loss/reacquisition counts, raw-score SD
   and median center-step/box-diagonal proxy. ID switches/fragmentation are unavailable without truth;
   smooth motion must not become an accuracy claim.
+- [ ] Add the design's 300-frame low-score-noise fixture: score .80 stationary cup +49 valid noise
+  boxes at .05–.24 per frame, 100 ms spacing. Assert one candidate/confirmation/public ID, no public
+  ID on frame 1, same ID on frames 2–300, zero loss/expiry/drops, peak slots 1 and 14,700 exclusions.
+  Task 4 reuses these snapshots to test slider projections without changing counts. Above-floor
+  one-frame candidates may churn,
+  but discarded candidates must not advance public IDs. This is synthetic, not the review probe.
 - [ ] Run `npm test -- tests/tracking-assignment.test.ts tests/tracking-lifecycle.test.ts tests/tracking-quality.test.ts`
   to PASS; commit. This milestone is pure logic, not a real-camera benchmark.
 
 ### Task 3 — Lab commit hooks, lifecycle integration and tracked overlay
 
 **Files:** modify `src/lab.ts`, `main.ts`, `overlay.ts`, `style.css`;
-create `src/inspection/controller.ts`; extend `tests/core.test.ts`,
+create `src/inspection/controller.ts`, `src/ui/track-list.ts`; extend `tests/core.test.ts`,
 create `tests/inspection-controller.test.ts`, `tests/browser/tracking.spec.ts`.
 **Consumes:** Tasks 1–2; existing camera/capture/client; no model/protocol changes required.
 **Produces:** optional `LabObserver` third constructor argument, accepted-frame callbacks and
@@ -141,31 +156,43 @@ central lifecycle boundaries; `Lab.geometryChanged(width,height): void`; control
   Test sampled versus detected/control event timestamps and unobserved-gap duration stopping at
   expiry deadline/segment closure. A running UI age >2000 ms since last completion hides live-box
   claims without tracker updates; Pause/destroy stops that timer and first-frame wait is explicit.
+- [ ] Deliver a usable tracked-video + compact-list pair at this checkpoint; select/highlight from
+  the list without pretending the later inspector exists. Keep controls and display/tracking/model
+  threshold explanations adjacent. Unconfirmed raw boxes have no public ID badge.
 - [ ] Draw current matched boxes/IDs and confirmed visible trajectories using shared unit geometry.
   Keep Phase 1 raw visible detection count consistent with clipped/filtered boxes, including
   tentative/untracked detections. Do not display lost/predicted boxes as current model output.
+  A prominent on-video New tracking segment reason and persistent segment chip explain Resume,
+  intrinsic geometry and analysis-gap ID resets. Test notice visibility in narrow/landscape layouts.
 - [ ] Browser fixtures cover stable motion, brief loss/reacquisition, expiry, threshold 0.05→1→0.05
   without track resets, rapid selection and portrait/landscape geometry mismatch. Assert camera
   tracks ended after error/Stop and old workers cannot revive trackers.
-- [ ] Run the new unit/browser tests plus the entire existing Phase 1 suite. Commit only with PASS.
+- [ ] Run the new unit/browser tests plus the entire existing Phase 1 suite. Commit/push only with
+  PASS and inspect CI. **Stop here:** provide exact SHA, diff summary, tests and lifecycle risks for
+  review. Do not implement Tasks 4–6 until that checkpoint commit's approval is supplied.
 
 ### Task 4 — Inspector, charts, explorer and honest returned-result view
 
 **Files:** create `src/ui/track-inspector.ts`, `confidence-chart.ts`, `category-explorer.ts`,
 `quality-panel.ts`; modify `main.ts`, `overlay.ts`, `style.css`, `model-info.ts`;
-create `tests/inspection-projection.test.ts`, `tests/browser/inspector.spec.ts`.
+create `tests/inspection-projection.test.ts`, `tests/browser/inspector.spec.ts`;
+modify `public/camera-diagnostics.js`, `.css` and `tests/browser/diagnostics.spec.ts` for Copy log.
 **Consumes:** controller snapshots, capability/catalog, live quality from Tasks 1–3.
 **Produces:** `mountTrackInspector(container, actions)` returning `update(view)`/`destroy()`;
 `drawConfidenceChart(canvas, samples)`; keyed view updates and accessible numeric summaries.
 
 - [ ] Write failing projection/UI tests: chart null gaps remain gaps, samples use actual time/raw
   score; ended/lost/stale/evicted selections are explicit and do not show stale boxes as live.
+  Reuse Task 2's noise snapshots at display thresholds .05/.50/1/.05; ID/candidate counts stay unchanged.
   Repeated UI updates add no tracker samples/events. Retention range/dropped counts stay visible.
 - [ ] Near-threshold assertions at threshold .50: .40 and .49 returned valid scores appear, .50
   appears in visible results instead, .39 does not; at floor .05 the band is empty. Data below
   the model floor or omitted by cap cannot be invented. Invalid/clipped-away boxes aren't counted.
 - [ ] Alternative scores unavailable displays a clear unavailable state with no percentages.
   Only a capability backed by Task 1 runtime evidence may expose actual same-box alternatives.
+- [ ] Preserve paired-row phone order: video/list; inspector/chart; then explorer, notes, benchmark.
+  Test side-by-side content minima from the design and stacked fallback below them; no cramped
+  controls or horizontal overflow. Use existing row1 list, don't replace it with a dead placeholder.
 - [ ] Implement selectable list/stage taps, event timeline/association evidence, configurable
   trails and confidence chart. Stage taps never swallow scroll/pinch; keyboard list is equivalent.
   Inspector says last observed for lost/ended data. Show live proxy/identity-metric limitations.
@@ -174,6 +201,11 @@ create `tests/inspection-projection.test.ts`, `tests/browser/inspector.spec.ts`.
 - [ ] Browser tests at 390/768/1440 CSS widths: 44px controls, no horizontal overflow, focus/selection
   preservation, scroll and touch flow, resize/zoom mapping, hidden/destroyed view cleanup. Inspector
   updates ≤4 Hz while controls respond immediately; pause/Stop cancels unnecessary timers.
+- [ ] Add Copy log only inside opt-in diagnostics: full JSON snapshot at click, successful clipboard
+  write/status and denied/unavailable fallback with full selectable read-only text. Test all five
+  representative events are copied, changes after click don't mutate the snapshot, no camera
+  requests/uploads are triggered, redaction/caps/Clear still work and ordinary mode has no panel.
+  Document explicit clipboard handling beyond page memory. No runtime copy feature exists yet.
 - [ ] Run `npm test -- tests/inspection-projection.test.ts` and the inspector browser tests, then
   full suite. Commit. No Phase 1 compatibility statement is silently broadened.
 
@@ -183,11 +215,13 @@ create `tests/inspection-projection.test.ts`, `tests/browser/inspector.spec.ts`.
 modify `main.ts`/`style.css`; create `tests/failure-store.test.ts`, `tests/browser/failure-log.spec.ts`.
 **Consumes:** selected observed sample or an explicit missed-object report; catalog/model metadata.
 **Produces:** `FailureLogStore` with `setPersistence(enabled)`, `load`, `add`, `remove`, `clearAll`
-and typed result/status; validated schema v1 and an independent memory fallback.
+and typed result/status; validated schema v1 and an independent memory fallback. Storage is
+**localStorage**, key `visual-labs.phase2.failure-notes.v1`, not IndexedDB. All property access and
+getItem/setItem/removeItem are guarded; clear/remove touches only this key, not unrelated settings.
 
 - [ ] Write/run RED tests: missed note without detection, wrong/unstable notes with actual selected
   history, expected-label validation, timestamp/score/unit-box finiteness, text length 500,
-  metadata-only provenance and user-report status. Reject invalid input, never modify model output.
+  metadata-only provenance including model/tracking/display thresholds and user-report status. Reject invalid input, never modify model output.
 - [ ] Test default no storage writes, explicit opt-in saves, disabling prevents new writes without
   claiming prior deletion, reload reads only previously saved data, per-entry deletion and clearAll. Explicit deletion works with saving disabled; failed saved-data
   deletion retains an accurate visible record/status, not a false success.
@@ -202,7 +236,8 @@ and typed result/status; validated schema v1 and an independent memory fallback.
 - [ ] Browser tests: opt-in/off, reload, delete, denied-storage fallback and no new non-GET requests
   in tested flow. Clearly limit that automated request observation to this test, not all devices.
 - [ ] Run unit/browser note tests and full suite; commit. Physical real storage denial remains an
-  accepted evidence gap unless genuinely exercised, not inferred from Private Browsing.
+  accepted evidence gap unless genuinely exercised, not inferred from Private Browsing. Automated store tests are the only planned refusal-path evidence; iOS device
+  Private Browsing/Block All Cookies operation is not proof of actual storage refusal.
 
 ### Task 6 — Labelled synthetic benchmark, device acceptance and handoff
 
@@ -249,6 +284,7 @@ Run synthetic benchmark view with source/config/version and measured runtime.
 ## Plan handoff
 
 The only executed checks in this planning PR are baseline CI verification and documentation checks.
-All runtime tasks above are future work. Claude reviews design/plan honesty, association defaults,
+All runtime tasks above are future work. The after-Task-3 review stop is mandatory even after
+initial implementation approval. Claude reviews design/plan honesty, association defaults,
 state/time/reset semantics, data limits and acceptance criteria, then the user explicitly authorizes
 implementation of an exact reviewed plan commit. Do not mistake a planning PR merge for that approval.
