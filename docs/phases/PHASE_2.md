@@ -49,8 +49,10 @@ checkpoint authorizes merge/deploy, changes to accepted limitations or Phase 3.
   labelled evidence; bundled synthetic numeric sequences evaluate association separately from
   real inference. No detector-accuracy or held-out improvement claim.
 
-Phone order is video/list side by side, then inspector/chart side by side, then explorer, notes
-and benchmark. Narrow content falls back to stacking within each pair without changing that order.
+On phone-width viewports (≤600 CSS px), show full-width video then track list, inspector then
+chart, followed by explorer, notes and benchmark. On wider viewports, pair video/list and
+inspector/chart only with ≥616 CSS px of available content and the design's minimum widths;
+otherwise stack in the same order.
 Controls remain usable; New tracking segment notices are prominent on video after continuity resets.
 
 ## Planning verification and next gate
