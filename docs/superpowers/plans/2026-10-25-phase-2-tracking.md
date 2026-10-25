@@ -207,7 +207,8 @@ and typed result/status; validated schema v1 and an independent memory fallback.
 ### Task 6 — Labelled synthetic benchmark, device acceptance and handoff
 
 **Files:** create `src/tracking/fixtures.ts`, `benchmark.ts`, `tests/tracking-benchmark.test.ts`;
-extend quality panel; add `tests/browser/tracking-quality.spec.ts`, production tracking smoke;
+extend quality panel; add `tests/browser/tracking-quality.spec.ts`, extend `tests/browser/live.spec.ts`
+for the existing production-smoke entry point;
 update README, ARCHITECTURE, EXPERIMENTS, MODEL_LIMITATIONS, ROADMAP and Phase 2 phase notes.
 **Consumes:** pure tracker/config and separate fixture truth; no captured footage or training data.
 **Produces:** `evaluateTrackingSequence(fixture, predictions): TrackingEvaluationReport` and local
