@@ -90,7 +90,7 @@ User-reported metadata carried forward, not independently inspected:
 | --- | --- | --- |
 | Fresh diagnostic tab: Idle, indicator off, no camera-request before Start; record CSP events | Partial — post-Start-only prompt/indicator/request confirmed; no CSP entries reported (P1–P4); Idle and actual JSON unprovided | Pass for user-reported pre-Start Idle/indicator off and prompt only after Start; supplied log has no camera-request before Start and records blocked Vercel script (P14–P16); coverage limits apply |
 | Non-diagnostic fresh-tab comparison | Pending | Pending |
-| Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Partial — prompt after Start confirmed (P16); site identity and successful acquisition unprovided |
+| Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Partial — prompt after Start and live video/labelled detections after allowing confirmed (P16/P17); site identity unprovided |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
 | Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending |
 | Background while permission pending | Pass — popup persisted on return; manual Resume required for inference, user-reported (P6/P7) | Pending |
@@ -460,6 +460,18 @@ answered; successful acquisition, prompt site identity and post-Start camera rec
 unprovided. A blocked Vercel script remains evidenced by P15, without any claim about historical
 camera causation. No runtime change, test or deployment was made. Next: confirm post-Allow live
 video/detections, then continue iPad startup-interruption checks.
+
+### P17 — iPad live video and labelled detections confirmed (2026-10-25)
+
+Source: **user-reported physical observation**, same iPad and requested privacy preview context.
+Asked whether live video and labelled detection boxes appeared after allowing camera access,
+the user answered: "Yes".
+
+Record successful post-Allow video and labelled detections as user-reported. No inference/FPS,
+class names or post-Start diagnostic JSON were supplied. Prompt site identity remains unprovided.
+This confirms operation under this preview but does not independently verify all response headers
+or explain historical S1/S2. No runtime change, test or deployment was made. Next: background
+while the iPad permission request is pending, with post-Allow manual Resume behavior observed.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
