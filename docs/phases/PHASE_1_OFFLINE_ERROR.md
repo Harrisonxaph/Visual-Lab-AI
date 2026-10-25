@@ -1,6 +1,9 @@
 # Phase 1 initialization error guidance and remaining validation decisions
 
-Status: **implementation under review; not deployed or physically retested**. This small follow-up
+Status: PR #6 merged. Its merge commit `063a97a` has one authorized temporary preview;
+focused physical retesting has **user-reported passes on both devices**, with broader validation
+gaps retained. See the
+[current retest ledger](../validation/PHASE_1_OFFLINE_RETEST_2026-10-25.md). This small follow-up
 does not complete Phase 1 validation or authorize Phase 2.
 
 ## Baseline and reproduction
@@ -82,10 +85,11 @@ identity guards are unchanged and were reviewed; that extra case is not included
 These decisions document what the review can rely on; they do not silently turn untested checks
 into passes, accept risk on the user's behalf or authorize Phase 2.
 
-## Future manual verification — only after a separately approved preview
+## Focused manual verification — current preview authorization
 
-No repeat device session is requested before review. If a new preview is later authorized, record
-its exact commit/URL separately from the `edea505` preview. On one device at a time:
+The user authorized one preview of merged commit `063a97a` after merge CI passed. Its exact
+commit/URL and results are recorded separately from `edea505` in the current retest ledger.
+Further deployments require separate approval. On one device at a time:
 
 1. Load the shell online without Start; disable connectivity, then Start and allow permission.
    Record exact error, indicator and whether camera/video was active. Cached assets may still work;
@@ -94,5 +98,6 @@ its exact commit/URL separately from the `edea505` preview. On one device at a t
 3. Confirm missing-capability and genuine model/runtime errors are not described as known network
    failures. Use automated controlled tests when a real device cannot safely induce these cases.
 
-Stop before merging/deploying or Phase 2. The existing preview still runs `edea505`; it does not
-contain this fix. No production, protection or automatic-deployment setting was changed.
+Stop before merging, any additional deployment or Phase 2. The old preview still runs `edea505`;
+the new focused preview is pinned to `063a97a`. No production, protection or automatic-deployment
+setting was changed.
