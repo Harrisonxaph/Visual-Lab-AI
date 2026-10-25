@@ -1,6 +1,6 @@
 # Phase 1 privacy preview validation — 2026-10-24
 
-Status: **in progress; iPhone acquisition sequence clarified as expected; diagnostic JSON and remaining checks pending**. This ledger is separate from the earlier
+Status: **in progress; observations from both devices recorded; review corrections and outstanding validation limits remain**. This ledger is separate from the earlier
 [device walkthrough](PHASE_1_DEVICES_2026-10-24.md). A clean retest cannot explain S1/S2.
 
 ## Authorization and exact build
@@ -446,6 +446,11 @@ click. That remains unresolved; there is also no post-Start camera-request or se
 to establish acquisition. Next: clarify prompt timing relative to Start and, if needed, whether
 video/detections began. No runtime fix, test or deployment was made.
 
+Review annotation (2026-10-25): P15 was **likely cut short when copied**, according to the supplied
+review correction. This is an inference, not proven; preserve the pasted entries as supplied and
+do not invent missing camera-request/settlement records. The additional log requested for P27
+has not yet been supplied to Codex and is needed before completing that evidence correction.
+
 ### P16 — iPad prompt timing corrected to after Start (2026-10-25)
 
 Source: **user-reported clarification**, same iPad and requested privacy preview context.
@@ -635,22 +640,6 @@ The cancellation path was not exercised; this is neither an application failure 
 pass. Do not generalize the observation to iPhone, where control accessibility remains untested.
 No runtime fix, automated test or deployment was made.
 
-## Current evidence checkpoint
-
-Both devices have reported live detections, scene/control/layout checks, private-tab operation
-and manual Resume after backgrounding while permission was pending. The iPad also supplies a
-user-copied trusted CSP event blocking Vercel feedback code, post-Start permission timing and
-navigation-return/denial recovery evidence. Offline error/retry is reported on both devices;
-the iPad photo corroborates the app camera-off/error presentation, not its system indicator.
-
-These observations do not complete validation. Loading-Stop could not be timed on either device;
-backgrounding during model loading is untested; iPad pending-permission Stop is blocked by Safari's
-modal, and that accessibility was not checked on iPhone. External interruption feasibility/testing,
-non-diagnostic fresh-tab comparison, actual storage denial, effective authenticated app/asset
-headers, HTML inspection and physical-session network inspection remain Pending. Earlier iPhone
-S1/S2 remain separate historical reports; current explicit corrections cannot reconstruct them.
-No material runtime defect has been reproduced or fixed during this preview walkthrough.
-
 ### P26 — External camera interruption untested (2026-10-25)
 
 Source: **user-reported testing status**. Asked whether an interruption such as an incoming
@@ -666,6 +655,23 @@ Record device/date/time, preview/commit, steps, status/indicator, camera-request
 prompt identity, exact errors, result and evidence source. Screenshots must exclude live footage
 and unnecessary personal data. If a permission prompt blocks panel rendering, capture it safely,
 dismiss it and then inspect the panel. Do not interpret missing information as a pass.
+
+## Current evidence checkpoint
+
+Both devices have reported live detections, scene/control/layout checks, private-tab operation
+and manual Resume after backgrounding while permission was pending. The iPad also supplies a
+user-copied trusted CSP event blocking Vercel feedback code, post-Start permission timing and
+navigation-return/denial recovery evidence. Offline error/retry is reported on both devices;
+the iPad photo corroborates the app camera-off/error presentation, not its system indicator.
+
+These observations do not complete validation. Loading-Stop could not be timed on either device;
+backgrounding during model loading is untested; iPad pending-permission Stop is blocked by Safari's
+modal, and that accessibility was not checked on iPhone. External interruption feasibility/testing,
+non-diagnostic fresh-tab comparison, actual storage denial, effective authenticated app/asset
+headers, HTML inspection and physical-session network inspection remain Pending. Earlier iPhone
+S1/S2 remain separate historical reports; current explicit corrections cannot reconstruct them.
+No runtime fix was applied during this preview walkthrough. Review identified misleading offline
+error wording as a follow-up runtime issue; its change and regression test belong in a separate PR.
 
 ## Next gate
 

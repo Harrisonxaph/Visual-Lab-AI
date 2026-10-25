@@ -1,7 +1,8 @@
 # Phase 1 privacy investigation and focused device retest
 
 Status: PR #4 merged; one temporary preview authorized for merged commit `edea505`.
-Deployment verification and new physical validation are **in progress**, not complete. See the
+The preview is READY with its source SHA verified; physical observations from both devices are
+recorded. Validation remains **in progress**, with outstanding checks and limits. See the
 [current privacy-preview ledger](../validation/PHASE_1_PRIVACY_PREVIEW_2026-10-24.md).
 Baseline main after ledger PR #3 merge: `6c8fe3761625f37e0ad3003f1cd9357f6c44d6b0`.
 Main push CI [40130225460](https://github.com/Harrisonxaph/Visual-Lab-AI/actions/runs/40130225460)
@@ -55,7 +56,8 @@ compilation; JavaScript `unsafe-eval` and `unsafe-inline` are absent. Workers ar
 this runtime uses a file worker, so blob workers are not allowed. Media allows local/blob resources
 for camera compatibility. Objects, embedding, base URLs and forms are forbidden.
 
-This blocks off-origin scripts/connections and may block preview toolbar injection. It does not
+Local production tests verify off-origin script/connection blocking. The user-supplied iPad log
+also records an enforcing CSP event blocking Vercel's feedback script in the preview. It does not
 change Deployment Protection. A blocked toolbar is not evidence that it previously requested a
 camera. The policy does **not** block same-origin uploads, all navigation-based exfiltration or
 trusted same-origin code. No claim of universal no-upload enforcement or physical network audit is
@@ -71,7 +73,7 @@ scripts as injected lab scripts. A read-only check on 2026-10-24 of the old prev
 302 redirect without a CSP header, then Vercel SSO (307) and login (200), each with one CSP header.
 The login policy belongs to a different document, not an extra policy applied to the app. This
 does not establish the headers on an authenticated app response or whether the proposed CSP
-interferes with that authentication flow. Those checks remain Pending after deployment approval.
+interferes with that authentication flow. Those checks remain Pending despite the authorized preview now being deployed.
 No auth tokens, redirect query values or cookies were recorded.
 
 After an approved authenticated inspection, record response URL,
@@ -80,7 +82,8 @@ cookies, query tokens or raw personal data. Source HTML alone cannot establish r
 
 ## Focused real-device checklist — both devices, one at a time
 
-All items below start **Pending** for this preview build. Record exact approved preview URL/SHA,
+This is the test procedure, not the current results matrix. Consult the current ledger for
+performed checks, remaining Pending items and the browser-modal blocker. Record exact approved preview URL/SHA,
 device/OS/Safari version, date/time, steps, result/error and evidence source. One preview deployment
 of merged commit `edea505` is authorized; no production deployment is authorized. Never overwrite old observations or mark an unperformed step passed.
 
@@ -147,8 +150,9 @@ real detections. No other Critical/Important or minor findings were reported. Th
 review. The reviewer could not independently rerun with the default missing browser executable;
 the implementer's runs explicitly use system Chromium.
 
-No new physical observations have been collected for this build. No claim is made that the old
-pre-Start report was reproduced, explained or fixed.
+Both devices now have user-reported physical observations for this build in the current ledger,
+including supplied diagnostic text and an iPad error photo. Those are separate from local/CI
+automated evidence. No claim is made that historical S1/S2 were reproduced, explained or fixed.
 
 ## Deployment plan and current authorization
 
