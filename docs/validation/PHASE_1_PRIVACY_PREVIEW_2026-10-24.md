@@ -100,7 +100,7 @@ User-reported metadata carried forward, not independently inspected:
 | Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pass for reported behavior — counts 0 / 2, boxes updated; labels unprovided (P20) |
 | Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pass for Private Browsing operation, user-reported (P21); actual storage denial untested |
 | Cold-cache network/model failure and recovery | Pass for reported offline error/retry sequence — camera did not activate offline; explicit Start recovered at displayed 50 ms (P10–P12). Specific model-download failure/cache state unverified | Partial — photographed Error/CAMERA OFF UI and error wording, explicit Start recovery reported; system indicator unobserved (P22/P23); resource/cache unverified |
-| Feasible external camera interruption | Pending | Pending |
+| Feasible external camera interruption | Pending — user reports not tested (P26) | Pending — user reports not tested (P26) |
 | Live preview, detections, threshold, rotation and lifecycle under new policy | Pass for user-reported behavior across P8/P9/P12/P13; effective deployed headers still uninspected | Pass for reported video/detections, responsive slider, rotation and lifecycle (P17/P20); effective headers uninspected |
 | Zoom, or explicit Not applicable reason | Pass for reported pinch zoom (P13); Safari Page Zoom setting not tested | Pass for reported pinch zoom (P20); Safari Page Zoom setting not tested |
 | Physical-session network inspection | Pending | Pending |
@@ -650,6 +650,16 @@ non-diagnostic fresh-tab comparison, actual storage denial, effective authentica
 headers, HTML inspection and physical-session network inspection remain Pending. Earlier iPhone
 S1/S2 remain separate historical reports; current explicit corrections cannot reconstruct them.
 No material runtime defect has been reproduced or fixed during this preview walkthrough.
+
+### P26 — External camera interruption untested (2026-10-25)
+
+Source: **user-reported testing status**. Asked whether an interruption such as an incoming
+FaceTime call was practical to test on either device, the user answered: "Not tested".
+
+Leave external interruption **Pending** for both devices. Feasibility and behavior were not
+established; do not mark Not applicable without a reason or infer success from ordinary
+backgrounding. No call was arranged, runtime fix made or deployment performed. This closes the
+current guided session with the outstanding evidence explicitly retained for review.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
