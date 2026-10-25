@@ -5,7 +5,9 @@
 EfficientDet-Lite0 float32 / v1, MediaPipe Tasks Vision 0.10.32, CPU/WASM in a module worker.
 Verified on Chromium 154, Linux x86_64 using a fixed image and synthetic camera video stream,
 in both development and production builds (production test disables GPU acceleration).
-Physical cameras, macOS Safari, real iPhone/iPad Safari and Android remain unverified.
+Physical-camera operation on the user-reported iPhone 15 Pro (iOS 27.0.1, Safari) and iPad Pro
+11-inch, 3rd generation (iPadOS 26.6.2, Safari) has user-reported evidence in the device ledgers.
+That is not comprehensive Safari/platform validation. macOS Safari and Android remain untested.
 Do not interpret responsive viewport screenshots as device inference evidence.
 
 Module workers, OffscreenCanvas, transferable ImageBitmap and WebAssembly are required.
@@ -47,7 +49,9 @@ Inference time measures the synchronous detection call inside the worker. Proces
 completed frames in the latest 2-second rolling window, including capture/transfer/scheduling.
 Before two seconds have elapsed, it uses elapsed session time. It is not camera FPS, a latency
 percentile or accuracy. Processing is capped at 10 FPS and only
-one frame is in flight. CPU, battery and thermal behavior still require real-device evaluation.
+one frame is in flight. Earlier five-minute physical sessions include user-reported battery,
+endpoint performance and subjective warmth observations; no controlled energy/thermal benchmark
+or measured throttling result exists. See the original device ledger for conditions and limits.
 
 Permission is requested only after Start. Pause retains camera preview, Stop releases tracks.
 Backgrounding pauses inference; camera preview may still be active until Stop or page exit.
@@ -57,10 +61,14 @@ The model is served locally after initial setup; no offline/PWA guarantee exists
 No tracking, identity persistence, active learning, training, retraining, ground-truth evaluation
 or model comparison is implemented. Corrections cannot improve this detector in Phase 1.
 
-## Proposed diagnostic and CSP change
+## Diagnostic and CSP change
 
-This branch adds opt-in local camera-call metadata diagnostics and a restrictive response CSP.
-It has not been deployed or checked on physical Safari devices. Same-origin requests are allowed,
+PR #4 adds opt-in local camera-call metadata diagnostics and a restrictive response CSP.
+Merged commit `edea505` has one authorized temporary preview and user-reported physical Safari
+checks on both devices, recorded in the
+[privacy-preview ledger](docs/validation/PHASE_1_PRIVACY_PREVIEW_2026-10-24.md).
+Remaining lifecycle, network and authenticated deployed-header/HTML checks are not complete.
+Same-origin requests are allowed,
 so CSP is not proof of no uploads. WASM execution requires the explicit `wasm-unsafe-eval` allowance;
 older browsers may reject compilation and must fail visibly. See
 [privacy investigation](docs/phases/PHASE_1_PRIVACY.md) for coverage and retest requirements.

@@ -1,6 +1,9 @@
 # Phase 1 privacy investigation and focused device retest
 
-Status: implementation under review; **not deployed and not physically validated**.
+Status: PR #4 merged; one temporary preview authorized for merged commit `edea505`.
+The preview is READY with its source SHA verified; physical observations from both devices are
+recorded. Validation remains **in progress**, with outstanding checks and limits. See the
+[current privacy-preview ledger](../validation/PHASE_1_PRIVACY_PREVIEW_2026-10-24.md).
 Baseline main after ledger PR #3 merge: `6c8fe3761625f37e0ad3003f1cd9357f6c44d6b0`.
 Main push CI [40130225460](https://github.com/Harrisonxaph/Visual-Lab-AI/actions/runs/40130225460)
 passed for that exact commit. Earlier physical results remain in
@@ -8,7 +11,7 @@ passed for that exact commit. Earlier physical results remain in
 
 ## Diagnostic behavior and limits
 
-Append `?diag=1` to an **approved future preview URL**. The same-origin classic script in the head
+Append `?diag=1` to the **approved preview URL recorded in the current ledger**. The same-origin classic script in the head
 executes synchronously before the app module; ordinary mode returns immediately, leaving the
 camera API untouched and adding no panel. Vite development injects its own client; only the built
 preview represents the intended document order. A hosting platform can insert earlier code, so
@@ -53,7 +56,9 @@ compilation; JavaScript `unsafe-eval` and `unsafe-inline` are absent. Workers ar
 this runtime uses a file worker, so blob workers are not allowed. Media allows local/blob resources
 for camera compatibility. Objects, embedding, base URLs and forms are forbidden.
 
-This blocks off-origin scripts/connections and may block preview toolbar injection. It does not
+Local production tests verify off-origin script/connection blocking. The user-supplied shared diagnostic log
+also records an enforcing CSP event blocking Vercel's feedback script in the preview; P27 records
+that raw device identity was not captured and other-device equivalence is user-reported. It does not
 change Deployment Protection. A blocked toolbar is not evidence that it previously requested a
 camera. The policy does **not** block same-origin uploads, all navigation-based exfiltration or
 trusted same-origin code. No claim of universal no-upload enforcement or physical network audit is
@@ -69,7 +74,7 @@ scripts as injected lab scripts. A read-only check on 2026-10-24 of the old prev
 302 redirect without a CSP header, then Vercel SSO (307) and login (200), each with one CSP header.
 The login policy belongs to a different document, not an extra policy applied to the app. This
 does not establish the headers on an authenticated app response or whether the proposed CSP
-interferes with that authentication flow. Those checks remain Pending after deployment approval.
+interferes with that authentication flow. Those checks remain Pending despite the authorized preview now being deployed.
 No auth tokens, redirect query values or cookies were recorded.
 
 After an approved authenticated inspection, record response URL,
@@ -78,9 +83,10 @@ cookies, query tokens or raw personal data. Source HTML alone cannot establish r
 
 ## Focused real-device checklist — both devices, one at a time
 
-All items below start **Pending** for this proposed build. Record exact approved preview URL/SHA,
-device/OS/Safari version, date/time, steps, result/error and evidence source. No deployment is
-currently authorized. Never overwrite old observations or mark an unperformed step passed.
+This is the test procedure, not the current results matrix. Consult the current ledger for
+performed checks, remaining Pending items and the browser-modal blocker. Record exact approved preview URL/SHA,
+device/OS/Safari version, date/time, steps, result/error and evidence source. One preview deployment
+of merged commit `edea505` is authorized; no production deployment is authorized. Never overwrite old observations or mark an unperformed step passed.
 
 1. **Fresh-page camera gate (iPhone blocker):** close other Safari tabs using cameras; verify the
    indicator is off. Open a fresh authenticated diagnostic tab, do not press Start, and wait 15 s.
@@ -145,13 +151,15 @@ real detections. No other Critical/Important or minor findings were reported. Th
 review. The reviewer could not independently rerun with the default missing browser executable;
 the implementer's runs explicitly use system Chromium.
 
-No new physical observations have been collected for this build. No claim is made that the old
-pre-Start report was reproduced, explained or fixed.
+Both devices now have user-reported physical observations for this build in the current ledger,
+including supplied diagnostic text and an iPad error photo. Those are separate from local/CI
+automated evidence. No claim is made that historical S1/S2 were reproduced, explained or fixed.
 
-## Deployment plan — requires later approval
+## Deployment plan and current authorization
 
-Review the draft PR and its exact head commit, then explicitly approve **preview only** for that
-SHA. Create a new immutable temporary preview from that commit (do not promote or move production
+The user approved one **preview only** deployment of merged commit `edea505` after successful
+merge CI. Further deployments require separate approval. Create a new immutable temporary preview
+from that commit (do not promote or move production
 aliases). Keep authentication/protection, project settings and disabled automatic Git deployments
 unchanged. Verify deployment source SHA, READY status and effective CSP headers on the page,
 app/diagnostic JS and CSS, worker script, every `/wasm/*.js` loader and WASM binary, and model.
