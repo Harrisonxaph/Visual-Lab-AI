@@ -95,8 +95,8 @@ User-reported metadata carried forward, not independently inspected:
 | Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending |
 | Background while permission pending | Pass — popup persisted on return; manual Resume required for inference, user-reported (P6/P7) | Pass — popup persisted; paused after Allow, manual Resume required (P18), user-reported |
 | Background while model loading pending | Pending — loading window not exercised | Pending |
-| Permission-denied message, inactive indicator and recovery | Pending | Pending |
-| Navigate away and return inactive until Start | Pending | Pending |
+| Permission-denied message, inactive indicator and recovery | Pending on new preview; older-preview evidence retained separately | Pass — error reported same as iPhone, indicator off, recovery worked (P19); no fresh verbatim transcription |
+| Navigate away and return inactive until Start | Pending on new preview; older-preview evidence retained separately | Pass — indicator off on leaving and return until Start, user-reported (P19) |
 | Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pending |
 | Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pending |
 | Cold-cache network/model failure and recovery | Pass for reported offline error/retry sequence — camera did not activate offline; explicit Start recovered at displayed 50 ms (P10–P12). Specific model-download failure/cache state unverified | Pending |
@@ -493,6 +493,30 @@ paused inference after Allow and explicit Resume required for detection boxes. B
 supplies no additional detail. This does not exercise backgrounding during model loading or Stop
 while permission is pending; those remain Pending. No runtime change, automated test or deployment
 was made. Next: fill the iPad denial-message and navigation-return evidence gaps.
+
+### P19 — iPad denial/recovery and navigation-return gaps addressed (2026-10-25)
+
+Source: **user-reported physical observation**, same iPad and requested privacy preview context.
+Exact timestamp was not supplied.
+
+Verbatim response:
+
+```text
+Permission-denied error, exact wording: same as with iphone
+Camera indicator stayed off when denied: yes
+After restoring permission, detections worked: yes
+Navigating away turned camera indicator off: yes
+On returning, camera stayed off until Start: yes
+```
+
+Record passes for reported denial explanation matching the iPhone message, indicator off when
+denied, successful permission recovery, indicator off on navigation away and remaining off on
+return until explicit Start. The earlier iPhone denial message was reported as "camera access was
+denied, allow in your browser settings then try again." The iPad wording is supplied **by reference**,
+not a fresh verbatim transcription; preserve that evidence distinction. These observations address
+the two previously unanswered iPad questions without rewriting their original historical entries.
+No track internals or network activity were inspected. No runtime change, automated test or
+deployment was made. Next: iPad plain/multiple scene and layout/control smoke checks.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
