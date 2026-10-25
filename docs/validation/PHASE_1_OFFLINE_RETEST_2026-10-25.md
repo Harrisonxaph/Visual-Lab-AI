@@ -85,10 +85,56 @@ assumed compliance. Do not repeat unrelated earlier controls/layout/performance 
 
 ## Session log
 
-No new physical observations yet. Record user-reported results explicitly, with device, date/time
-if supplied, exact preview/commit, error text and unanswered fields. Mark unperformed steps
-Pending. Reproduce material failures before any fixes and add appropriate regression coverage;
-no speculative runtime change or further deployment is authorized by this ledger task.
+### O1 — Supplied diagnostic excerpt; offline outcome not supplied (2026-10-25)
+
+Source: **user-supplied diagnostic text**, following the requested iPhone-first procedure. The
+current device and complete address/build were not independently confirmed in this reply; do not
+assign the log to a device solely from its metadata. The requested preview/commit is above.
+
+Supplied entries, wrapped in an opening array bracket for JSON presentation:
+
+```json
+[
+  {
+    "event": "installed",
+    "at": "2026-10-25T20:00:46.496Z",
+    "elapsedMs": 0,
+    "active": false,
+    "hasBeenActive": false,
+    "context": "top-level page"
+  },
+  {
+    "event": "csp-violation",
+    "at": "2026-10-25T20:00:46.497Z",
+    "elapsedMs": 1,
+    "directive": "script-src-elem",
+    "blockedAddress": "https://vercel.live/_next-live/feedback/feedback.js",
+    "disposition": "enforce",
+    "trusted": true
+  },
+  {
+    "event": "start-click",
+    "at": "2026-10-25T20:01:06.294Z",
+    "elapsedMs": 19798,
+    "trusted": true,
+    "active": true,
+    "hasBeenActive": true
+  }
+]
+```
+
+The text shows installation in the top-level page, an enforcing browser-trusted CSP violation
+blocking Vercel feedback code at +1 ms, and a trusted Start click at +19,798 ms. No camera-request
+or settlement appears in the supplied excerpt. Do not infer whether entries were omitted, whether
+permission was pending, or whether the camera failed to activate. Diagnostic entries do not log
+the app's error text or establish network state. Offline reproduction, visible error wording,
+camera indicator state and explicit retry recovery all remain Pending. No runtime change,
+automated test or deployment was made. Next: obtain the actual visible offline error/result and
+camera state without requiring another full run.
+
+For subsequent records, preserve user-reported results, device/date/time if supplied, exact
+preview/commit, error text and unanswered fields. Mark unperformed steps Pending. Reproduce
+material failures before fixes; no speculative change or further deployment is authorized.
 
 ## Next gate
 
