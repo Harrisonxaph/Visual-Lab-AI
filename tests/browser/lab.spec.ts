@@ -17,7 +17,9 @@ async function camera(page: Page, denied = false) {
         };
         draw();
         setInterval(draw, 50);
-        return canvas.captureStream(10);
+        const stream = canvas.captureStream(10);
+        Object.assign(window, { __labStreamTest: stream });
+        return stream;
       },
     });
   }, denied);
@@ -202,7 +204,7 @@ test("camera track ending externally stops the session", async ({ page }) => {
   );
 });
 
-test("an actual model asset download failure is reported and camera is released", async ({
+test("an actual model asset download failure gives initialization guidance and explicit retry releases camera", async ({
   page,
 }) => {
   await camera(page);
@@ -214,27 +216,91 @@ test("an actual model asset download failure is reported and camera is released"
   await expect(page.getByTestId("lab-state")).toHaveText("Error", {
     timeout: 30000,
   });
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("Check your connection");
   expect(
     await page.locator("video").evaluate((v: HTMLVideoElement) => v.srcObject),
   ).toBeNull();
+  expect(
+    await page.evaluate(() =>
+      (window as any).__labStreamTest
+        .getTracks()
+        .every((track: MediaStreamTrack) => track.readyState === "ended"),
+    ),
+  ).toBe(true);
+  await page.unroute("**/models/efficientdet_lite0.tflite");
+  await expect(page.getByTestId("lab-state")).toHaveText("Error");
+  await page.getByRole("button", { name: "Start camera", exact: true }).click();
+  await expect(page.getByTestId("lab-state")).toHaveText("Running", {
+    timeout: 30000,
+  });
+  await page.getByRole("button", { name: "Stop camera", exact: true }).click();
 });
-test("worker crashes produce a recoverable error", async ({ page }) => {
+
+test("offline worker initialization gives connection/retry guidance and recovers only after Start", async ({
+  page,
+  context,
+}) => {
+  await camera(page);
+  await page.goto("/");
+  await context.setOffline(true);
+  await page.getByRole("button", { name: "Start camera", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Check your connection");
+  await expect(page.getByRole("alert")).not.toContainText(
+    "browser may not support",
+  );
+  expect(
+    await page.locator("video").evaluate((v: HTMLVideoElement) => v.srcObject),
+  ).toBeNull();
+  expect(
+    await page.evaluate(() =>
+      (window as any).__labStreamTest
+        .getTracks()
+        .every((track: MediaStreamTrack) => track.readyState === "ended"),
+    ),
+  ).toBe(true);
+  await context.setOffline(false);
+  await expect(page.getByTestId("lab-state")).toHaveText("Error");
+  await page.getByRole("button", { name: "Start camera", exact: true }).click();
+  await expect(page.getByTestId("lab-state")).toHaveText("Running", {
+    timeout: 30000,
+  });
+  await page.getByRole("button", { name: "Stop camera", exact: true }).click();
+});
+
+test("worker crashes during inference remain generic runtime errors with explicit retry", async ({
+  page,
+}) => {
   await camera(page);
   await page.route("**/src/inference/detector.worker.ts*", (route) =>
     route.fulfill({
       contentType: "text/javascript",
-      body: "self.onmessage=()=>{throw new Error('Test worker crash');};",
+      body: "self.onmessage=({data})=>{if(data.type==='init')postMessage({type:'ready'});else{data.bitmap.close();throw new Error('Test inference crash')}};",
     }),
   );
   await page.goto("/");
   await page.getByRole("button", { name: "Start camera", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText(
-    "inference worker stopped",
+    "inference worker stopped unexpectedly",
   );
-  await expect(
-    page.getByRole("button", { name: "Start camera", exact: true }),
-  ).toBeEnabled();
+  await expect(page.getByRole("alert")).not.toContainText(
+    "Check your connection",
+  );
+  expect(
+    await page.locator("video").evaluate((v: HTMLVideoElement) => v.srcObject),
+  ).toBeNull();
+  expect(
+    await page.evaluate(() =>
+      (window as any).__labStreamTest
+        .getTracks()
+        .every((track: MediaStreamTrack) => track.readyState === "ended"),
+    ),
+  ).toBe(true);
+  await page.unroute("**/src/inference/detector.worker.ts*");
+  await model(page);
+  await page.getByRole("button", { name: "Start camera", exact: true }).click();
+  await expect(page.getByTestId("lab-state")).toHaveText("Running");
+  await expect(page.getByTestId("detection-count")).toHaveText("2");
+  await page.getByRole("button", { name: "Stop camera", exact: true }).click();
 });
 
 test("camera aspect change clears old boxes while the next result is pending", async ({

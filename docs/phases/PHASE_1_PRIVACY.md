@@ -176,3 +176,10 @@ The early diagnostics asset is currently fetched on every load but activates onl
 Before any production release, explicitly decide whether to retain that opt-in capability or remove
 it from the production build. No production-shipping decision or deployment is made in this PR.
 The existing `media-src blob:` allowance is retained; current camera srcObject does not require it.
+
+## After ledger PR #5
+
+PR #5 is merged; its accepted ledger remains historical physical evidence for preview `edea505`.
+The separate [offline-message follow-up and written validation decisions](PHASE_1_OFFLINE_ERROR.md)
+document the initialization guidance change and remaining physical/network/header limitations.
+No additional deployment or Phase 2 is authorized by that follow-up.

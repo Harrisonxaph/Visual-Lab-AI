@@ -72,3 +72,12 @@ Same-origin requests are allowed,
 so CSP is not proof of no uploads. WASM execution requires the explicit `wasm-unsafe-eval` allowance;
 older browsers may reject compilation and must fail visibly. See
 [privacy investigation](docs/phases/PHASE_1_PRIVACY.md) for coverage and retest requirements.
+
+## Initialization failure guidance (follow-up under review)
+
+The offline-error follow-up distinguishes worker failure before ready from a crash during
+inference. Initialization guidance mentions possibly unavailable app/model/runtime files and
+connection checks, retaining reported detector details; it does not diagnose every failure as
+network-related or use navigator.onLine as proof. Generic runtime and missing-capability errors
+remain distinct. The change has not been deployed or physically retested. See
+[offline guidance and remaining validation decisions](docs/phases/PHASE_1_OFFLINE_ERROR.md).

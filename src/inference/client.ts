@@ -13,6 +13,12 @@ interface Pending<T> {
   reject: (error: Error) => void;
   timer: ReturnType<typeof setTimeout>;
 }
+function initializationError(detail?: string): Error {
+  return new Error(
+    "Inference could not start. Required app, model or runtime files may be unavailable. Check your connection and choose Start camera to retry." +
+      (detail ? ` Detector: ${detail}` : ""),
+  );
+}
 /** A fresh worker for each session; at most one transferred frame may be outstanding. */
 export class WorkerDetector {
   private worker?: Worker;
@@ -65,15 +71,21 @@ export class WorkerDetector {
             pending.resolve(data);
           }
           if (data.type === "error")
-            this.fail(new Error(`Detector: ${data.message}`));
+            this.fail(
+              this.loaded
+                ? new Error(`Detector: ${data.message}`)
+                : initializationError(data.message),
+            );
         };
         worker.onerror = (event) => {
           if (worker !== this.worker) return;
           event.preventDefault?.();
           this.fail(
-            new Error(
-              "The inference worker stopped. This browser may not support the model. Try starting again.",
-            ),
+            this.loaded
+              ? new Error(
+                  "The inference worker stopped unexpectedly. Choose Start camera to retry.",
+                )
+              : initializationError(),
           );
         };
         worker.onmessageerror = () => {
