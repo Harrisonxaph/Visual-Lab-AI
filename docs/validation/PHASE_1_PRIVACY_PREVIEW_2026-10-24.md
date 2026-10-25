@@ -92,7 +92,7 @@ User-reported metadata carried forward, not independently inspected:
 | Non-diagnostic fresh-tab comparison | Pending | Pending |
 | Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Partial — prompt after Start and live video/labelled detections after allowing confirmed (P16/P17); site identity unprovided |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
-| Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending |
+| Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending — loading too brief to interrupt (P24) |
 | Background while permission pending | Pass — popup persisted on return; manual Resume required for inference, user-reported (P6/P7) | Pass — popup persisted; paused after Allow, manual Resume required (P18), user-reported |
 | Background while model loading pending | Pending — loading window not exercised | Pending |
 | Permission-denied message, inactive indicator and recovery | Pending on new preview; older-preview evidence retained separately | Pass — error reported same as iPhone, indicator off, recovery worked (P19); no fresh verbatim transcription |
@@ -611,6 +611,18 @@ unconfirmed; no repeat is required merely to fill that field. No raw photograph 
 the repository. No runtime failure requiring a fix is established by this image; no code/test or
 deployment changes were made. Next: the remaining iPad model-loading Stop attempt, recording
 "too fast to test" honestly if that state cannot be observed.
+
+### P24 — iPad loading-Stop attempt not testable at observed speed (2026-10-25)
+
+Source: **user-reported physical observation**, same iPad and requested privacy preview context.
+Asked to attempt Stop while Loading is visible, the user answered: "Loading too brief".
+
+Stop during model loading remains **Pending**, not passed or failed. No interruption or late-grant
+cleanup is inferred; no 45-second observation or subsequent restart result was supplied for this
+attempt. Model-loading background interruption also remains untested. Do not infer that cached
+or brief initialization covers those lifecycle paths. No runtime fix, automated test or redeployment
+was made. Next: establish whether Safari's permission modal permits the pending-permission Stop
+check, without assuming it is accessible or forcing repeated attempts.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
