@@ -99,7 +99,7 @@ User-reported metadata carried forward, not independently inspected:
 | Navigate away and return inactive until Start | Pending on new preview; older-preview evidence retained separately | Pass — indicator off on leaving and return until Start, user-reported (P19) |
 | Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pass for reported behavior — counts 0 / 2, boxes updated; labels unprovided (P20) |
 | Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pass for Private Browsing operation, user-reported (P21); actual storage denial untested |
-| Cold-cache network/model failure and recovery | Pass for reported offline error/retry sequence — camera did not activate offline; explicit Start recovered at displayed 50 ms (P10–P12). Specific model-download failure/cache state unverified | Partial — error reported same as iPhone and explicit Start recovered; indicator state unclear (P22); resource/cache unverified |
+| Cold-cache network/model failure and recovery | Pass for reported offline error/retry sequence — camera did not activate offline; explicit Start recovered at displayed 50 ms (P10–P12). Specific model-download failure/cache state unverified | Partial — photographed Error/CAMERA OFF UI and error wording, explicit Start recovery reported; system indicator unobserved (P22/P23); resource/cache unverified |
 | Feasible external camera interruption | Pending | Pending |
 | Live preview, detections, threshold, rotation and lifecycle under new policy | Pass for user-reported behavior across P8/P9/P12/P13; effective deployed headers still uninspected | Pass for reported video/detections, responsive slider, rotation and lifecycle (P17/P20); effective headers uninspected |
 | Zoom, or explicit Not applicable reason | Pass for reported pinch zoom (P13); Safari Page Zoom setting not tested | Pass for reported pinch zoom (P20); Safari Page Zoom setting not tested |
@@ -591,6 +591,26 @@ must not be interpreted as either on or off. Blank issue wording adds no detail.
 remains unconfirmed pending an explicit indicator answer; if it remained on after the error,
 investigate that sequence before claiming a cleanup pass. Specific model-download failure and
 cold-cache conditions remain unverified. No runtime fix, automated test or deployment was made.
+
+### P23 — User-supplied photo of iPad offline error UI (2026-10-25)
+
+Source: **visual inspection of a user-supplied photograph**, not direct device/track/network
+inspection. Context supplied by the ongoing iPad offline check; the visible address is truncated,
+so the full preview URL/source commit cannot independently be established from the image.
+
+The photo shows the app's Error status, camera placeholder with "Let's try that again" and
+"CAMERA OFF · NOTHING IS RECORDED", an enabled Start camera button, disabled-looking Pause/Stop
+controls, and the visible error wording: "The inference worker stopped. This browser may not
+support the model. Try starting again."
+
+This corroborates the app's camera-off error presentation and supplies visual evidence of the
+error wording beyond P22's reference to the iPhone message. It does **not** establish underlying
+camera-track state, absence of recording/upload, browser incompatibility, or the system green
+camera indicator, which is not visible in the photo. Keep the system-indicator observation
+unconfirmed; no repeat is required merely to fill that field. No raw photograph was copied into
+the repository. No runtime failure requiring a fix is established by this image; no code/test or
+deployment changes were made. Next: the remaining iPad model-loading Stop attempt, recording
+"too fast to test" honestly if that state cannot be observed.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
