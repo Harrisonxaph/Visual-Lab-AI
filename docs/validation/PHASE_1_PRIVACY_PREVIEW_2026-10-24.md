@@ -93,7 +93,7 @@ User-reported metadata carried forward, not independently inspected:
 | Prompt site identity and post-Start acquisition | Partial — post-Start sequence confirmed (P2–P4); prompt site identity unprovided | Partial — prompt after Start and live video/labelled detections after allowing confirmed (P16/P17); site identity unprovided |
 | Stop during permission request, if Safari permits interaction | Pending | Pending |
 | Stop while model loading; no late activation, explicit recovery | Pending — Loading not observed; reported 45-second camera-off period and restart recorded separately (P5) | Pending |
-| Background while permission pending | Pass — popup persisted on return; manual Resume required for inference, user-reported (P6/P7) | Pending |
+| Background while permission pending | Pass — popup persisted on return; manual Resume required for inference, user-reported (P6/P7) | Pass — popup persisted; paused after Allow, manual Resume required (P18), user-reported |
 | Background while model loading pending | Pending — loading window not exercised | Pending |
 | Permission-denied message, inactive indicator and recovery | Pending | Pending |
 | Navigate away and return inactive until Start | Pending | Pending |
@@ -472,6 +472,27 @@ class names or post-Start diagnostic JSON were supplied. Prompt site identity re
 This confirms operation under this preview but does not independently verify all response headers
 or explain historical S1/S2. No runtime change, test or deployment was made. Next: background
 while the iPad permission request is pending, with post-Allow manual Resume behavior observed.
+
+### P18 — iPad background during pending permission (2026-10-25)
+
+Source: **user-reported physical observation**, same iPad and requested privacy preview context.
+Requested background duration was 15 seconds; actual duration and exact timestamp were not supplied.
+
+Verbatim response:
+
+```text
+Could leave Safari with permission pending: yes
+Popup remained on return: yes
+After allowing, inference: paused
+Had to tap Resume for detection boxes: yes
+Any error:
+```
+
+Record a user-reported pass for leaving Safari while permission was pending, popup persistence,
+paused inference after Allow and explicit Resume required for detection boxes. Blank error wording
+supplies no additional detail. This does not exercise backgrounding during model loading or Stop
+while permission is pending; those remain Pending. No runtime change, automated test or deployment
+was made. Next: fill the iPad denial-message and navigation-return evidence gaps.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
