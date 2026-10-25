@@ -650,21 +650,18 @@ established; do not mark Not applicable without a reason or infer success from o
 backgrounding. No call was arranged, runtime fix made or deployment performed. This closes the
 current guided session with the outstanding evidence explicitly retained for review.
 
-### P27 — Review correction: shared diagnostic log and other-device report (2026-10-25)
+### P27 — New-session camera acquisition log (2026-10-25, about 01:19 UTC)
 
-Source: **user-supplied diagnostic text, reaffirmed by reference**, plus user-supplied review
-corrections. The review requested a P27 log entry with device not recorded and the other device
-reported as the same. Asked for that log, the user clarified: "Same diagnostic log reported above".
-The following is the same text already preserved in P15, not a newly captured session or a second
-independent device log. Its device identity is **not recorded in the log**. P15 was originally
-associated with iPad from conversational context; no new device attribution is invented here.
-The other device's equivalent behavior is **user-reported**, not independently logged.
+Source: **user-supplied diagnostic log from a new session**, pasted in full below. The device
+is **not recorded in the log**. The user reports both devices showed the same log; only one was
+pasted. This is not a second independently supplied device capture and is not the earlier P15
+session. Requested preview/build remains `edea505`, with URL and stack evidence below.
 
 ```json
 [
   {
     "event": "installed",
-    "at": "2026-10-25T00:26:51.360Z",
+    "at": "2026-10-25T01:19:02.476Z",
     "elapsedMs": 0,
     "active": false,
     "hasBeenActive": false,
@@ -672,8 +669,8 @@ The other device's equivalent behavior is **user-reported**, not independently l
   },
   {
     "event": "csp-violation",
-    "at": "2026-10-25T00:26:51.363Z",
-    "elapsedMs": 3,
+    "at": "2026-10-25T01:19:02.478Z",
+    "elapsedMs": 2,
     "directive": "script-src-elem",
     "blockedAddress": "https://vercel.live/_next-live/feedback/feedback.js",
     "disposition": "enforce",
@@ -681,31 +678,60 @@ The other device's equivalent behavior is **user-reported**, not independently l
   },
   {
     "event": "start-click",
-    "at": "2026-10-25T00:28:15.580Z",
-    "elapsedMs": 84222,
+    "at": "2026-10-25T01:19:03.635Z",
+    "elapsedMs": 1159,
     "trusted": true,
     "active": true,
     "hasBeenActive": true
+  },
+  {
+    "event": "camera-request",
+    "at": "2026-10-25T01:19:03.639Z",
+    "elapsedMs": 1163,
+    "id": 1,
+    "active": true,
+    "hasBeenActive": true,
+    "sinceStartMs": 4,
+    "stack": "wrapped@https://visual-lab-3luq4khke-harrisonjbailey-3896.vercel.app/camera-diagnostics.js:86:38\nstart@https://visual-lab-3luq4khke-harrisonjbailey-3896.vercel.app/assets/index-oohfpgVL.js:1:1031\nstart@https://visual-lab-3luq4khke-harrisonjbailey-3896.vercel.app/assets/index-oohfpgVL.js:1:7336\n@https://visual-lab-3luq4khke-harrisonjbailey-3896.vercel.app/assets/index-oohfpgVL.js:41:2452"
+  },
+  {
+    "event": "camera-settled",
+    "at": "2026-10-25T01:19:05.017Z",
+    "elapsedMs": 2541,
+    "id": 1,
+    "outcome": "resolved"
   }
 ]
 ```
 
-The supplied entries show installation at +0 ms with no user activation, an enforcing trusted
-script-src-elem violation blocking Vercel feedback code at +3 ms, and a trusted Start click at
-+84,222 ms. They show no camera-request before that click. No post-click request/settlement is
-included; P15 was **likely cut short during copying**, an inference rather than a proven fact.
-Do not invent missing records or use their absence to contradict the reported successful video.
+What the supplied log shows:
 
-Per the review correction and the user's confirmation of the shared log, mark the fresh-tab
-check **Pass on both devices**, based on the corrected user-reported sequences and reported
-other-device equivalence. Supersede the iPhone's initial "no CSP entries" summary with the
-reported blocked Vercel feedback-script observation, without claiming two independently supplied
-CSP captures or assigning this raw log to a specific device.
+- Diagnostics installed in the top-level (main) page at +0 ms, with no user activation.
+- The security policy blocked Vercel's feedback script at +2 ms (`script-src-elem`, enforcing,
+  browser-trusted event).
+- A trusted Start tap occurred at +1,159 ms, with active user activation.
+- Exactly one camera request appears, ID 1 at +1,163 ms, **4 ms after Start**.
+- That request resolved at +2,541 ms, consistent with the camera opening; the log records API
+  settlement, not the precise moment live pixels appeared.
+- No camera request appears before Start in this supplied sequence.
 
-Coverage remains this page's wrapped API/events after installation. Earlier calls, cached
-references and other contexts are not observed. No historical S1/S2 causation, complete injection
-inventory, deployed-header inventory or absence of uploads is established. No runtime change,
-automated test or redeployment was made for this documentation correction.
+**Build match (reviewer check, also checked against available local build output):** the stack
+names `index-oohfpgVL.js`, matching the local rebuild of `edea505`. Line 86 of
+`camera-diagnostics.js` records the request stack. The bundle positions map to camera acquisition
+(`1:1031`), the lab's Start routine (`1:7336`) and the Start button click handler (`41:2452`). The
+trace uses Safari/WebKit-style `function@URL:line:column` formatting. This shows the diagnostics
+catching the app's request in the reported WebKit session; it is not a separate browser-version
+inspection or a universal Safari compatibility claim.
+
+The matrix remains **Pass on both devices** within the user-report and single-pasted-log limits.
+The current blocked-feedback-script observation supersedes the iPhone's earlier "no CSP entries"
+summary; no second independent CSP log or raw device identity is invented.
+
+**Limits:** diagnostics cover only the main page from installation onward, excluding earlier
+calls, saved original references and other contexts. A fresh tab was not confirmed. Stop is not
+logged. This does not explain historical S1/S2 or establish that the blocked script caused camera
+access. Physical-session network inspection and effective deployed headers/HTML remain unchecked.
+No runtime change, new automated runtime test or deployment was made for this ledger correction.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
@@ -717,9 +743,10 @@ dismiss it and then inspect the panel. Do not interpret missing information as a
 
 Both devices have reported live detections, scene/control/layout checks, private-tab operation
 and manual Resume after backgrounding while permission was pending. Fresh-tab checks are Pass
-on both devices with P27's shared-log/other-device reporting limits. The user-copied log records a
-trusted CSP event blocking Vercel feedback code; raw device identity is unrecorded, and equivalent
-behavior on the other device is user-reported. The iPad also has post-Start permission timing and
+on both devices with P27's single-log/other-device reporting limits. The new-session log in P27
+(about 01:19 UTC) records a trusted CSP event blocking Vercel feedback code, Start followed 4 ms
+later by one camera request, and successful settlement. Raw device identity is unrecorded; the
+other device's equivalent behavior is user-reported, with only one log pasted. The iPad also has post-Start permission timing and
 navigation-return/denial recovery evidence. Offline error/retry is reported on both devices;
 the iPad photo corroborates the app camera-off/error presentation, not its system indicator.
 
