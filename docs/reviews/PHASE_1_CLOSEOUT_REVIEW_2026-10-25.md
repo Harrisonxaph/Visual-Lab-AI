@@ -3,7 +3,7 @@
 Source: the readiness/limitations review supplied by the user in this conversation on 2026-10-25.
 This records that supplied review, not a new Claude invocation or an independently retrieved
 approval. Its statement that the user already accepted items 1–5 on that date is the provenance
-for recording their acceptance. Items 6–8 are recommendations awaiting the user's decision.
+for recording their acceptance. Items 6–8 were recommendations at receipt; subsequent explicit user decisions are recorded below.
 The Codex bot review on PR #7 is separate and is not Claude evidence.
 
 ## Already accepted, as recorded in the supplied review
@@ -22,7 +22,7 @@ Acceptance date for these five limitations: **2026-10-25**, attributed to the us
 Acceptance is a scope/risk decision, not a physical test pass. CSP specifically restricts off-origin
 script/connection sources; it is not a guarantee against every exfiltration mechanism.
 
-## New recommendations, not yet accepted
+## Recommendations at receipt — subsequently decided below
 
 6. Storage denial: the review reports that the app worked with Block All Cookies enabled, but
    there is no evidence Safari refused storage. Actual refusal is covered only by the automated
@@ -37,4 +37,16 @@ script/connection sources; it is not a guarantee against every exfiltration mech
 
 The Block All Cookies observation is supplied through this review, not a new directly inspected
 session, and no device-specific attribution or proof of actual storage denial is added.
-See [the proposed closeout](../phases/PHASE_1_CLOSEOUT.md) for decisions and evidence links.
+See [the closeout](../phases/PHASE_1_CLOSEOUT.md) for decisions and evidence links.
+
+## Subsequent explicit user decisions — 2026-10-25 UTC
+
+The user directly accepted limitations 6 and 7, approved proposal 8 and approved Phase 1 closeout
+with the documented limits. Actual Safari storage denial remains untested; automated coverage
+is sufficient for that closeout. Diagnostic coverage/provenance acceptance does not explain
+S1/S2 or establish absence of uploads. Existing opt-in diagnostics remain for device testing,
+including through Phase 2 only if separately authorized. Production inclusion is to be decided
+before the first production deployment. The exact approval is quoted in the closeout document.
+
+No PR merge, deployment, protection/automatic-deployment change or Phase 2 was authorized. These
+are direct user decisions after the supplied review, not a new Claude review or added test evidence.

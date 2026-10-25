@@ -1,7 +1,8 @@
 # Phase 1 implementation and testing
 
 Current status: implementation and device records are available; the
-[proposed closeout](PHASE_1_CLOSEOUT.md) identifies accepted limitations and decisions still needed.
+[closeout](PHASE_1_CLOSEOUT.md) records accepted limitations and the user's explicit approval on
+2026-10-25 UTC. No Phase 2, merge or deployment is authorized.
 The original merge/test chronology below is historical; it is not the current device-results matrix.
 
 Implemented on `phase-1/live-object-detection`; baseline main `cafa8c7`.
@@ -11,8 +12,8 @@ This merge preceded the recommended real iPhone/iPad testing. The user reported 
 no device-test completion or waiver is inferred. No explicit deployment command was issued.
 The existing Vercel Git integration did publish branch previews; see the review follow-up below.
 The designated review has now been supplied through the user; fixes and response are recorded
-in docs/reviews/PHASE_1_RESPONSE.md. Later physical sessions are linked below; remaining closeout
-decisions are separate from merge approval.
+in docs/reviews/PHASE_1_RESPONSE.md. Later physical sessions are linked below; closeout approval
+is separate from merge approval.
 
 ## Delivered
 
@@ -81,7 +82,8 @@ Controlled model comparison remains Phase 3. No accuracy benchmark, tracking, re
 training, PWA, offline guarantee or advanced module is included. Vendor module-worker compatibility
 adaptations need device scrutiny. First load requires asset acquisition; slow devices can time out.
 
-Recommended next action: review the proposed closeout and decide its remaining limitations.
+The user approved Phase 1 closeout with documented limitations on 2026-10-25 UTC.
+Recommended next action: review the updated documentation PR without merging or deploying.
 Device sessions and the offline-message fix are recorded; Phase 2 still requires explicit authorization.
 Opening a follow-up PR does not authorize merging it or deploying the app.
 

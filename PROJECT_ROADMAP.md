@@ -2,8 +2,8 @@
 
 Phase 1 merged into main through PR #1 on 2026-10-23 at 23:17:42 UTC (`a5bb085`).
 The merge preceded real iPhone/iPad testing. Those observations and the focused offline retest are
-now recorded; [Phase 1 closeout](docs/phases/PHASE_1_CLOSEOUT.md) awaits explicit decisions.
-Phase 2 remains blocked until closeout and a separate explicit Phase 2 authorization.
+now recorded; the user approved [Phase 1 closeout](docs/phases/PHASE_1_CLOSEOUT.md) with its
+documented limitations on **2026-10-25 UTC**. Phase 2 remains blocked until separately authorized.
 Phases 2–5 and all stretch/exploratory targets remain planned, not implemented.
 Deliver each phase in a separate branch and PR into main.
 Codex develops; Claude reviews. Never merge, deploy or modify production without user approval.

@@ -90,7 +90,10 @@ internals. See
 The [supplied closeout review](docs/reviews/PHASE_1_CLOSEOUT_REVIEW_2026-10-25.md) records user
 acceptance of limitations 1–5 on 2026-10-25: model-loading interruption coverage, permission-modal
 Stop coverage, uninspected network/headers/HTML, untested external interruption and unexplained
-historical S1/S2. Those are accepted limits, not new physical test passes. Storage-denial evidence,
-diagnostic coverage/provenance and the recommendation to retain opt-in diagnostics for testing
-remain decisions 6–8 in the [proposed closeout](docs/phases/PHASE_1_CLOSEOUT.md). No production
-release, Phase 2 or acceptance of those new items is inferred.
+historical S1/S2. Those are accepted limits, not new physical test passes. On the same UTC date, the user directly
+accepted limitations 6 and 7 (actual Safari storage denial remains untested, and diagnostic
+coverage/log provenance is limited), approved retaining opt-in diagnostics for device testing,
+and approved Phase 1 closeout. This does not explain S1/S2 or establish absence of uploads.
+See the [recorded decisions](docs/phases/PHASE_1_CLOSEOUT.md). Phase 2 remains separately gated;
+production diagnostic inclusion must be decided before the first production deployment. No merge,
+deployment or protection/automatic-deployment change is authorized by those decisions.

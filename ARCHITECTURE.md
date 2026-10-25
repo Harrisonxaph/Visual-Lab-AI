@@ -3,7 +3,8 @@
 Status: Phase 1 merged into main through [PR #1](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1)
 on **2026-10-23 at 23:17:42 UTC**, merge commit `a5bb085627c226b4c4a9bd768dfa12ba6133c408`.
 The merge happened before real iPhone/iPad testing. User-reported physical evidence is now recorded;
-[Phase 1 closeout decisions](docs/phases/PHASE_1_CLOSEOUT.md) remain pending. The merge
+[Phase 1 closeout](docs/phases/PHASE_1_CLOSEOUT.md) was approved by the user with documented
+limitations on 2026-10-25 UTC. Phase 2 remains separately gated. The original merge
 does not establish device compatibility or authorize Phase 2 or deployment.
 
 ## Repository inspection (2026-10-23)
@@ -145,7 +146,7 @@ PR #4 is merged. Its exact merge commit `edea505` has a single authorized tempor
 READY according to Vercel. Production/protection were not changed. Effective authenticated
 response headers remain uninspected; user-reported physical sessions are recorded in the
 [privacy-preview ledger](docs/validation/PHASE_1_PRIVACY_PREVIEW_2026-10-24.md).
-Current accepted limitations and decisions are in the proposed closeout; historical ledgers are
+Current accepted limitations and explicit user approval are in the closeout; historical ledgers are
 not retroactively turned into complete validation.
 
 The separate offline-message follow-up uses WorkerDetector's ready state to distinguish
