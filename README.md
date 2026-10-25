@@ -55,8 +55,10 @@ simulated camera tests from real hardware testing. A build is local verification
 ## Compatibility and interpretation
 
 Verified: headless Chromium 154 on Linux x86_64, including the built application.
-Real iPhone/iPad Safari, macOS Safari and Android hardware remain **unverified**; responsive viewport
-tests do not establish device compatibility. Requires secure camera access, module workers,
+The recorded iPhone/iPad Safari sessions provide **user-reported physical observations**, with
+coverage limits in the [proposed Phase 1 closeout](docs/phases/PHASE_1_CLOSEOUT.md). Comprehensive
+Safari compatibility, macOS Safari and Android remain unverified; viewport tests do not establish
+device compatibility. Requires secure camera access, module workers,
 transferable ImageBitmap, OffscreenCanvas and WASM. Unsupported features show actionable errors.
 MediaPipe SIMD capability detection selects its WASM variant; no GPU delegate is required.
 
@@ -71,13 +73,15 @@ actual speed depends on hardware. Model-load timeout is 45 seconds, frame infere
 - [All five phases and stretch targets](PROJECT_ROADMAP.md)
 - [Model limitations](MODEL_LIMITATIONS.md) and [supported categories](docs/COCO_LABELS.md)
 - [Experiment evidence](EXPERIMENTS.md)
+- [Phase 1 proposed closeout and decisions](docs/phases/PHASE_1_CLOSEOUT.md)
 - [Phase 1 testing and delivery notes](docs/phases/PHASE_1.md)
 - [Claude review handoff](docs/CLAUDE_REVIEW.md)
 - [Assistant instructions](AGENTS.md)
 - [Third-party provenance and notices](THIRD_PARTY_NOTICES.md)
 
 Codex implements; Claude is the intended reviewer. The user supplied the Phase 1 review; findings and the implementation response are recorded
-in [the review response](docs/reviews/PHASE_1_RESPONSE.md). Real-device validation remains pending.
+in [the review response](docs/reviews/PHASE_1_RESPONSE.md). Physical evidence is recorded, while
+Phase 1 closeout awaits the explicit decisions in the closeout document.
 Each phase uses a separate branch and PR. Merging or deployment requires explicit user approval.
 Application source: MIT. Third-party assets retain their own terms and attribution.
 

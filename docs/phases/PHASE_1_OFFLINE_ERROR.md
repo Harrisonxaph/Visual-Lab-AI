@@ -71,15 +71,19 @@ identity guards are unchanged and were reviewed; that extra case is not included
 
 ## Written decisions for remaining validation checks
 
+Current acceptance status is in the [proposed closeout](PHASE_1_CLOSEOUT.md), based on the supplied
+2026-10-25 review. It records acceptance of limitations 1–5; actual storage denial and diagnostic
+coverage/shipping decisions remain open. The test evidence and physical gaps below remain real.
+
 | Check | Decision and basis | Evidence limit / next action |
 | --- | --- | --- |
 | Stop while model loads | Use existing deterministic automated cancellation coverage for Phase 1 review because physical loading was too brief to interrupt. `tests/core.test.ts`: `does not revive after Stop while loading`; also `releases a camera stream granted after Stop`. | These are **Vitest unit tests**, not Chromium startup-interruption tests. Physical model-loading Stop remains untested; do not relabel it a device pass. |
 | Background while model loads | Use existing deterministic automated delayed-loading coverage for review: `stays paused when backgrounding interrupts model loading, even after returning` in `tests/core.test.ts`. | Unit test controls loading completion; Chromium's separate `backgrounding pauses inference without automatically resuming` checks the UI visibility bridge after startup. Neither establishes physical Safari interruption during model loading. |
 | Stop during permission modal | iPad test is blocked by Safari's modal; retain that reason. iPhone control accessibility was not checked. | Existing late-grant cancellation unit test provides automated evidence, not a physical modal-interaction pass. |
-| External interruption | **Pending**, not Not applicable. User reported not tested; no device/setup reason establishes impossibility. | Later test a feasible FaceTime/competing-camera interruption or obtain a concrete reason before classifying Not applicable. Simulated track-ending tests are not physical interruption evidence. |
+| External interruption | **Untested, accepted limitation on 2026-10-25** per supplied review: no second device/person available. Not a pass or Not applicable. | Later test a feasible FaceTime/competing-camera interruption or obtain a concrete reason before classifying Not applicable. Simulated track-ending tests are not physical interruption evidence. |
 | Actual storage denial | **Pending physical restriction case**; keep successful Private Browsing operation separate. | iOS alone is not a Not applicable reason. Chromium `blocked storage does not prevent startup` simulates thrown storage operations; it does not prove actual Safari storage restriction. No supported test setup for real denial was established. |
-| Network inspection | Retain as an explicit **unverified limit**, pending user/reviewer acceptance or later signed-in desktop inspection. | UI camera indicators and CSP do not establish absence of uploads. Same-origin connections remain allowed. No acceptance is inferred from approval of a ledger's accuracy. |
-| Authenticated deployed headers and HTML | Retain as explicit **unverified limits**, pending acceptance or later signed-in desktop inspection. | Local/CI header tests and the device's blocked Vercel-script event are useful distinct evidence, not a full deployed document/worker/loader/model header or injection inventory. No protection bypass/public sharing link is authorized. |
+| Network inspection | **Accepted unverified limit on 2026-10-25**, per supplied review. Later signed-in desktop inspection remains follow-up work. | UI camera indicators and CSP do not establish absence of uploads. Same-origin connections remain allowed. No acceptance is inferred from approval of a ledger's accuracy. |
+| Authenticated deployed headers and HTML | **Accepted unverified limits on 2026-10-25**, per supplied review. Later signed-in desktop inspection remains follow-up work. | Local/CI header tests and the device's blocked Vercel-script event are useful distinct evidence, not a full deployed document/worker/loader/model header or injection inventory. No protection bypass/public sharing link is authorized. |
 | Fresh-tab and diagnostic comparison | Preserve the ledger's Pass rows and P27 coverage limits; a fresh tab was not confirmed for that full log and a separate non-diagnostic comparison remains pending. | The diagnostics observed one post-Start camera request, not all browser contexts. Historical S1/S2 remain unexplained. |
 
 These decisions document what the review can rely on; they do not silently turn untested checks

@@ -84,3 +84,13 @@ focused retest. Both devices have user-reported passes for revised wording, indi
 and explicit retry recovery; these do not complete broader validation or inspect network/track
 internals. See
 [offline guidance and remaining validation decisions](docs/phases/PHASE_1_OFFLINE_ERROR.md).
+
+## Closeout disposition — 2026-10-25
+
+The [supplied closeout review](docs/reviews/PHASE_1_CLOSEOUT_REVIEW_2026-10-25.md) records user
+acceptance of limitations 1–5 on 2026-10-25: model-loading interruption coverage, permission-modal
+Stop coverage, uninspected network/headers/HTML, untested external interruption and unexplained
+historical S1/S2. Those are accepted limits, not new physical test passes. Storage-denial evidence,
+diagnostic coverage/provenance and the recommendation to retain opt-in diagnostics for testing
+remain decisions 6–8 in the [proposed closeout](docs/phases/PHASE_1_CLOSEOUT.md). No production
+release, Phase 2 or acceptance of those new items is inferred.

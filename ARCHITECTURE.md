@@ -2,7 +2,8 @@
 
 Status: Phase 1 merged into main through [PR #1](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1)
 on **2026-10-23 at 23:17:42 UTC**, merge commit `a5bb085627c226b4c4a9bd768dfa12ba6133c408`.
-The merge happened before real iPhone/iPad testing. Device validation remains pending; the merge
+The merge happened before real iPhone/iPad testing. User-reported physical evidence is now recorded;
+[Phase 1 closeout decisions](docs/phases/PHASE_1_CLOSEOUT.md) remain pending. The merge
 does not establish device compatibility or authorize Phase 2 or deployment.
 
 ## Repository inspection (2026-10-23)
@@ -91,7 +92,8 @@ through the user and its findings are tracked in docs/reviews/PHASE_1_RESPONSE.m
 
 The fixed-image test detects cat and dog in a real worker; the full UI/model path also passes
 against a synthetic camera stream in development and production. See EXPERIMENTS.md for hardware,
-versions, scores and timing limits. Safari/device claims remain unverified.
+versions, scores and timing limits. Physical iPhone/iPad Safari observations are recorded separately
+as user reports; comprehensive platform validation is not claimed.
 
 `src/camera.ts` owns stream lifetime; `capture.ts` bounds capture waits; `inference/client.ts`
 owns worker lifecycle and transfer; `inference/detector.worker.ts` adapts MediaPipe; `lab.ts`
@@ -141,8 +143,10 @@ production verification. Same-origin connections remain allowed. See
 
 PR #4 is merged. Its exact merge commit `edea505` has a single authorized temporary preview,
 READY according to Vercel. Production/protection were not changed. Effective authenticated
-response headers and new physical validation remain pending; see the
+response headers remain uninspected; user-reported physical sessions are recorded in the
 [privacy-preview ledger](docs/validation/PHASE_1_PRIVACY_PREVIEW_2026-10-24.md).
+Current accepted limitations and decisions are in the proposed closeout; historical ledgers are
+not retroactively turned into complete validation.
 
 The separate offline-message follow-up uses WorkerDetector's ready state to distinguish
 initialization errors from active-inference worker crashes. It changes guidance only, keeps
