@@ -1,5 +1,10 @@
 # Phase 1 implementation and testing
 
+Current status: implementation and device records are available; the
+[closeout](PHASE_1_CLOSEOUT.md) records accepted limitations and the user's explicit approval on
+2026-10-25 UTC. No Phase 2, merge or deployment is authorized.
+The original merge/test chronology below is historical; it is not the current device-results matrix.
+
 Implemented on `phase-1/live-object-detection`; baseline main `cafa8c7`.
 **Merged into main in [PR #1](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1) on 2026-10-23
 at 23:17:42 UTC**, merge commit `a5bb085627c226b4c4a9bd768dfa12ba6133c408`.
@@ -7,7 +12,8 @@ This merge preceded the recommended real iPhone/iPad testing. The user reported 
 no device-test completion or waiver is inferred. No explicit deployment command was issued.
 The existing Vercel Git integration did publish branch previews; see the review follow-up below.
 The designated review has now been supplied through the user; fixes and response are recorded
-in docs/reviews/PHASE_1_RESPONSE.md. Real-device testing remains pending. Merge approval for any follow-up PR is separate.
+in docs/reviews/PHASE_1_RESPONSE.md. Later physical sessions are linked below; closeout approval
+is separate from merge approval.
 
 ## Delivered
 
@@ -44,7 +50,7 @@ stream with that image. Neither uses a physical camera. The supplied review repo
 layout tests at 390/768px, not iOS validation. Remote GitHub CI status is independent of local results.
 See EXPERIMENTS.md for exact model input, outputs, hardware and measured timing caveats.
 
-## Manual testing still required
+## Manual test procedure — current results are in the ledgers
 
 Use a secure origin (HTTPS, or localhost on the machine running the browser). Test desktop Chrome,
 macOS Safari, real iPhone Safari and real iPad Safari; add Android Chrome when available.
@@ -69,13 +75,16 @@ macOS Safari, real iPhone Safari and real iPad Safari; add Android Chrome when a
 
 ## Limitations and next action
 
-Real iOS/Safari/Android and physical-camera behavior remain unverified. Lite0 remains the only default asset;
+User-reported iPhone/iPad physical observations are now recorded; comprehensive Safari support,
+macOS Safari and Android are not established. Lite0 remains the only default asset;
 Lite2 compatibility evidence was supplied in the review and is recorded in EXPERIMENTS.md.
 Controlled model comparison remains Phase 3. No accuracy benchmark, tracking, recording,
 training, PWA, offline guarantee or advanced module is included. Vendor module-worker compatibility
 adaptations need device scrutiny. First load requires asset acquisition; slow devices can time out.
 
-Recommended next action: inspect the review fixes and remote CI, then complete real-device testing above. Write up device results and fix material findings before requesting approval to start Phase 2.
+The user approved Phase 1 closeout with documented limitations on 2026-10-25 UTC.
+Recommended next action: review the updated documentation PR without merging or deploying.
+Device sessions and the offline-message fix are recorded; Phase 2 still requires explicit authorization.
 Opening a follow-up PR does not authorize merging it or deploying the app.
 
 ## Pull request and supplemental review
@@ -85,7 +94,7 @@ Fresh Codex audit found a startup/background pause gap and noted stale-worker er
 aspect mismatch. Regression tests reproduced each; fixes preserve startup suspension, ignore
 obsolete worker errors and clear mismatched boxes on video resize. Full local suites passed after
 fixes. That audit was not Claude review. The subsequent user-supplied designated review is now recorded
-in docs/reviews/PHASE_1_RESPONSE.md; real-device validation remains pending despite the merge.
+in docs/reviews/PHASE_1_RESPONSE.md; later physical evidence and current decisions are in the closeout.
 
 ## Review follow-up and device gate
 
@@ -98,13 +107,15 @@ any further merge or manual deployment still requires approval.
 
 | Required physical-device check | Status |
 | --- | --- |
-| Real iPhone Safari camera/inference/rotation/background checklist | Pending: no HTTPS access to the merged build |
-| Real iPad Safari camera/inference/rotation/background checklist | Pending: no HTTPS access to the merged build |
+| Real iPhone Safari camera/inference/rotation/background checklist | User-reported observations recorded; remaining limits/dispositions in the closeout |
+| Real iPad Safari camera/inference/rotation/background checklist | User-reported observations recorded; remaining limits/dispositions in the closeout |
 
 Phase 2 must not start until device results are written up, resulting issues are fixed, and
 the user explicitly authorizes Phase 2. The earlier merge does not waive this gate.
 
-## Physical-device access status (2026-10-24)
+## Historical initial access status (2026-10-24)
+
+This subsection preserves the initial pre-preview state, superseded by the later ledgers.
 
 User-reported devices: iPhone 15 Pro / iOS 27.0.1 / Safari, and iPad Pro 11-inch (3rd generation) /
 iPadOS 26.6.2 / Safari. OS versions are recorded as supplied, not independently inspected.
@@ -127,15 +138,19 @@ not evidence that CI ran when the merge occurred.
 The docs/CI follow-up adds a push trigger limited to `main`, retaining PR checks without a second
 branch-push run on each PR update.
 
-## Current physical-device validation session
+## Physical-device validation records
 
 See [the 2026-10-24 device ledger](../validation/PHASE_1_DEVICES_2026-10-24.md) for the
-exact current main/preview, CI provenance, device metadata and per-check results. The user
+main/preview at that session, CI provenance, device metadata and per-check results. The user
 authorized refreshing only the temporary preview for this session. Historical access constraints
 above describe the earlier state; current authentication/access and observations are recorded in
 the ledger. No physical-device pass is claimed until an observation is collected.
 
-## Pending privacy investigation
+## Privacy investigation and offline follow-up
 
 See [diagnostic/CSP implementation and focused retest checklist](PHASE_1_PRIVACY.md).
-The proposed change is not deployed; existing physical results do not validate its CSP or diagnostics.
+The privacy/diagnostic changes were merged and tested in an approved preview, with physical
+observations recorded in the privacy ledger. The separate offline-message change has a
+[focused retest](../validation/PHASE_1_OFFLINE_RETEST_2026-10-25.md) on source `063a97a`.
+Effective authenticated headers/network/HTML remain uninspected, now an accepted limitation as
+recorded in the supplied closeout review; this does not prove absence of uploads.
