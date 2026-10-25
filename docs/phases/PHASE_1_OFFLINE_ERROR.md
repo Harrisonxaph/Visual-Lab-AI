@@ -1,7 +1,8 @@
 # Phase 1 initialization error guidance and remaining validation decisions
 
 Status: PR #6 merged. Its merge commit `063a97a` has one authorized temporary preview;
-focused physical retesting is **in progress**, not complete. See the
+focused physical retesting has **user-reported passes on both devices**, with broader validation
+gaps retained. See the
 [current retest ledger](../validation/PHASE_1_OFFLINE_RETEST_2026-10-25.md). This small follow-up
 does not complete Phase 1 validation or authorize Phase 2.
 

@@ -1,6 +1,6 @@
 # Phase 1 focused offline-message retest — 2026-10-25
 
-Status: **in progress; new physical-device results Pending**. This is a focused retest, not a
+Status: **focused offline-message retest complete with user-reported passes on both devices; broader Phase 1 validation gaps remain**. This is a focused retest, not a
 repeat of the earlier walkthrough or a claim that Phase 1 validation is complete.
 
 ## Authorization and exact source
@@ -64,9 +64,9 @@ User-reported device metadata carried forward; confirm changes before recording 
 | --- | --- | --- |
 | Initialization failure reproduced offline | Pass — user-reported offline result with initialization wording supplied (O2/O3); failed resource unverified | Pass for reported same initialization error in requested offline sequence (O4); failed resource unverified |
 | Exact actionable initialization error wording | Pass — supplied wording matches revised message (O3) | Pass by user reference to same revised iPhone message (O4), not a fresh transcription |
-| Camera indicator and preview state after failure | Pass for reported green indicator off (O2); preview state not supplied | Pending |
-| Remains stopped after reconnecting, before Start | Pass — user-reported (O2) | Pending |
-| Explicit Start restores live video/detections | Pass — user-reported (O2) | Pending |
+| Camera indicator and preview state after failure | Pass for reported green indicator off (O2); preview state not supplied | Pass for reported green indicator off (O5); preview state not supplied |
+| Remains stopped after reconnecting, before Start | Pass — user-reported (O2) | Pass — user-reported (O5) |
+| Explicit Start restores live video/detections | Pass — user-reported (O2) | Pass — user-reported (O5) |
 
 Cached resources may prevent a failure. Record that outcome as failure-path **untested**, not a
 pass or a failure. Without inspection, do not identify the failing resource or conclude browser
@@ -186,6 +186,28 @@ resource and network/cache conditions remain unverified. Do not interpret "the s
 all other requested fields: camera indicator after failure, state before Start after reconnecting
 and successful explicit retry remain Pending until clarified. No runtime fix, test or deployment
 was made. Next: confirm those three observable iPad results without requiring another full run.
+
+### O5 — iPad camera-off and explicit recovery confirmed (2026-10-25)
+
+Source: **user-reported clarification**, same iPad context as O4. Asked whether the green camera
+indicator was off after the error, inference stayed stopped after reconnecting until Start and
+Start restored live video/detections, the user answered: "All also true".
+
+Record passes for all three specifically listed observations, resolving O4's unanswered fields.
+Combined O4/O5 confirms the same revised initialization message by reference plus visible
+camera-off state and explicit recovery on iPad. No track/network inspection or new runtime fix,
+automated test or deployment was performed.
+
+## Focused retest checkpoint
+
+Both devices have user-reported passes for the requested offline initialization error/retry
+sequence against preview source `063a97ace91172f4523b6a0756b4bb84e1424bc7`: revised actionable
+message (iPhone verbatim, iPad by reference), green indicator off after error, staying stopped
+after reconnection until explicit Start and successful Start recovery of video/detections.
+This completes the **focused guided retest**, not full Phase 1 validation or independent device
+inspection. The exact failed resource/cache state remains unknown; no specific model-download
+failure or browser incompatibility is inferred. The separate preview/context limitations and
+unaccepted gaps above remain unchanged. No additional deployment or Phase 2 is authorized.
 
 For subsequent records, preserve user-reported results, device/date/time if supplied, exact
 preview/commit, error text and unanswered fields. Mark unperformed steps Pending. Reproduce

@@ -80,5 +80,7 @@ inference. Initialization guidance mentions possibly unavailable app/model/runti
 connection checks, retaining reported detector details; it does not diagnose every failure as
 network-related or use navigator.onLine as proof. Generic runtime and missing-capability errors
 remain distinct. PR #6 is merged; an authorized preview of `063a97a` is READY for a
-focused retest. New physical-device results remain pending. See
+focused retest. Both devices have user-reported passes for revised wording, indicator-off state
+and explicit retry recovery; these do not complete broader validation or inspect network/track
+internals. See
 [offline guidance and remaining validation decisions](docs/phases/PHASE_1_OFFLINE_ERROR.md).
