@@ -62,8 +62,8 @@ User-reported device metadata carried forward; confirm changes before recording 
 
 | Check | iPhone | iPad |
 | --- | --- | --- |
-| Initialization failure reproduced offline | Pending | Pending |
-| Exact actionable initialization error wording | Pending | Pending |
+| Initialization failure reproduced offline | Pass — user-reported offline result with initialization wording supplied (O2/O3); failed resource unverified | Pending |
+| Exact actionable initialization error wording | Pass — supplied wording matches revised message (O3) | Pending |
 | Camera indicator and preview state after failure | Pass for reported green indicator off (O2); preview state not supplied | Pending |
 | Remains stopped after reconnecting, before Start | Pass — user-reported (O2) | Pending |
 | Explicit Start restores live video/detections | Pass — user-reported (O2) | Pending |
@@ -156,6 +156,24 @@ its category/cause is not established. Blank issue text adds no detail. Do not t
 excerpt as the missing app error or infer camera-track internals from the indicator. No runtime
 fix, automated test or deployment was made. Next: obtain the visible error wording if available,
 or preserve it as not recorded rather than invent a result.
+
+### O3 — iPhone exact initialization wording supplied (2026-10-25)
+
+Source: **user-reported visible app text**, continuing the iPhone-first offline sequence in O2.
+Verbatim response:
+
+```text
+Inference could not start. Required app, model or runtime files may be unavailable. Check your connection and choose Start camera to retry.
+```
+
+This resolves O2's blank wording field and matches the revised initialization guidance in merged
+commit `063a97a`. Combine O2/O3 as user-reported passes for offline initialization failure with
+actionable wording, green indicator off, remaining stopped after reconnect until Start, and
+explicit Start restoring video/detections. Exact failed resource, cache state and network traffic
+were not inspected; no browser incompatibility or specific model-download failure is inferred.
+This is not an independent on-device build inspection or a guarantee across Safari versions.
+No runtime fix, automated test or deployment was made. Next: the same focused check on iPad,
+without replaying unrelated earlier tests.
 
 For subsequent records, preserve user-reported results, device/date/time if supplied, exact
 preview/commit, error text and unanswered fields. Mark unperformed steps Pending. Reproduce
