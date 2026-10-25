@@ -97,12 +97,12 @@ User-reported metadata carried forward, not independently inspected:
 | Background while model loading pending | Pending — loading window not exercised | Pending |
 | Permission-denied message, inactive indicator and recovery | Pending on new preview; older-preview evidence retained separately | Pass — error reported same as iPhone, indicator off, recovery worked (P19); no fresh verbatim transcription |
 | Navigate away and return inactive until Start | Pending on new preview; older-preview evidence retained separately | Pass — indicator off on leaving and return until Start, user-reported (P19) |
-| Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pending |
+| Empty/plain surface and multiple objects | Pass for reported behavior — counts 0 / 4, boxes updated, slider/scroll responsive; labels unprovided (P8) | Pass for reported behavior — counts 0 / 2, boxes updated; labels unprovided (P20) |
 | Private Browsing operation; distinguish actual storage restriction | Pass for Private Browsing operation, user-reported (P9); actual storage denial untested | Pending |
 | Cold-cache network/model failure and recovery | Pass for reported offline error/retry sequence — camera did not activate offline; explicit Start recovered at displayed 50 ms (P10–P12). Specific model-download failure/cache state unverified | Pending |
 | Feasible external camera interruption | Pending | Pending |
-| Live preview, detections, threshold, rotation and lifecycle under new policy | Pass for user-reported behavior across P8/P9/P12/P13; effective deployed headers still uninspected | Pending |
-| Zoom, or explicit Not applicable reason | Pass for reported pinch zoom (P13); Safari Page Zoom setting not tested | Pending |
+| Live preview, detections, threshold, rotation and lifecycle under new policy | Pass for user-reported behavior across P8/P9/P12/P13; effective deployed headers still uninspected | Pass for reported video/detections, responsive slider, rotation and lifecycle (P17/P20); effective headers uninspected |
+| Zoom, or explicit Not applicable reason | Pass for reported pinch zoom (P13); Safari Page Zoom setting not tested | Pass for reported pinch zoom (P20); Safari Page Zoom setting not tested |
 | Physical-session network inspection | Pending | Pending |
 
 ## Session log
@@ -517,6 +517,33 @@ not a fresh verbatim transcription; preserve that evidence distinction. These ob
 the two previously unanswered iPad questions without rewriting their original historical entries.
 No track internals or network activity were inspected. No runtime change, automated test or
 deployment was made. Next: iPad plain/multiple scene and layout/control smoke checks.
+
+### P20 — iPad scene, layout and lifecycle smoke checks (2026-10-25)
+
+Source: **user-reported physical observation**, same iPad and requested privacy preview context.
+Requested settings were 50% threshold and about 30 seconds per scene; actual threshold/durations
+and exact timestamp were not separately supplied. A repeated P19 answer preceded this report;
+it was acknowledged as duplicate evidence and not counted as an additional test.
+
+Verbatim response:
+
+```text
+Plain surface detection count: 0
+Multiple-object count and labels: 2
+Boxes updated when objects left view:yes
+Rotation alignment and pinch zoom worked: yes
+Slider and scrolling responsive: yes
+Pause/Resume worked; Stop turned indicator off: yes
+Any issue:
+```
+
+Record passes for reported scene behavior (zero plain-surface detections, two with multiple
+objects), box updates as objects left view, rotation alignment, pinch zoom, responsive
+slider/scrolling, Pause/Resume and visible indicator off after Stop. Labels were not supplied;
+counts do not establish class correctness, accuracy or recall. Pinch zoom is the actual zoom
+mechanism tested, not Safari Page Zoom settings. Blank issue wording supplies no additional
+detail. No runtime fix, automated test or deployment was made. Next: Private Browsing operation
+on iPad, keeping actual storage denial separate from private-tab operation.
 
 For subsequent sessions:
 Record device/date/time, preview/commit, steps, status/indicator, camera-request and CSP entries,
