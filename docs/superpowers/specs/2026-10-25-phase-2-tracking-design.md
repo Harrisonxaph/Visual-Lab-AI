@@ -201,12 +201,13 @@ Lost tracks are selectable from the list/history, not presented as current detec
 
 Use the following paired-row order, including phones: **tracked video/overlay + compact track
 list**, then **inspector + confidence chart**, then full-width **explorer**, **notes**, **benchmark**.
-Pair views side by side where readable; camera controls, threshold and status stay adjacent to
-row 1 and span its width. At ≥338 CSS px of available content, allocate at least 220 px to video
-and 110 px to list with an 8 px gap; row 2 uses ≥170 px inspector and ≥160 px chart. Below those
-content minima, stack within each pair in the same reading order rather than shrink touch/text
-or introduce horizontal scrolling. This is a responsive fallback, not a different feature order.
-Desktop/tablet may give the paired views more width. Task 3 already delivers a usable tracked
+On phone-width viewports (≤600 CSS px), stack each pair: full-width video, then track list;
+full-width inspector, then chart. Do not squeeze the camera and list side by side in portrait.
+Camera controls, threshold and status stay adjacent to the video and use the full row width.
+On wider viewports, use side-by-side pairs only when the actual available content is ≥616 CSS px:
+video ≥360 px, list ≥240 px and a 16 px gap; inspector/chart each ≥300 px with a 16 px gap.
+Otherwise stack in the same reading order. Never shrink touch/text or introduce horizontal
+scrolling to force a pair. Desktop/tablet may give the paired views more width. Task 3 already delivers a usable tracked
 video + minimal list; later milestones progressively add the rows rather than dead placeholder
 controls. Model info and permission/error/retry controls remain reachable.
 
