@@ -15,8 +15,11 @@ export class TrackingController {
   private reason = "";
   selected: number | null = null;
   notice = "";
-  constructor(private modelFloor: number) {
-    this.tracker = new Tracker({ modelFloor });
+  constructor(
+    private modelFloor: number,
+    trackingFloor?: number,
+  ) {
+    this.tracker = new Tracker({ modelFloor, trackingFloor });
   }
   onFrame = (frame: CommittedFrame) => {
     if (frame.sessionId !== this.session) {
@@ -104,6 +107,9 @@ export class TrackingController {
             })()
           : null,
     };
+  }
+  get config() {
+    return { ...this.tracker.config };
   }
   snapshot() {
     return this.tracker.snapshot();

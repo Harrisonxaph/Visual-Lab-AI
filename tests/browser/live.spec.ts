@@ -79,11 +79,26 @@ for (const diagnosticQuery of ["", "?diag=1"]) {
       }));
     expect(overlay.width).toBeGreaterThan(0);
     expect(overlay.hasDrawing).toBe(true);
+    await expect(page.locator("#run-stress-profile")).toBeDisabled();
+    await page.locator("#pause").click();
+    await expect(page.getByTestId("lab-state")).toHaveText("Paused");
+    await expect(page.locator("#run-stress-profile")).toBeEnabled();
+    expect(
+      await page
+        .locator("video")
+        .evaluate((v: HTMLVideoElement) => v.srcObject !== null),
+    ).toBe(true);
+    await page.locator("#run-stress-profile").click();
+    await page.locator("#pause").click();
+    await expect(page.locator("#benchmark-status")).toContainText(/Cancel/i);
+    await expect(page.locator("#benchmark-results")).toHaveText("");
+    await expect(page.getByTestId("lab-state")).toHaveText("Running");
     await page.getByRole("slider", { name: "Confidence threshold" }).fill("1");
     await expect(page.getByTestId("detection-count")).toHaveText("0");
     await page
       .getByRole("button", { name: "Stop camera", exact: true })
       .click();
+    await expect(page.locator("#run-stress-profile")).toBeEnabled();
     expect(
       requests.every(
         (r) =>

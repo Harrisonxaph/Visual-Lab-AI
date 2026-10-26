@@ -57,3 +57,11 @@ test("dismissing a segment notice changes no tracking state and survives project
   c.onFrame({ ...f(5, 3, 500), geometry: 2 });
   expect(c.notice).toContain("geometry");
 });
+
+test("configuration exposes the actual tracker floor through a defensive read", () => {
+  const c = new TrackingController(0.05, 0.6);
+  expect(c.config).toEqual({ modelFloor: 0.05, trackingFloor: 0.6 });
+  const config = c.config;
+  config.trackingFloor = 0.9;
+  expect(c.config.trackingFloor).toBe(0.6);
+});

@@ -114,13 +114,13 @@ Accepted Phase 1 limitations remain in force and are not new Phase 2 device pass
 
 ## Phase 2 Tasks 1–3 checkpoint
 
-Geometric tracking is now implemented on the draft Phase 2 branch; it is not full Phase 2
-acceptance. See [checkpoint evidence and risks](docs/phases/PHASE_2_TASK_3_CHECKPOINT.md).
+Geometric tracking was introduced at the Task 3 checkpoint and merged through PR #11;
+this is not full Phase 2 physical acceptance. See [checkpoint evidence and risks](docs/phases/PHASE_2_TASK_3_CHECKPOINT.md).
 No new physical Safari tracking evidence or measured ground-truth accuracy is supplied.
 
 ## Phase 2 inspector, notes and synthetic evaluation
 
-The full Phase 2 runtime is implemented on draft PR #11, not yet accepted on physical devices.
+The Phase 2 runtime merged via PR #11 at `efdb1d9` on 2026-10-26 UTC; it is not yet accepted on physical devices.
 Current association evidence explains geometric matching, not the model's internal reasoning.
 The near-threshold band contains actual returned boxes only; alternatives remain unavailable.
 Tracks can switch identities in crossings, expire during low scores or occlusion, and reset at
@@ -141,3 +141,9 @@ content and OS sync are outside page memory; Clear removes page records/fallback
 pending UI callbacks, but cannot revoke an already initiated clipboard write. Production inclusion
 of diagnostics still requires a decision before the first production deployment. Historical S1/S2
 and every other accepted Phase 1 evidence limitation remain unchanged.
+
+The [on-device synthetic stress profiler](docs/phases/PHASE_2_STRESS_PROFILE.md) makes tracker/copy
+timings measurable from the app, independently of model inference. It uses no camera and cannot
+establish real-scene accuracy, battery/thermal safety or absence of uploads. Physical results and
+the inconsistent 8 ms investigation budget remain unresolved. Unsupported long-task observation
+is explicitly unavailable; whole overlapping task durations may include unrelated main-thread work.

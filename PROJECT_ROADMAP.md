@@ -4,7 +4,7 @@ Phase 1 merged into main through PR #1 on 2026-10-23 at 23:17:42 UTC (`a5bb085`)
 The merge preceded real iPhone/iPad testing. Those observations and the focused offline retest are
 now recorded; the user approved [Phase 1 closeout](docs/phases/PHASE_1_CLOSEOUT.md) with its
 documented limitations on **2026-10-25 UTC**. The user separately authorized Phase 2 implementation after approving its plan and Task 3
-checkpoint. Tasks 1–6 are implemented on draft PR #11, awaiting final review and physical
+checkpoint. Tasks 1–6 merged via PR #11 at `efdb1d9` on 2026-10-26 UTC, before Phase 2 physical
 acceptance; Phase 2 is not closed. Phases 3–5 and stretch/exploratory targets remain planned.
 Deliver each phase in a separate branch and PR into main.
 Codex develops; Claude reviews. Never merge, deploy or modify production without user approval.
