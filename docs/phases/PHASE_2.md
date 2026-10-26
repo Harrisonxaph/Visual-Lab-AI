@@ -1,5 +1,7 @@
 # Phase 2 proposal — tracking and decision inspector
 
+> **Superseded by the roadmap reset (2026-10-26).** This was the old "Phase 2" (tracking and decision inspector). Its implementation is merged and is now part of the Phase 1 foundation. The new Phase 2 is the Dataset laboratory; see [PROJECT_ROADMAP.md](../../PROJECT_ROADMAP.md). Kept as history.
+
 **Status: planning only.** User authorized this design/plan and a draft PR, not runtime features,
 merging, deployment, protection/automatic Git changes or Phase 3. Codex proposes, Claude reviews,
 then the user explicitly authorizes implementation of the reviewed plan. No proposed feature is

@@ -1,5 +1,7 @@
 # Phase 1 handoff for Claude
 
+> **Historical.** Roles have since changed: Claude is now the lead developer and Codex the reviewer. See [docs/WORKFLOW.md](WORKFLOW.md) for the current review handoff.
+
 Status: the user supplied the designated Phase 1 review in this conversation. Its findings are
 recorded in docs/reviews/PHASE_1_RESPONSE.md and addressed in the merged Phase 1 changes.
 This records receipt of the supplied review, not a new Claude invocation or merge approval.

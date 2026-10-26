@@ -1,5 +1,7 @@
 # Phase 2 acceptance and milestone-based testing plan
 
+> **Superseded by the roadmap reset (2026-10-26).** The M2/M3 device sessions below are no longer planned. Open items (missing boxes D12–D14, incomplete tracking device acceptance) are carried in the "Known issues" section of [PROJECT_ROADMAP.md](../../PROJECT_ROADMAP.md); testing now follows [docs/WORKFLOW.md](../WORKFLOW.md). Kept as history.
+
 **In progress; not accepted or closed.** Tasks 1–6 and follow-ups through PR #14 are merged.
 The one approved preview is source `37ff7d4be571d56c21c1f74bae834c3fe16c7952`; partial iPhone
 observations are in the [device ledger](../validation/PHASE_2_DEVICES_2026-10-26.md).

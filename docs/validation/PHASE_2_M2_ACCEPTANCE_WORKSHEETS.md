@@ -1,5 +1,7 @@
 # Phase 2 M2 — consolidated device acceptance worksheets
 
+> **Superseded by the roadmap reset (2026-10-26).** These worksheets are not required. Unrecorded or untested items stay open (not passed); see "Known issues" in [PROJECT_ROADMAP.md](../../PROJECT_ROADMAP.md). Kept as history.
+
 **Prepared, not started. M1 is blocked by the unresolved missing-box report.** These sheets do
 not authorize a session, deployment, merge, risk acceptance, Phase 2 closure or Phase 3. Use after
 the [M1 investigation/readiness review](../reviews/PHASE_2_M1_MISSING_BOXES.md), against an exact
