@@ -1,17 +1,27 @@
 # Visual Labs AI
 
-A private, on-device computer-vision laboratory for investigating what a detector sees,
-how confident it is, and how its outputs change.
+A private, in-browser laboratory for learning how AI models are trained, evaluated and improved.
 
-Phase 1 provides live camera detection, labelled boxes, confidence filtering, pause/resume/stop,
-processing FPS and inference latency, plus educational model explanations. Later phases are
-recorded in [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md), including every stretch target.
-Phase 2 adds tracking, inspection, local user reports and labelled synthetic
-evaluation. Active learning, retraining and PWA installation remain later roadmap work.
+It started as a live object-detection lab: point a phone camera at objects and inspect what a
+pretrained detector (EfficientDet-Lite0) sees and how confident it is. That foundation is built.
+The roadmap now focuses on **training real models**: building labelled datasets, training a
+classifier, measuring it honestly, and improving it with human feedback. See
+[PROJECT_ROADMAP.md](PROJECT_ROADMAP.md).
+
+| Phase | What you can do | Status |
+| --- | --- | --- |
+| 1 | Live detection, tracking, inspector, confidence and privacy safeguards | Implemented |
+| 2 | Build labelled image datasets from your photos | Next |
+| 3 | Train a real classifier and watch it learn | Planned |
+| 4 | Evaluate: precision, recall, overfitting, experiments | Planned |
+| 5 | Active learning: improve the model with your feedback | Planned |
+
+The detector does not learn from the camera. Training happens in Phase 3 onwards, and the app
+always says which kind of learning is happening (see the table at the top of the roadmap).
 
 ## Run locally
 
-Use Node **24.5 or newer** (tested on 24.19.0) and npm.
+Use Node **24.5 or newer** and npm.
 
 ```sh
 npm ci
@@ -19,86 +29,59 @@ npm run assets
 npm run dev
 ```
 
-Open `http://localhost:5173` and choose **Start camera**. Grant permission when your browser asks.
-On a phone or tablet, a remote development server needs **HTTPS**; an HTTP LAN address generally
-cannot request camera access. Prefer rear-facing camera, good lighting and familiar COCO objects.
-No API key or paid service is required.
+Open `http://localhost:5173` and choose **Start camera**. A phone or tablet needs **HTTPS** to use
+the camera. No API key or paid service is required.
 
-`npm run assets` downloads the pinned 13.2 MiB Lite0 model and verifies its SHA-256, then copies
-MediaPipe's WASM resources from the pinned npm package. Builds serve everything from the same
-origin: no runtime model CDN and no frame uploads. Network is needed for first setup and asset
-acquisition. This phase does not guarantee offline operation or provide a service worker.
-If the model checksum fails, remove `public/models/efficientdet_lite0.tflite` and rerun assets.
+`npm run assets` downloads the pinned 13.2 MiB Lite0 model, verifies its SHA-256 and copies
+MediaPipe's WASM files from the pinned npm package. Everything is served from the same origin; no
+frames are uploaded. If the checksum fails, delete `public/models/efficientdet_lite0.tflite` and
+rerun it.
 
-**Pause** stops inference and clears detections; camera preview remains on. **Stop** releases
-camera tracks, terminates inference and clears results. Backgrounding pauses inference; returning
-requires Resume. Leaving the page stops the session. Frames and detections are not recorded;
-only the confidence threshold is optionally saved in local storage. Blocked storage is supported.
+**Pause** stops inference (camera preview stays on). **Stop** releases the camera. Leaving the page
+stops the session. Frames are not recorded.
 
 ## Checks
 
 ```sh
 npm run check
+npm run format:check
 npm test
 npx playwright install --with-deps chromium
 npm run test:browser
 npm run build
 npm run test:production
-npm run format:check
 ```
 
-For an existing Chromium installation set `CHROMIUM_PATH=/path/to/chromium` for browser commands.
-The test suite combines mocked lifecycle/error tests with **actual CPU/WASM inference** against
-a fixed test image. Production smoke tests exercise the built worker with GPU acceleration disabled.
-CI runs these checks on PRs. [Manual device checks and results](docs/phases/PHASE_1.md) distinguish
-simulated camera tests from real hardware testing. A build is local verification, not deployment.
-The [recorded plain-link comparison](docs/validation/PHASE_1_OFFLINE_RETEST_2026-10-25.md#o6--plain-link-fresh-tab-check-without-diagnostics-2026-10-25)
-used https://visual-lab-2co40dr92-harrisonjbailey-3896.vercel.app without `?diag=1` (source `063a97a`).
-It is a user-reported Phase 1 pass with device/tab-closure limits, not a Phase 2 test.
+Set `CHROMIUM_PATH=/path/to/chromium` to use an existing Chromium. Tests combine mocked lifecycle
+tests with real CPU/WASM inference on a fixed image. CI runs them on pull requests and on `main`.
 
 ## Compatibility and interpretation
 
-Verified: headless Chromium 154 on Linux x86_64, including the built application.
-The recorded iPhone/iPad Safari sessions provide **user-reported physical observations**, with
-coverage limits in the [approved Phase 1 closeout](docs/phases/PHASE_1_CLOSEOUT.md). Comprehensive
-Safari compatibility, macOS Safari and Android remain unverified; viewport tests do not establish
-device compatibility. Requires secure camera access, module workers,
-transferable ImageBitmap, OffscreenCanvas and WASM. Unsupported features show actionable errors.
-MediaPipe SIMD capability detection selects its WASM variant; no GPU delegate is required.
+Automated tests run in Chromium. iPhone/iPad Safari behaviour comes from user-reported sessions with
+documented limits; comprehensive Safari, macOS Safari and Android support are not claimed. The app
+needs a secure context, module workers, transferable ImageBitmap, OffscreenCanvas and WebAssembly.
 
-Confidence is a model score, **not measured accuracy**. The UI displays results at or above the
-threshold, subject to a 5% model output floor and 50-result cap. Processing FPS uses a 2-second rolling window, and scheduling is capped at 10 FPS;
-actual speed depends on hardware. Model-load timeout is 45 seconds, frame inference timeout is
-15 seconds, and frame capture timeout is 5 seconds. Slow devices may need to retry.
+Confidence is a model score, **not measured accuracy**.
 
 ## Documentation
 
-- [Architecture and actual repository inspection](ARCHITECTURE.md)
-- [All five phases and stretch targets](PROJECT_ROADMAP.md)
-- [Model limitations](MODEL_LIMITATIONS.md) and [supported categories](docs/COCO_LABELS.md)
-- [Experiment evidence](EXPERIMENTS.md)
-- [Phase 1 approved closeout and decisions](docs/phases/PHASE_1_CLOSEOUT.md)
-- [Phase 1 testing and delivery notes](docs/phases/PHASE_1.md)
-- [Claude review handoff](docs/CLAUDE_REVIEW.md)
+- [Roadmap, phases, completion criteria and known issues](PROJECT_ROADMAP.md)
+- [Development workflow and testing approach](docs/WORKFLOW.md)
 - [Assistant instructions](AGENTS.md)
+- [Architecture](ARCHITECTURE.md) and [model limitations](MODEL_LIMITATIONS.md)
+- [Experiment evidence](EXPERIMENTS.md)
+- [Supported detector categories](docs/COCO_LABELS.md)
 - [Third-party provenance and notices](THIRD_PARTY_NOTICES.md)
+- History: [Phase 1 closeout](docs/phases/PHASE_1_CLOSEOUT.md),
+  [tracking implementation](docs/phases/PHASE_2_IMPLEMENTATION.md),
+  [device ledgers](docs/validation/), [reviews](docs/reviews/)
 
-Codex implements; Claude is the intended reviewer. The user supplied the Phase 1 review; findings and the implementation response are recorded
-in [the review response](docs/reviews/PHASE_1_RESPONSE.md). Physical evidence is recorded, and
-the user approved Phase 1 closeout with the documented limitations on 2026-10-25 UTC.
-Phase 2 remains separately gated.
-Each phase uses a separate branch and PR. Merging or deployment requires explicit user approval.
-Application source: MIT. Third-party assets retain their own terms and attribution.
+## Roles
 
-Vercel Git integration automatically created previews of earlier branch pushes. `vercel.json` now
-disables automatic Git deployments for refs containing it; no existing preview is removed.
-No manual deployment or production change is authorized by this PR. The CI workflow runs on PR
-events, pushes limited to main, or manual dispatch. PR branch pushes do not also trigger push jobs.
+Claude develops; Codex reviews; the project owner approves merges and deployments. Each milestone
+uses its own branch and pull request.
 
-Phase 1 privacy follow-up: [diagnostics, policy limits and pending device checklist](docs/phases/PHASE_1_PRIVACY.md).
+Application source: MIT. Third-party assets keep their own terms.
 
-Phase 2 Tasks 1–6 were merged via [PR #11](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/11) on 2026-10-26 UTC (`efdb1d9`); physical acceptance remains pending.
-See [scope, automated evidence, profiling and remaining checks](docs/phases/PHASE_2_IMPLEMENTATION.md).
-Phase 2 is not closed; no deployment approval is implied.
-The [device stress-profile follow-up](docs/phases/PHASE_2_STRESS_PROFILE.md) adds an inference-inactive
-synthetic timing button (paused preview stays on) and note-form corrections; its physical results remain Pending.
+Deployment: `vercel.json` disables automatic Git deployments. Production still serves the original
+README-only commit; any deployment requires explicit owner approval.

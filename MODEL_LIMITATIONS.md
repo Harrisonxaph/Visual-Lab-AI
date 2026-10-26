@@ -1,5 +1,15 @@
 # Model and platform limitations
 
+## What learns and what does not (roadmap reset, 2026-10-26)
+
+- The EfficientDet-Lite0 detector is **pretrained and fixed**. It never learns from camera input,
+  failure notes or user corrections. Its 80 COCO categories cannot be extended in this app.
+- Planned Phase 3 training updates only a **small new classifier** on top of a **frozen** image
+  embedder. That is transfer learning (training on pretrained features), not detector retraining
+  and not fine-tuning of the embedder.
+- Classifier accuracy on small personal datasets can be misleading. Phase 4 adds held-out test
+  evaluation, precision/recall and overfitting checks; confidence is never treated as accuracy.
+
 ## Verified combination
 
 EfficientDet-Lite0 float32 / v1, MediaPipe Tasks Vision 0.10.32, CPU/WASM in a module worker.

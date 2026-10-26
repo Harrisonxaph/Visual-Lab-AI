@@ -1,94 +1,188 @@
 # Visual Labs AI roadmap
 
-Phase 1 merged into main through PR #1 on 2026-10-23 at 23:17:42 UTC (`a5bb085`).
-The merge preceded real iPhone/iPad testing. Those observations and the focused offline retest are
-now recorded; the user approved [Phase 1 closeout](docs/phases/PHASE_1_CLOSEOUT.md) with its
-documented limitations on **2026-10-25 UTC**. The user separately authorized Phase 2 implementation after approving its plan and Task 3
-checkpoint. Tasks 1–6 merged via PR #11 at `efdb1d9` on 2026-10-26 UTC, before Phase 2 physical
-acceptance; Phase 2 is not closed. Phases 3–5 and stretch/exploratory targets remain planned.
-Deliver each phase in a separate branch and PR into main.
-Codex develops; Claude reviews. Never merge, deploy or modify production without user approval.
+**Purpose:** learn how AI models are actually trained, evaluated and improved, through working
+experiments you can run on an iPhone, iPad or desktop browser. Success means building, training and
+evaluating a genuine machine-learning model, not just operating a pretrained detector.
 
-## Phase 1 — Live object detection
+This roadmap replaced the earlier tracking/PWA/advanced-modes plan on 2026-10-26 (roadmap reset).
+The earlier plan, its phase documents and validation ledgers remain in `docs/` as history.
 
-Responsive desktop/iPhone/iPad lab, safe camera permission and live preview, verified on-device
-runtime/model, labelled boxes and confidence, threshold slider, pause/resume, loading/errors,
-inference time and processing FPS, model panel and confidence education. Keep UI responsive.
-Acceptance: actual camera detections, live threshold updates and graceful unsupported states.
+## Five kinds of "AI" this project distinguishes
 
-## Phase 2 — Tracking and decision inspector
+The app must always say which of these is happening. They are easy to confuse, and confusing them
+leads to false claims.
 
-Planning entry: [Phase 2 proposal and scope](docs/phases/PHASE_2.md). The reviewed design and implementation plan remain the baseline; see the
-[implementation evidence and pending acceptance](docs/phases/PHASE_2_IMPLEMENTATION.md). No deployment is approved.
+| # | What happens | What changes | Where in this roadmap |
+| --- | --- | --- | --- |
+| 1 | **Inference with a pretrained model.** A model someone else trained makes predictions. | Nothing. The model's weights are fixed. | Phase 1 (EfficientDet-Lite0 detector, already built) |
+| 2 | **Training a new classifier on pretrained features** ("transfer learning", "linear probe"). A frozen network turns each image into a list of numbers (an *embedding*); we train a small new model on those numbers. | Only the new small model's weights. The big network stays frozen. | Phase 3 (first genuine training) |
+| 3 | **Fine-tuning an existing neural network.** Some of the pretrained network's own layers are unfrozen and updated with our data. | The pretrained network's weights (some layers). | Stretch target |
+| 4 | **Training a small neural network from scratch.** All weights start random and are learned from our data. | Every weight, starting from random. | Phase 4 comparison (small network on embeddings); a raw-pixel network is a stretch target |
+| 5 | **Fine-tuning an object detector.** Teaching EfficientDet new categories or better boxes. | Detector weights; needs box-labelled data and a heavier training pipeline. | Stretch target |
 
-Persistent IDs, association, configurable trajectories, confidence histories/charts, entry/exit/loss/
-reacquisition events, selectable object history, searchable 80-category COCO explorer where applicable,
-local missed/incorrect/unstable detection log. Show alternative predictions and near-threshold results
-only when actually exposed. Benchmark duration, fragmentation, temporary loss, occlusion recovery
-and stability; report ID switches only with valid evaluation evidence. Separate heuristics from
-objective ground truth. Acceptance: stable IDs when conditions permit and understandable histories.
+The Phase 1 detector does **not** learn from camera input. Training a classifier (type 2) is never
+described as retraining or fine-tuning EfficientDet (type 5).
 
-## Phase 3 — Active learning and model comparison
+## Phase summary
 
-Flag errors, approve/reject corrections, explicitly permitted local examples, provenance/model/version/
-annotation metadata, uncertainty review ranking, duplicate/near-duplicate checks, label quality,
-training/validation/held-out splits and leakage prevention. Provide an honest supported training
-workflow: classifier training is never called detector retraining. Compare Lite0/Lite2 only after
-compatibility verification using identical inputs/conditions: speed, latency, size, class coverage,
-confidence/output, labelled-ground-truth accuracy where available, hardware/browser/configuration.
-Record experiment ID/date, model/version, threshold, inference settings, dataset version, hardware,
-results and before/after measurements. Acceptance: reviewable corrections and reproducible comparisons;
-improvement claims require held-out evaluation evidence.
+| Phase | Name | Status | Difficulty |
+| --- | --- | --- | --- |
+| 1 | Computer vision foundation | Implemented (with documented limitations) | Done |
+| 2 | Dataset laboratory | Next | Medium (3/5) |
+| 3 | First genuine AI training system | Planned (**highest educational priority**) | Medium–high (3.5/5) |
+| 4 | Learning and evaluation laboratory | Planned | Medium (3/5) |
+| 5 | Active learning | Planned | Medium (3/5) |
 
-## Phase 4 — Interactive modes and practical tracking
+- **Minimum meaningful result:** end of Phase 3. You will have trained a real model and seen its
+  weights and loss change.
+- **Core project complete:** end of Phase 5. Train, evaluate, improve with human feedback, and
+  prove the improvement on held-out data.
+- Stretch targets are optional and not required to call the project complete.
 
-Scavenger hunt with random/selected lists, countdown, progress, feedback, score and difficulty;
-persistence rules prevent points from unstable single frames. Draw zones/lines; entry/exit and
-directional crossings, dwell time, current/historical counts; stable-ID deduplication and correct
-coordinates under resizing/aspect changes. Installable PWA where supported; cache suitable app/model
-assets, explain network/offline limits, touch controls and camera limitations. Acceptance: working
-hunt, movement measurement and supported installation.
+## Phase 1 — Computer vision foundation
 
-## Phase 5 — Advanced AI experiences
+**Status: implemented.** Live camera detection with EfficientDet-Lite0 (MediaPipe, CPU/WASM in a
+worker), labelled boxes, confidence threshold, privacy safeguards (local-only frames, CSP, opt-in
+diagnostics), tracking with confirmed IDs, inspector, confidence history, local failure notes,
+synthetic tracking benchmark and stress profile. 79 unit, 51 development-browser and 14
+production tests exist.
 
-Independently configurable pose, gestures, scene understanding, optional narration, movement/activity
-summaries, decision visualisation and educational explanations. Identify every producing model and
-its limitations; speculative interpretation is not verified observation. No remote/expensive inference
-without justification and explicit opt-in. Acceptance: optional modules preserve the core lab.
+What it teaches: what inference is, what a confidence score is (and why it is not accuracy).
 
-## Required stretch targets
+Earlier phase numbering: the old "Phase 1" (detection) and old "Phase 2" (tracking and decision
+inspector) are both part of this foundation now.
 
-A. Advanced Decision Inspector: decision histories, genuinely supported alternatives, threshold
-sensitivity, uncertainty trends and cross-model decision comparison.
+Do not restart camera validation unless a material defect or a relevant code change justifies it.
+Known issues and gaps are listed below and stay open; none is silently waived.
 
-B. Tracking Quality Laboratory: algorithm benchmarks, fragmentation/ID stability, motion/partial
-occlusion/recovery tests, labelled sequences and association-strategy comparison.
+## Phase 2 — Dataset laboratory
 
-C. Reproducible Experiment System: named experiments, versioned configurations/datasets, compatible
-reruns, comparison reports and structured results export.
+Build and manage labelled image datasets. The camera becomes optional.
 
-D. Uncertainty-Driven Active Learning: review identification/ranking, human label approval,
-held-out improvement tracking and a later supported detector fine-tuning pathway.
+Scope:
 
-E. Adaptive Mobile Inference Engine: resolution/cadence adaptation, performance monitoring,
-quality/performance presets, workers where feasible, responsive controls, and battery/thermal
-considerations where measurable. Do not imply browsers expose universal thermal measurements.
+- Add images from a phone or tablet photo library (file picker), optionally from the camera.
+- Create categories (labels); assign, correct and remove labels.
+- Training / validation / test splits, created deterministically and kept stable.
+- Exact-duplicate detection (content hash) and near-duplicate detection (a small image
+  fingerprint); near-duplicates are kept in the same split so they cannot leak across splits.
+- Dataset statistics: images per label and per split, imbalance warnings, duplicates found.
+- A generated example dataset (simple shapes drawn in code) for automated tests and quick demos.
+- Local-only storage in the browser (IndexedDB); nothing uploaded. Clear-all deletion.
+- In-app acceptance checklist (see testing approach) for the one manual check this phase needs.
 
-F. Dataset Integrity Laboratory: duplicates, likely split leakage, annotation validation, class
-imbalance, coverage/quality, provenance and consent.
+Done when, in plain terms:
 
-G. Privacy-Safe Experiment Sharing: configuration, charts, numerical results, summaries and anonymised
-metadata export; raw footage only by explicit choice; strip unnecessary personal data and offer local deletion.
+1. You can create a dataset of your own photos with at least two labels on your phone.
+2. The app shows how many images each label has in training, validation and test.
+3. Adding the same photo twice is detected; near-identical photos never end up in different splits.
+4. The example dataset loads in one tap, and automated tests prove splits are stable and leak-free.
 
-## Exploratory, uncommitted targets
+## Phase 3 — First genuine AI training system (highest priority)
 
-Evaluate only after the core roadmap stabilises: custom-class detector fine-tuning; advanced
-multi-object re-identification; recorded video replay with synchronized analysis; side-by-side
-tracking algorithms; advanced gesture interactions; guided learning challenges and quizzes.
+Train a real model in the browser and show exactly what changed.
 
-## Delivery checks
+Approach (proposed, see Architecture): a **frozen** pretrained image embedder turns each image into
+1,024 numbers; a **small trainable classifier** (softmax regression, optionally one hidden layer)
+learns to map those numbers to your labels. The classifier is written in plain TypeScript so every
+weight, gradient and update can be shown and tested. This is type 2 above, honestly labelled.
 
-Every phase: inspect, present plan, branch, implement scoped work, add relevant tests/docs, run checks,
-open PR, summarize evidence/limits/next action, and stop before merge/deployment. Maintain README,
-AGENTS, architecture, experiments, limitations and phase notes. Later phases add interruption tracking,
-zone deduplication, split integrity, reproducible configuration and validated import/export tests.
+Scope:
+
+- Choose which labels/examples to train on.
+- Adjustable learning rate and number of epochs; fixed random seed for reproducibility.
+- Live training progress: loss per epoch (training and validation), training and validation accuracy.
+- "What learns / what stays frozen" panel: weight count, a view of weights changing, embedder frozen.
+- Before-and-after predictions on the same validation images.
+- Save and reload a trained model locally, with a compatibility check (same embedder, same labels).
+- Evidence that training changed the model: untrained accuracy ≈ chance; weights differ from start.
+
+Done when, in plain terms:
+
+1. You train a model on your own dataset and watch the loss go down.
+2. Validation accuracy is shown separately from training accuracy.
+3. The same validation images are predicted before and after training, side by side.
+4. Reloading the page and reloading the saved model gives the same predictions.
+5. Automated tests prove the maths is correct (gradient check), training reduces loss on the
+   example dataset, and results are reproducible with the same seed.
+
+## Phase 4 — Learning and evaluation laboratory
+
+Explore what "good" means for a model.
+
+Scope:
+
+- Accuracy, precision, recall per label; confusion matrix.
+- Training vs validation loss curves; overfitting and underfitting demonstrations.
+- Experiments: vary dataset size, learning rate, epochs, regularisation; compare results.
+- Compare learning methods: softmax regression vs a small neural network trained from random
+  weights on the same embeddings (type 4); nearest-neighbour baseline.
+- Final evaluation on the held-out test split only after choices are made (no peeking).
+- Reproducible experiment records: dataset version, split seed, settings, results; local list and
+  JSON export.
+
+Done when, in plain terms:
+
+1. You can explain from the app's own charts why a model is overfitting.
+2. You can run two settings on the same data and see which generalises better on unseen images.
+3. Every reported result can be re-run with the same settings and dataset version.
+
+## Phase 5 — Active learning
+
+Improve a model with human feedback and prove the improvement.
+
+1. Run the trained model on unlabelled images.
+2. Rank images by uncertainty (e.g. lowest top-score margin or highest entropy).
+3. Ask you to review a small batch: approve, correct or skip.
+4. Add approved examples to the training split (never to test).
+5. Retrain.
+6. Compare held-out test results before and after, against a random-selection baseline.
+
+Done when, in plain terms:
+
+1. One loop of review → retrain → re-evaluate works end to end.
+2. The app shows test-set results before and after, not confidence scores.
+3. An automated experiment on the example dataset shows whether uncertainty-picked examples beat
+   randomly picked ones, reporting whichever result actually occurs.
+
+## Stretch targets (optional, deprioritised)
+
+- Fine-tuning a pretrained network's layers (type 3), likely with TensorFlow.js.
+- Custom neural network trained from scratch on raw pixels (type 4, small CNN).
+- Object-detector fine-tuning (type 5); likely needs an offline Python pipeline such as MediaPipe
+  Model Maker and box labels. Difficulty 5/5.
+- Additional learning algorithms and comparison experiments.
+- Object tracking and decision-inspection extensions (foundation already has the basics).
+- Gesture and pose recognition.
+- Performance optimisation (adaptive inference, workers, presets).
+- Advanced dataset management (import/export, versioned datasets, annotation tools).
+- Interactive learning challenges and quizzes.
+
+## Known issues and validation gaps (carried forward)
+
+These remain open. They do not block the new phases, which do not depend on live tracking.
+
+- **Missing boxes on iPhone (ledger D12–D14):** a single report of boxes disappearing while
+  inference ran. Not reproduced in automated tests; cause unknown. If it recurs during normal use,
+  check the "Visible detections" number and the text under "Detected objects" (see
+  `docs/reviews/PHASE_2_M1_MISSING_BOXES.md`). Not waived.
+- **Legacy tracking device acceptance incomplete:** partial iPhone evidence recorded; the iPhone M2
+  session results were never recorded in the repository and no iPad session was run. Not passed.
+  No dedicated re-run is planned; tracking is no longer on the critical path.
+- **Overlay can fail silently** if the 2D canvas context is unavailable (`src/overlay.ts`).
+  Optional hardening.
+- **Phase 1 accepted limitations** (`docs/phases/PHASE_1_CLOSEOUT.md`): physical loading/permission
+  interruption coverage, external interruption untested, real Safari storage refusal untested,
+  deployed headers/HTML/network not inspected, diagnostics coverage limits, early S1/S2 reports
+  unexplained.
+- **Diagnostics in production:** decide before the first production deployment.
+- **Performance:** the tracker stress profile's 8 ms p95 budget is not consistently met on shared
+  desktop Chromium; one iPhone run was within it. Not on the critical path.
+- **Automated WebKit unavailable** in the development container (missing host libraries).
+- **Production** still serves the original README-only commit; temporary previews are protected.
+
+## Delivery rules
+
+See [docs/WORKFLOW.md](docs/WORKFLOW.md). In short: Claude develops on a branch and runs automated
+checks; Codex reviews the PR; the project owner approves merges and deployments. One focused
+manual acceptance session per new feature at most, guided inside the app.

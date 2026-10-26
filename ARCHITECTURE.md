@@ -1,5 +1,61 @@
 # Visual Labs AI architecture
 
+## Current summary (roadmap reset, 2026-10-26)
+
+A static Vite + TypeScript app with a framework-free DOM UI, no backend and no paid services.
+
+| Area | Modules | Reuse for training phases |
+| --- | --- | --- |
+| Camera and capture | `camera.ts`, `capture.ts` | Optional image source for datasets |
+| Inference worker | `inference/client.ts`, `inference/detector.worker.ts`, `inference/types.ts` | Same MediaPipe loader adaptations, worker lifecycle, timeouts and typed configuration pattern for the image embedder |
+| Assets | `scripts/prepare-assets.mjs`, `THIRD_PARTY_NOTICES.md` | Pinned download + SHA-256 check for the embedder model |
+| Lifecycle and scheduling | `lab.ts` | Unchanged; detection-only |
+| Tracking and inspection | `tracking/*`, `inspection/*`, `ui/*` | Patterns: seeded synthetic fixtures, cancellable jobs, bounded state, canvas charts |
+| Local storage | `failures/store.ts` | Patterns: guarded storage, schema validation, size limits, honest deletion status |
+| Privacy | `vercel.json` CSP, `public/camera-diagnostics.js` | CSP already allows same-origin workers, WASM and blob media; datasets stay local |
+| Tests | `tests/`, `tests/browser/` | Fake camera, worker stubs, real-runtime smoke tests, CI |
+
+## Planned learning-lab architecture (Phases 2–5)
+
+Proposed; each phase's plan is approved before implementation.
+
+```text
+Photo library / camera ──► Dataset store (IndexedDB: image blobs + labels + split + hashes)
+                                   │
+                                   ▼
+             Embedder worker (MediaPipe ImageEmbedder, MobileNetV3-Small, FROZEN)
+                                   │  1,024 numbers per image, cached per image + model hash
+                                   ▼
+             Trainable classifier (plain TypeScript: softmax regression, optional hidden layer)
+             forward ─► cross-entropy loss ─► gradients ─► optimiser step (SGD/Adam)
+                                   │
+                                   ▼
+        Evaluation (accuracy, precision, recall, confusion matrix, loss curves) ─► experiment records
+```
+
+- **What learns:** only the classifier's weights and biases (about 1,024 × number of labels, plus a
+  hidden layer if enabled). **What stays frozen:** the embedder network.
+- **Why this stack:** it reuses the MediaPipe package already pinned (`@mediapipe/tasks-vision`
+  0.10.32 includes `ImageEmbedder`), adds no runtime dependency, keeps every weight and gradient
+  visible for teaching, trains in well under a second on small datasets, and can be tested
+  deterministically in Node and Chromium without phone hardware.
+- **Feasibility check (2026-10-26, Chromium, throwaway code):** MobileNetV3-Small embedder
+  (float32 v1, 4,117,670 bytes) produced 1,024-number embeddings in about 9 ms per 224×224 image.
+  A softmax classifier trained on 60 generated shape images (circles / squares / triangles) went
+  from loss 1.10 (chance, ln 3) to 0.005, and from 33% to 100% accuracy on 30 validation images.
+  Generated shapes are an easy task: this proves the pipeline works, not that real photos will.
+- **Alternatives considered:** TensorFlow.js + MobileNet enables true fine-tuning (roadmap type 3)
+  but adds a large dependency and GPU-backend variability; deferred to stretch targets. Offline
+  Python/MediaPipe Model Maker training is needed for detector fine-tuning (type 5); not in-app.
+- **Storage:** IndexedDB for images (downscaled on import), labels, splits, cached embeddings and
+  saved models. `navigator.storage.persist()` requested where supported. Clear-all deletion.
+- **Splits and leakage:** deterministic splits from a seed; exact duplicates by SHA-256; near
+  duplicates by a small perceptual hash, grouped so a group never spans splits.
+- **Model files:** saved classifier = JSON weights + label list + embedder model hash + training
+  settings; reload refuses incompatible embedders or label sets.
+
+## Historical record
+
 Status: Phase 1 merged into main through [PR #1](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1)
 on **2026-10-23 at 23:17:42 UTC**, merge commit `a5bb085627c226b4c4a9bd768dfa12ba6133c408`.
 The merge happened before real iPhone/iPad testing. User-reported physical evidence is now recorded;
