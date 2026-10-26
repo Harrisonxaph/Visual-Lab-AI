@@ -70,7 +70,7 @@ runtime test run is claimed. Draft-PR CI is recorded separately from source merg
 | Previously reported OS/browser | iOS 27.0.1 / Safari | iPadOS 26.6.2 / Safari |
 | Confirmed current details / Safari build | User confirmed iPhone 15 Pro / iOS 27.0.1 / Safari; exact Safari build not supplied | Pending |
 | Test date/time / preview source | Pending | Pending |
-| Charging / Low Power Mode / battery / warmth / other workload | Pending | Pending |
+| Charging / Low Power Mode / battery / warmth / other workload | D5 stress run: not charging, Low Power Mode off (D6); battery/warmth/other workload Pending | Pending |
 
 ## Physical checklist
 
@@ -81,8 +81,8 @@ Every cell starts Pending. A partial result covers only the steps actually repor
 | Fresh page: Idle, camera inactive, no prompt before Start | User-reported Pass (D2; tab closure not separately confirmed) | Pending |
 | Camera-off stress profile: counts/config/environment, full timing distributions | Correct 100×50 stress report supplied (D5); D3 observations retained separately | Pending |
 | Clock step, uncertainty window/source, verdict, startup responsiveness | Step/window 1 ms observed, within, update p95 5 ms (D5); quantified startup delay Pending | Pending |
-| Stress cancellation/retry; Start/Resume/hide/page-exit cancellation | Pending | Pending |
-| Start/consent, live boxes, confirmed IDs; running/loading profile gate | Pending | Pending |
+| Stress cancellation/retry; Start/Resume/hide/page-exit cancellation | Manual Cancel (D7) and Start cancellation (D8) passed; phase-specific/Resume/hide/page-exit paths Pending | Pending |
+| Start/consent, live boxes, confirmed IDs; running/loading profile gate | Live video/conditional prompt timing (D8), labels/confidence/public IDs and running profile gate (D9) reported Pass; loading gate not separately observed | Pending |
 | Single-object ID continuity (30 seconds) | Pending | Pending |
 | Two-object motion/crossing qualitative observation | Pending | Pending |
 | Brief loss/reacquisition and longer expiry | Pending | Pending |
@@ -121,7 +121,8 @@ No addition of separate percentiles or inference about real-camera performance i
 Long-task observation is **unsupported**, not evidence of zero long tasks. Reported hardware
 concurrency is 4, build ID Unknown, measurement interval 8747–9339 ms and elapsedMs 2235.
 `elapsedMs` includes warmup/yields but excludes probe/setup; it is not a probe-delay measurement.
-Charging, Low Power Mode, warmth, other workload and exact physical test time remain Pending.
+For D5, not charging and Low Power Mode off are user-confirmed in D6; battery, warmth,
+other workload and exact physical test time remain Pending.
 The report describes the synthetic job as camera not used; that alone does not establish the
 whole page's camera state. Prior user-reported camera-off observations remain separately in D3.
 No stress cancellation, retry, sustained performance or physical tracking acceptance is inferred.
@@ -263,6 +264,46 @@ above. Preserve the UA as reported; do not replace D1's OS confirmation with a U
   "budgetResult": "within"
 }
 ```
+
+
+### D6 — iPhone stress-run power conditions
+
+Source: **user-reported physical observation**, recorded 2026-10-26 14:47 UTC.
+Asked about the just-supplied D5 stress run, the user selected **A**: not charging; Low Power Mode
+off. This confirmation applies to that run only. Battery, warmth and other workload were not
+supplied and remain Pending; no thermal or energy inference is made.
+
+
+### D7 — iPhone manual stress-profile cancellation
+
+Source: **user-reported physical observation**, recorded 2026-10-26 14:50 UTC.
+After instructions to rerun the stress profile and immediately tap Cancel benchmark/profile,
+the user selected **A**: cancelled; results cleared; camera stayed off. Record a manual Cancel
+pass for that attempt. Warmup versus measurement phase was not identified, so do not claim both
+phases were exercised. Retry to completion, Start/Resume, background and page-exit cancellation
+remain Pending. This is not a new numeric timing run or a camera-privacy/network finding.
+
+
+### D8 — iPhone Start cancels synthetic stress and opens camera
+
+Source: **user-reported physical observation**, recorded 2026-10-26 14:54 UTC.
+The requested sequence was stress profile then immediate Start camera, allowing permission if
+prompted. The user selected **A**: profile cancelled and results cleared; live video started;
+any permission prompt appeared only after Start. This is conditional prompt-timing evidence;
+the reply does not establish that a new permission prompt was actually shown. Labelled boxes,
+confirmed IDs, gate-disabled states and inference metrics were not yet reported. No claim is made
+about loading Stop/background interruptions or about cancellation in both profile phases.
+
+
+### D9 — iPhone live detections, public IDs and running profile gate
+
+Source: **user-reported physical observation**, recorded 2026-10-26 15:03 UTC.
+The user selected **A**: labels, confidence and IDs visible; stress-profile button disabled.
+Instructions requested a well-lit cup, bottle or book and about 10 seconds of observation, with
+an ID on the box or track list. The actual object/label, numeric ID, confidence, inference/FPS
+values and wait duration were not separately supplied. Record visibility and running gate as
+reported passes, not measured confirmation latency, ground-truth detection accuracy or stable
+tracking duration. The loading gate remains unobserved; no loading regression pass is inferred.
 
 ## Remaining gate
 
