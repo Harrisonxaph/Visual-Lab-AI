@@ -2,11 +2,10 @@
 
 Build Visual Labs AI as a private, educational computer-vision laboratory. Read ARCHITECTURE.md,
 PROJECT_ROADMAP.md and MODEL_LIMITATIONS.md before changes. Phase 1 is closed with documented
-accepted limitations. Current authorised scope is Phase 2 planning only: design/plan documents
-and their draft PR. Runtime implementation requires separate explicit approval of the reviewed
-plan. Any later authorized Phase 2 implementation must stop after Task 3: push its exact
-commit and passing regression/CI evidence, then await designated-review approval before Tasks
-4–6. No merge/deployment/protection change or Phase 3 is authorized.
+accepted limitations. The user authorized Phase 2 Tasks 1–3 only against merged plan
+`559bd645aa5c9be636169435e02b74df5a6374df` on 2026-10-26 UTC. Stop at the Task 3
+checkpoint: push its exact commit and passing regression/CI evidence, then await explicit
+review approval before Tasks 4–6. No merge/deployment/protection change or Phase 3 is authorized.
 
 Use one development branch and PR per phase. Never push to main, merge, deploy or modify production
 without approval. Preserve working functionality. Codex implements; Claude is the intended reviewer.

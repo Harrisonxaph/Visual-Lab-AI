@@ -1,3 +1,12 @@
+import type {
+  CommittedFrame,
+  TrackingBoundary,
+  BoundaryReason,
+} from "./tracking/types";
+export interface LabObserver {
+  onFrame(frame: CommittedFrame): void;
+  onBoundary(boundary: TrackingBoundary): void;
+}
 import { cameraError } from "./camera";
 import { ProcessingMeter } from "./detections";
 import type { Detection } from "./inference/types";
@@ -44,6 +53,53 @@ export class Lab {
     message: "",
   };
   private generation = 0;
+  private sessionId = 0;
+  private segment = 0;
+  private geometry = 0;
+  private sequence = 0;
+  private segmentOpen = false;
+  private dimensions: { width: number; height: number } | null = null;
+  private previousSample: number | null = null;
+  private suppressObserver = false;
+  private boundary(reason: BoundaryReason) {
+    if (!this.segmentOpen) return true;
+    this.segmentOpen = false;
+    if (!this.suppressObserver) {
+      try {
+        this.observer?.onBoundary({
+          sessionId: this.sessionId,
+          segment: this.segment,
+          reason,
+          atMs: this.deps.now(),
+        });
+      } catch (error) {
+        this.suppressObserver = true;
+        this.fail(error);
+        return false;
+      }
+    }
+    return true;
+  }
+  geometryChanged(width: number, height: number): void {
+    if (
+      !Number.isFinite(width) ||
+      !Number.isFinite(height) ||
+      width <= 0 ||
+      height <= 0
+    )
+      return;
+    if (this.dimensions?.width === width && this.dimensions.height === height)
+      return;
+    this.dimensions = { width, height };
+    if (this.snapshot.state !== "running" && this.snapshot.state !== "paused")
+      return;
+    if (!this.boundary("geometry")) return;
+    this.geometry++;
+    this.generation++;
+    this.previousSample = null;
+    this.emit({ detections: [], width, height });
+    this.schedule();
+  }
   private scheduled?: number;
   private busy = false;
   private pauseAfterLoad = false;
@@ -54,6 +110,7 @@ export class Lab {
   constructor(
     private deps: LabDependencies,
     private update: (snapshot: Snapshot) => void,
+    private observer?: LabObserver,
   ) {}
   private emit(patch: Partial<Snapshot>) {
     this.snapshot = { ...this.snapshot, ...patch };
@@ -61,6 +118,14 @@ export class Lab {
   }
   async start(): Promise<void> {
     this.stop();
+    this.suppressObserver = false;
+    this.sessionId++;
+    this.segment = 0;
+    this.geometry = 1;
+    this.sequence = 0;
+    this.segmentOpen = false;
+    this.dimensions = null;
+    this.previousSample = null;
     this.pauseAfterLoad = false;
     const generation = this.generation;
     this.emit({
@@ -83,12 +148,13 @@ export class Lab {
       if (generation === this.generation) this.fail(error);
     }
   }
-  pause(): void {
+  pause(reason: "pause" | "hidden" = "pause"): void {
     if (this.snapshot.state === "loading") {
       this.pauseAfterLoad = true;
       return;
     }
     if (this.snapshot.state !== "running") return;
+    if (!this.boundary(reason)) return;
     this.generation++;
     this.unschedule();
     this.emit({
@@ -101,13 +167,15 @@ export class Lab {
   }
   resume(): void {
     if (this.snapshot.state !== "paused") return;
+    this.previousSample = null;
     this.lastVideoTime = -1;
     this.lastFrameAt = -Infinity;
     this.meter.reset(this.deps.now());
     this.emit({ state: "running", message: "" });
     this.schedule();
   }
-  stop(): void {
+  stop(reason: BoundaryReason = "stop"): void {
+    if (!this.boundary(reason)) return;
     this.generation++;
     this.unschedule();
     this.deps.camera.stop();
@@ -122,14 +190,14 @@ export class Lab {
     });
   }
   cameraEnded(): void {
-    this.stop();
+    this.stop("camera-ended");
     this.emit({
       message:
         "Camera connection ended. The camera may have disconnected or been interrupted by another app. Choose Start camera to reconnect.",
     });
   }
   fail(error: unknown): void {
-    this.stop();
+    this.stop("error");
     this.emit({ state: "error", error: cameraError(error), message: "" });
   }
   private unschedule() {
@@ -167,11 +235,43 @@ export class Lab {
         height = bitmap.height;
       this.lastVideoTime = videoTime;
       this.lastFrameAt = now;
+      if (
+        this.dimensions &&
+        (width !== this.dimensions.width || height !== this.dimensions.height)
+      ) {
+        bitmap.close();
+        return;
+      }
+      this.dimensions = { width, height };
       const timestamp = Math.max(this.deps.now(), this.lastTimestamp + 1);
       this.lastTimestamp = timestamp;
       const result = await this.deps.detector.detect(bitmap, timestamp);
       if (generation !== this.generation || this.snapshot.state !== "running")
         return;
+      if (this.previousSample !== null && now - this.previousSample > 2000)
+        if (!this.boundary("analysis-gap")) return;
+      if (!this.segmentOpen) {
+        this.segment++;
+        this.segmentOpen = true;
+      }
+      this.previousSample = now;
+      const frame: CommittedFrame = {
+        sessionId: this.sessionId,
+        segment: this.segment,
+        geometry: this.geometry,
+        sequence: ++this.sequence,
+        sampledAtMs: now,
+        completedAtMs: this.deps.now(),
+        width,
+        height,
+        detections: result.detections,
+      };
+      try {
+        this.observer?.onFrame(frame);
+      } catch (error) {
+        this.suppressObserver = true;
+        throw error;
+      }
       this.emit({
         detections: result.detections,
         width,

@@ -59,6 +59,7 @@ for (const diagnosticQuery of ["", "?diag=1"]) {
     }
     await expect(page.locator("#inference-time")).not.toContainText("—");
     await expect(page.locator("#processing-fps")).not.toContainText("—");
+    await expect(page.locator("#track-list")).toContainText("#1");
     const overlay = await page
       .locator("canvas")
       .evaluate((c: HTMLCanvasElement) => ({

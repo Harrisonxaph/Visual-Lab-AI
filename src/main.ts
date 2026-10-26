@@ -1,3 +1,5 @@
+import { TrackingController } from "./inspection/controller";
+import { mountTrackList } from "./ui/track-list";
 import "./style.css";
 import { Camera } from "./camera";
 import { captureFrame } from "./capture";
@@ -39,15 +41,18 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       <div class="lab-grid">
         <section class="panel camera-panel" aria-labelledby="camera-title">
           <div class="panel-heading"><h2 id="camera-title">${icon("camera", 18)} Live camera</h2><span class="status-pill" id="status-pill"><span></span><span data-testid="lab-state">Idle</span></span></div>
-          <div class="stage-shell">
+          <div class="tracking-pair"><div class="stage-shell">
             <div class="video-stage"><video muted playsinline aria-label="Live camera preview"></video><canvas aria-label="Object detection bounding boxes"></canvas></div>
             <div class="stage-grid" aria-hidden="true"></div>
             <div class="stage-corner top-left" aria-hidden="true"></div><div class="stage-corner top-right" aria-hidden="true"></div><div class="stage-corner bottom-left" aria-hidden="true"></div><div class="stage-corner bottom-right" aria-hidden="true"></div>
             <div class="stage-intro"><div class="intro-icon">${icon("scan", 38)}</div><h3 id="stage-title">A new perspective starts here</h3><p id="stage-description">Point your camera at everyday objects.<br>Explore how a model makes sense of them.</p><span class="stage-caption">CAMERA OFF · NOTHING IS RECORDED</span></div>
-            <div class="stage-footer"><span id="frame-label">WAITING FOR INPUT</span><span><span id="stage-model"></span></span></div>
+            <div id="video-segment-notice" hidden></div><div class="stage-footer"><span id="frame-label">WAITING FOR INPUT</span><span><span id="stage-model"></span></span></div>
           </div>
+          <section class="track-panel" aria-labelledby="track-title"><h3 id="track-title">Tracks</h3><span id="segment-chip">No segment</span><div id="track-list"></div><p id="tracking-counts"></p></section></div>
+          <div id="segment-notice" role="status" hidden></div>
           <div class="camera-toolbar"><div class="camera-buttons"><button id="start" class="button primary">${icon("camera", 17)} Start camera</button><button id="pause" class="button secondary" disabled>${icon("pause", 16)} <span>Pause inference</span></button><button id="stop" class="button stop" disabled aria-label="Stop camera">${icon("stop", 15)}<span>Stop camera</span></button></div></div>
           <p class="session-message" id="session-message" role="status">Start when you’re ready. Your browser will ask for camera access.</p>
+          <button id="clear-tracking" class="button secondary">Stop and clear tracking session</button><p class="tracking-explanation">Tracking floor: 25% (both new and continuing tracks). Display slider affects visibility only; model floor: ${formatPercentage(MODEL.floor)}. IDs are geometric estimates, not re-identification. Trails show the last 5 seconds; missing observations break the line.</p>
           <div id="error" role="alert" hidden></div>
           <div class="metrics"><div><span class="metric-label">${icon("pulse", 15)} Inference time</span><strong id="inference-time">—<small> ms</small></strong></div><div><span class="metric-label">Processing speed</span><strong id="processing-fps">—<small> FPS</small></strong></div><div><span class="metric-label">Visible detections</span><strong data-testid="detection-count">0</strong></div></div>
         </section>
@@ -100,6 +105,15 @@ try {
 }
 slider.value = String(threshold);
 const detector = new WorkerDetector(MODEL);
+const tracking = new TrackingController(MODEL.floor);
+let lastListAt = -Infinity;
+let lastState = "";
+const trackList = mountTrackList(element("#track-list"), (id) => {
+  tracking.select(id);
+  lastListAt = -Infinity;
+  render(lab.snapshot);
+});
+let ageTimer: ReturnType<typeof setInterval> | undefined;
 let lab: Lab;
 const camera = new Camera(video, () => lab.cameraEnded());
 lab = new Lab(
@@ -113,6 +127,7 @@ lab = new Lab(
     mediaTime: () => video.currentTime,
   },
   render,
+  tracking,
 );
 detector.onFatal = (error) => lab.fail(error);
 function render(snapshot: Snapshot): void {
@@ -126,14 +141,28 @@ function render(snapshot: Snapshot): void {
     Math.abs(
       snapshot.width / snapshot.height - video.videoWidth / video.videoHeight,
     ) < 0.001;
-  const detections = frameMatchesVideo
-    ? visibleDetections(
-        snapshot.detections,
-        threshold,
-        snapshot.width,
-        snapshot.height,
-      )
-    : [];
+  const now = performance.now();
+  const stale =
+    running &&
+    tracking.completedAtMs !== null &&
+    now - tracking.completedAtMs > 2000;
+  if (running && !ageTimer)
+    ageTimer = setInterval(() => render(lab.snapshot), 250);
+  if (!running && ageTimer) {
+    clearInterval(ageTimer);
+    ageTimer = undefined;
+  }
+  const detections =
+    frameMatchesVideo && !stale
+      ? snapshot.detections.flatMap((d, sourceIndex) =>
+          visibleDetections(
+            [d],
+            threshold,
+            snapshot.width,
+            snapshot.height,
+          ).map((d) => ({ ...d, trackId: tracking.idFor(sourceIndex) })),
+        )
+      : [];
   element('[data-testid="lab-state"]').textContent =
     state[0].toUpperCase() + state.slice(1);
   element("#status-pill").dataset.state = state;
@@ -232,7 +261,38 @@ function render(snapshot: Snapshot): void {
       row.append(name, score, bar);
       results.append(row);
     }
-  drawDetections(canvas, detections, snapshot.width, snapshot.height);
+  const current =
+    running && !stale && frameMatchesVideo
+      ? tracking.visible(threshold, now)
+      : [];
+  const view = tracking.snapshot();
+  if (now - lastListAt >= 250 || state !== lastState) {
+    trackList.update(view.tracks, tracking.selected);
+    element("#tracking-counts").textContent =
+      `Candidates: ${view.candidates} · Confirmed IDs: ${view.counters.publicIds} · Below floor: ${view.counters.belowFloor} · Capacity drops: ${view.counters.capacityDrops} · Histories pruned: ${view.counters.droppedHistories} · Events pruned: ${view.counters.droppedEvents}`;
+    lastListAt = now;
+    lastState = state;
+  }
+  element("#segment-chip").textContent = view.segment
+    ? `Segment ${view.segment}${view.closed ? " · ended" : ""}`
+    : "No segment";
+  for (const selector of ["#segment-notice", "#video-segment-notice"]) {
+    const n = element(selector);
+    n.textContent = tracking.notice;
+    n.hidden = !tracking.notice || (!running && !paused);
+  }
+  if (stale)
+    element("#frame-label").textContent = "ANALYSIS STALE · WAITING FOR RESULT";
+  else if (running && snapshot.inferenceMs === null)
+    element("#frame-label").textContent = "WAITING FOR ANALYSIS";
+  drawDetections(
+    canvas,
+    detections,
+    snapshot.width,
+    snapshot.height,
+    current,
+    tracking.selected,
+  );
 }
 function unsupported(): string | null {
   if (!window.isSecureContext)
@@ -251,7 +311,11 @@ function unsupported(): string | null {
 element("#start").addEventListener("click", () => {
   const issue = unsupported();
   if (issue) lab.fail(new Error(issue));
-  else void lab.start();
+  else {
+    tracking.clearSession();
+    lastListAt = -Infinity;
+    void lab.start();
+  }
 });
 element("#pause").addEventListener("click", () => {
   if (lab.snapshot.state === "paused") lab.resume();
@@ -267,9 +331,22 @@ slider.addEventListener("input", () => {
   }
   render(lab.snapshot);
 });
-video.addEventListener("resize", () => render(lab.snapshot));
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) lab.pause();
+video.addEventListener("resize", () => {
+  lab.geometryChanged(video.videoWidth, video.videoHeight);
+  render(lab.snapshot);
 });
-window.addEventListener("pagehide", () => lab.stop());
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) lab.pause("hidden");
+});
+element("#clear-tracking").addEventListener("click", () => {
+  lab.stop();
+  tracking.clearSession();
+  lastListAt = -Infinity;
+  render(lab.snapshot);
+});
+window.addEventListener("pagehide", () => {
+  lab.stop();
+  tracking.clearSession();
+  trackList.destroy();
+});
 render(lab.snapshot);

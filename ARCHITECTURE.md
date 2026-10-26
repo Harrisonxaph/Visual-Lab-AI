@@ -165,3 +165,11 @@ notes (explicit localStorage save) and labelled synthetic evaluation remain sepa
 primary label/score/pixel box only. See the [Phase 2 entry](docs/phases/PHASE_2.md) and linked design
 for alternatives, defaults, capability limits, memory/privacy rules and approval gates. No proposed
 module or runtime behavior is implemented by the planning PR.
+
+## Phase 2 integration checkpoint
+
+Accepted Lab frames notify a synchronous optional observer before UI render. The inspection
+controller normalizes once and updates the pure bounded tracker; slider/selection/timer renders
+project existing state. Intrinsic geometry invalidates old generations; analysis/control boundaries
+close segments. Tracking, catalog, controller and keyed list remain separate modules.
+See [Tasks 1–3 checkpoint](docs/phases/PHASE_2_TASK_3_CHECKPOINT.md); later features remain gated.

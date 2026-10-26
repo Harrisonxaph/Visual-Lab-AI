@@ -99,3 +99,7 @@ Phase 1 privacy follow-up: [diagnostics, policy limits and pending device checkl
 Phase 2 is authorized for **planning only**: [proposal and implementation plan](docs/phases/PHASE_2.md).
 Tracking, inspector histories and the failure log are not implemented yet; runtime work needs
 separate approval of the reviewed plan.
+
+Phase 2 Tasks 1–3 are available on the draft tracking branch for review; see the
+[checkpoint scope, tests and limitations](docs/phases/PHASE_2_TASK_3_CHECKPOINT.md).
+This is not full Phase 2 acceptance or deployment approval.

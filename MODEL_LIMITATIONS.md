@@ -111,3 +111,9 @@ Live tracking counters/variability
 are not accuracy; labelled synthetic identity metrics evaluate association, not detector quality
 or real-camera identities. See the [proposed design](docs/superpowers/specs/2026-10-25-phase-2-tracking-design.md).
 Accepted Phase 1 limitations remain in force and are not new Phase 2 device passes.
+
+## Phase 2 Tasks 1–3 checkpoint
+
+Geometric tracking is now implemented on the draft Phase 2 branch; it is not full Phase 2
+acceptance. See [checkpoint evidence and risks](docs/phases/PHASE_2_TASK_3_CHECKPOINT.md).
+No new physical Safari tracking evidence or measured ground-truth accuracy is supplied.
