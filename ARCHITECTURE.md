@@ -194,3 +194,12 @@ within 10 machine epsilons are treated as numerical ties. It is distinct from li
 Benchmark chunks yield every 10 frames; cancellation tokens block late/partial completed reports.
 Start/Resume and hide/page exit cancel it. It runs only with inference inactive; a paused camera
 preview can remain on, as explicitly disclosed. See [Phase 2 implementation](docs/phases/PHASE_2_IMPLEMENTATION.md).
+
+## Device stress-profile follow-up
+
+`runStressProfile` runs a separate fixed numeric tracker, yielding every update, with no camera,
+model or storage access. A shared abort token in the benchmark panel serializes jobs, enforces
+stopped-camera states and prevents late publication. App and developer tests use this same engine.
+Timing stamps isolate update/returned-copy, extra snapshot and combined costs; optional long-task
+records use interval overlap. Notes read current tracker configuration through a defensive getter.
+See [scope, measurement definitions and pending device procedure](docs/phases/PHASE_2_STRESS_PROFILE.md).

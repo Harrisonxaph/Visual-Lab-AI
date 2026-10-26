@@ -1,7 +1,12 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/browser",
-  testMatch: ["live.spec.ts", "privacy.spec.ts", "diagnostics.spec.ts"],
+  testMatch: [
+    "live.spec.ts",
+    "privacy.spec.ts",
+    "diagnostics.spec.ts",
+    "stress-profile.spec.ts",
+  ],
   timeout: 90000,
   workers: 1,
   use: {

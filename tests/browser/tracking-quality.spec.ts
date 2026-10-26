@@ -38,88 +38,19 @@ test("synthetic benchmark is explicit, cancellable and reports configuration", a
     "recoveryRate",
   );
 });
-test("100 live tracks × 50 detections profile includes returned and explicit snapshot copies", async ({
+test("100 live tracks × 50 detections use the same production stress profiler", async ({
   page,
 }) => {
   await page.goto("/");
   const report = await page.evaluate(async () => {
-    const { Tracker } = await import("/src/tracking/tracker.ts");
-    const tracker = new Tracker();
-    tracker.startSession(1);
-    let seq = 0;
-    const feed = (x: number) =>
-      tracker.update({
-        sessionId: 1,
-        segment: 1,
-        geometry: 1,
-        sequence: ++seq,
-        sampledAtMs: seq * 5,
-        completedAtMs: seq * 5,
-        width: 100,
-        height: 100,
-        detections: Array.from({ length: 50 }, (_, sourceIndex) => ({
-          sourceIndex,
-          label: "cup",
-          score: 0.8,
-          box: { x, y: 0.2, width: 0.1, height: 0.1 },
-        })),
-      });
-    feed(0.05);
-    feed(0.05);
-    feed(0.75);
-    feed(0.75);
-    for (let i = 0; i < 180; i++) {
-      feed(0.75);
-      if (i % 10 === 9) await new Promise((r) => setTimeout(r, 0));
-    }
-    await new Promise((r) => setTimeout(r, 0));
-    const update: number[] = [],
-      copy: number[] = [],
-      total: number[] = [],
-      longTasks: number[] = [];
-    const observer =
-      typeof PerformanceObserver !== "undefined" &&
-      PerformanceObserver.supportedEntryTypes.includes("longtask")
-        ? new PerformanceObserver((list) =>
-            longTasks.push(...list.getEntries().map((e) => e.duration)),
-          )
-        : null;
-    observer?.observe({ type: "longtask", buffered: false });
-    for (let i = 0; i < 50; i++) {
-      const start = performance.now();
-      feed(0.75);
-      const middle = performance.now();
-      tracker.snapshot();
-      const end = performance.now();
-      update.push(middle - start);
-      copy.push(end - middle);
-      total.push(end - start);
-      await new Promise((r) => setTimeout(r, 0));
-    }
-    await new Promise((r) => setTimeout(r, 0));
-    observer?.disconnect();
-    const summarize = (a: number[]) => {
-      a.sort((a, b) => a - b);
-      return {
-        p50: a[Math.floor(a.length * 0.5)],
-        p95: a[Math.floor(a.length * 0.95)],
-        max: a.at(-1),
-      };
-    };
-    return {
-      browser: navigator.userAgent,
-      hardwareConcurrency: navigator.hardwareConcurrency,
-      samples: 50,
-      live: tracker.snapshot().tracks.filter((t) => t.state !== "ended").length,
-      updateIncludingReturnCopy: summarize(update),
-      explicitSnapshotCopy: summarize(copy),
-      combined: summarize(total),
-      longTasks: observer ? longTasks : "Not supported",
-      budgetMs: 8,
-    };
+    const { runStressProfile } = await import(
+      "/src/tracking/stress-profile.ts"
+    );
+    return runStressProfile(new AbortController().signal);
   });
-  expect(report.live).toBe(100);
+  expect(report.liveTracks).toBe(100);
   expect(report.samples).toBe(50);
+  expect(report.retainedSamples).toBe(10150);
   console.log("TRACKING_PROFILE", JSON.stringify(report));
 });
 
@@ -140,4 +71,58 @@ test("Start cancels an in-flight benchmark before permission/loading begins", as
   await expect(page.locator("#benchmark-results")).toHaveText("");
   await expect(page.getByTestId("lab-state")).toHaveText("Loading");
   await page.locator("#stop").click();
+});
+
+test("on-device stress button reports copy-inclusive metrics without camera requests and cancels cleanly", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as any).cameraCalls = 0;
+    Object.defineProperty(navigator.mediaDevices, "getUserMedia", {
+      value: () => {
+        (window as any).cameraCalls++;
+        return new Promise(() => {});
+      },
+    });
+  });
+  await page.goto("/");
+  await page.locator("#run-stress-profile").click();
+  await expect(page.locator("#benchmark-status")).toHaveText(
+    "Completed synthetic stress profile.",
+    { timeout: 30000 },
+  );
+  const report = JSON.parse(
+    await page.locator("#benchmark-results").innerText(),
+  );
+  expect(report).toMatchObject({
+    liveTracks: 100,
+    samples: 50,
+    detectionsPerFrame: 50,
+  });
+  for (const field of [
+    "updateIncludingReturnCopy",
+    "explicitSnapshotCopy",
+    "combined",
+  ])
+    for (const metric of ["p50", "p95", "max"])
+      expect(Number.isFinite(report[field][metric])).toBe(true);
+  expect(await page.evaluate(() => (window as any).cameraCalls)).toBe(0);
+  await page.evaluate(() => {
+    (
+      document.querySelector("#run-stress-profile") as HTMLButtonElement
+    ).click();
+    (document.querySelector("#cancel-benchmark") as HTMLButtonElement).click();
+  });
+  await expect(page.locator("#benchmark-status")).toContainText(/cancel/i);
+  await expect(page.locator("#benchmark-results")).toHaveText("");
+  await page.evaluate(() => {
+    (
+      document.querySelector("#run-stress-profile") as HTMLButtonElement
+    ).click();
+    (document.querySelector("#start") as HTMLButtonElement).click();
+  });
+  await expect(page.locator("#benchmark-status")).toContainText(/cancel/i);
+  await expect(page.locator("#run-stress-profile")).toBeDisabled();
+  await page.locator("#stop").click();
+  await expect(page.locator("#run-stress-profile")).toBeEnabled();
 });

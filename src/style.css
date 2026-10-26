@@ -1448,3 +1448,25 @@ input[type="range"]::-moz-range-thumb {
   overflow: auto;
   padding-left: 20px;
 }
+
+#stress-profile-summary table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin: 12px 0;
+}
+#stress-profile-summary th,
+#stress-profile-summary td {
+  border: 1px solid #dce3d5;
+  padding: 8px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+#stress-profile-summary th:first-child {
+  width: 52%;
+}
+#stress-profile-summary caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 8px 0;
+}

@@ -123,3 +123,15 @@ p95 .6–1.9 ms, combined p95 5.5–9.8 ms; no observed long tasks in those meas
 The 8 ms update budget is not consistently met. See the full conditions and initial/final table
 in [Phase 2 implementation notes](docs/phases/PHASE_2_IMPLEMENTATION.md). These are not mobile,
 battery, thermal or end-to-end camera measurements; real-device profiling remains Pending.
+
+## On-device stress-profile capability (2026-10-26 UTC)
+
+The [follow-up engine and device procedure](docs/phases/PHASE_2_STRESS_PROFILE.md) moves 100-live ×
+50-result timing into the application. App and browser test now use the same fixture v1 engine:
+184 warmups, 50 measured updates, 50 active/50 lost, 10,150 retained samples including gaps.
+No camera or detector is used. It records median p50, nearest-rank p95 and max separately for
+update with returned copy, extra snapshot and combined cost. Metadata/config and long-task
+support/drops accompany the numbers. Older developer-driver results above remain historical.
+One local Chromium run measured update p95 8.20 ms and extra-copy p95 1.80 ms; the investigation
+flag correctly reported the 8 ms budget exceeded. This is not evidence from iPhone or iPad.
+All physical-device timing results remain Pending, and no preview deployment is authorized here.

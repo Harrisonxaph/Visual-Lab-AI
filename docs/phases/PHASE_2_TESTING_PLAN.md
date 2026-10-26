@@ -92,3 +92,12 @@ When a preview is separately approved, additionally verify on each device:
 - Record actual matching/snapshot/UI latency alongside inference time/FPS and sustained heat/battery
   observations. Shared-Linux profiling exceeded the proposed budget in one final run; no mobile
   budget claim has been established.
+
+## Device matching/copy timing procedure
+
+Use the **Stress profile (synthetic, no camera)** button after stopping this lab's camera, rather
+than inferring tracker time from inference ms/FPS or from the small ≤10-object benchmark. Follow
+[the exact on-device procedure](PHASE_2_STRESS_PROFILE.md). Record each device's p50/p95/max,
+metadata and observation support separately; no on-device run has been supplied yet. Results are
+Pending until a separately approved preview and real-device session. Existing live-camera and
+privacy checks remain required; a synthetic timing result does not replace them.

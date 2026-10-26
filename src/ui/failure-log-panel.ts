@@ -1,6 +1,6 @@
 import { FailureLogStore } from "../failures/store";
 import type { FailureNote } from "../failures/types";
-import type { TrackSnapshot } from "../tracking/types";
+import type { TrackerConfig, TrackSnapshot } from "../tracking/types";
 import type { DetectorConfiguration } from "../inference/types";
 import { catalogFor } from "../data/coco-labels";
 export function mountFailureLog(
@@ -11,13 +11,14 @@ export function mountFailureLog(
     segment: number;
     selected: TrackSnapshot | null;
     threshold: number;
+    trackerConfig: TrackerConfig;
   },
 ) {
   const store = new FailureLogStore();
   store.load();
   container.insertAdjacentHTML(
     "beforeend",
-    `<p>User reports are not verified truth, approved corrections or training. Metadata only; no images. Limit: 100 notes / 256 KiB in page memory and saved storage. Free text may contain personal information you enter. Browser storage is not encrypted or guaranteed durable.</p><label>Report type <select id="failure-type"><option value="missed">Missed object</option><option value="incorrect">Incorrect detection (selected track)</option><option value="unstable">Unstable detection (selected track)</option></select></label><label>Expected category <select id="failure-label"><option value="">Unknown</option></select></label><label for="failure-text">Optional note (500 characters)</label><textarea id="failure-text" maxlength="1000"></textarea><button id="add-failure" type="button">Add failure note</button><label><input type="checkbox" id="save-failures"> Save notes on this device</label><button id="clear-failures" type="button">Clear all failure notes</button><p id="failure-status" role="status"></p><ul id="failure-list"></ul>`,
+    `<p>User reports are not verified truth, approved corrections or training. Metadata only; no images. Limit: 100 notes / 256 KiB in page memory and saved storage. Free text may contain personal information you enter. Browser storage is not encrypted or guaranteed durable.</p><label>Report type <select id="failure-type"><option value="missed">Missed object</option><option value="incorrect">Incorrect detection (selected track)</option><option value="unstable">Unstable detection (selected track)</option></select></label><label>Expected category <select id="failure-label"><option value="">Unknown</option></select></label><label for="failure-text">Optional note (500 characters)</label><textarea id="failure-text" maxlength="500" aria-describedby="failure-character-count"></textarea><p id="failure-character-count">0 / 500</p><button id="add-failure" type="button">Add failure note</button><label><input type="checkbox" id="save-failures"> Save notes on this device</label><button id="clear-failures" type="button">Clear all failure notes</button><p id="failure-status" role="status"></p><ul id="failure-list"></ul>`,
   );
   const q = <T extends HTMLElement = HTMLElement>(id: string) =>
     container.querySelector<T>(id)!;
@@ -55,10 +56,23 @@ export function mountFailureLog(
     store.clearAll();
     update();
   });
+  const textInput = q<HTMLTextAreaElement>("#failure-text");
+  textInput.addEventListener("input", () => {
+    q("#failure-character-count").textContent =
+      `${textInput.value.length} / 500`;
+  });
   q("#add-failure").addEventListener("click", () => {
     const c = context(),
       type = q<HTMLSelectElement>("#failure-type").value as FailureNote["type"],
       t = type === "missed" ? null : c.selected;
+    if (type !== "missed" && !t) {
+      q("#failure-status").textContent = "Select a track first.";
+      return;
+    }
+    if (textInput.value.length > 500) {
+      q("#failure-status").textContent = "Keep the note within 500 characters.";
+      return;
+    }
     const note: FailureNote = {
       id: crypto.randomUUID(),
       type,
@@ -69,8 +83,8 @@ export function mountFailureLog(
       trackId: t?.id ?? null,
       model: { name: model.name, version: model.version, sha256: model.sha256 },
       thresholds: {
-        model: model.floor,
-        tracking: Math.max(0.25, model.floor),
+        model: c.trackerConfig.modelFloor,
+        tracking: c.trackerConfig.trackingFloor,
         display: c.threshold,
       },
       observed: t

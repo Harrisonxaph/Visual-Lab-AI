@@ -4,8 +4,9 @@ Build Visual Labs AI as a private, educational computer-vision laboratory. Read 
 PROJECT_ROADMAP.md and MODEL_LIMITATIONS.md before changes. Phase 1 is closed with documented
 accepted limitations. The user approved Task 3 checkpoint `a73014743bc10b1a187474ffbc0ebb147a27d9f7`
 and authorized Phase 2 Tasks 4–6 against merged plan `559bd64` on 2026-10-26 UTC.
-Tasks 1–6 are implemented on the draft Phase 2 branch; final review and physical acceptance
-remain pending. Do not merge/deploy/change protection or automatic deployments, add dependencies,
+Tasks 1–6 merged through PR #11 at `efdb1d9` on 2026-10-26 UTC. Physical acceptance remains
+pending. Current follow-up scope is an on-device synthetic stress profiler, note-form errors/count
+and configuration provenance, tests and documentation. Do not merge/deploy/change protection or automatic deployments, add dependencies,
 or begin Phase 3 without explicit approval. Preserve every accepted Phase 1 limitation.
 
 

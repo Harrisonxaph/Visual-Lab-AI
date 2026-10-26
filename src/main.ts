@@ -146,10 +146,14 @@ const failureLog = mountFailureLog(element("#failure-log"), MODEL, () => {
     sessionId: v.snapshot.sessionId,
     segment: v.snapshot.segment,
     selected: v.selected,
+    trackerConfig: tracking.config,
     threshold,
   };
 });
-const benchmark = mountBenchmark(element("#synthetic-benchmark"));
+const benchmark = mountBenchmark(
+  element("#synthetic-benchmark"),
+  () => tracking.config,
+);
 let ageTimer: ReturnType<typeof setInterval> | undefined;
 let lab: Lab;
 const camera = new Camera(video, () => lab.cameraEnded());

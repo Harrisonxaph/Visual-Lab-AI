@@ -1,6 +1,7 @@
-# Phase 2 implementation — awaiting review and physical acceptance
+# Phase 2 implementation — physical acceptance pending
 
-Branch `phase-2/tracking`, draft [PR #11](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/11).
+Merged [PR #11](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/11) on 2026-10-26 at 10:59:06 UTC,
+commit `efdb1d98825d4960e91882156f08b3f1067abe91`; this preceded Phase 2 physical acceptance.
 Approved design/plan baseline: `559bd645aa5c9be636169435e02b74df5a6374df`.
 Task 3 checkpoint `a73014743bc10b1a187474ffbc0ebb147a27d9f7` was approved; the user
 separately authorized Tasks 4–6 on 2026-10-26 UTC. Exact final source SHA and remote CI are
@@ -61,8 +62,8 @@ No new physical observations, preview, production deployment or deployed-header 
 
 ## Profiling and investigation
 
-Developer test: 100 live slots (50 active / 50 lost), 50 returned detections, roughly 10,100 retained
-samples after warmup; 50 measured updates at synthetic 5 ms spacing. This is stress logic timing,
+Developer test: 100 live slots (50 active / 50 lost), 50 returned detections, 10,150 retained
+samples (including 50 null gap markers) after warmup; 50 measured updates at synthetic 5 ms spacing. This is stress logic timing,
 not camera FPS. Update includes its returned defensive snapshot. Explicit copy simulates a further
 read; the live UI now avoids redundant per-frame copies and projects inspection at 4 Hz.
 
@@ -128,3 +129,9 @@ Do not merge, deploy or begin Phase 3 without separate approval.
 The pagehide handler cancels work, stops camera tracks and clears tracking state without removing
 static controls that must survive back/forward-cache restoration. A synthetic lifecycle-event
 regression covers this; it does not establish physical Safari back/forward-cache behavior.
+
+## Later device measurement follow-up
+
+The original test counts and timing table above record PR #11 evidence. A separate
+[stress-profile follow-up](PHASE_2_STRESS_PROFILE.md) adds an on-device button, note-form
+corrections and newer tests. It does not add physical evidence or close the performance risk.

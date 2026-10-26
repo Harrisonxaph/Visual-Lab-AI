@@ -6,7 +6,7 @@ how confident it is, and how its outputs change.
 Phase 1 provides live camera detection, labelled boxes, confidence filtering, pause/resume/stop,
 processing FPS and inference latency, plus educational model explanations. Later phases are
 recorded in [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md), including every stretch target.
-The Phase 2 draft branch adds tracking, inspection, local user reports and labelled synthetic
+Phase 2 adds tracking, inspection, local user reports and labelled synthetic
 evaluation. Active learning, retraining and PWA installation remain later roadmap work.
 
 ## Run locally
@@ -97,6 +97,8 @@ events, pushes limited to main, or manual dispatch. PR branch pushes do not also
 
 Phase 1 privacy follow-up: [diagnostics, policy limits and pending device checklist](docs/phases/PHASE_1_PRIVACY.md).
 
-Phase 2 Tasks 1–6 are implemented on `phase-2/tracking` in draft [PR #11](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/11), awaiting review and physical acceptance.
+Phase 2 Tasks 1–6 were merged via [PR #11](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/11) on 2026-10-26 UTC (`efdb1d9`); physical acceptance remains pending.
 See [scope, automated evidence, profiling and remaining checks](docs/phases/PHASE_2_IMPLEMENTATION.md).
-Phase 2 is not closed; no merge or deployment approval is implied.
+Phase 2 is not closed; no deployment approval is implied.
+The [device stress-profile follow-up](docs/phases/PHASE_2_STRESS_PROFILE.md) adds a stopped-camera
+synthetic timing button and note-form corrections; its physical results remain Pending.
