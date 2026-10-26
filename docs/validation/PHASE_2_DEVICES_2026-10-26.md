@@ -382,6 +382,55 @@ only when a material fix warrants it. See the updated testing plan for M1/M2/M3 
 All existing Pending checks, accepted Phase 1 limitations and authorization boundaries remain.
 The one-preview authorization is consumed; no merge, further deployment or Phase 3 is approved.
 
+
+## M1 automated follow-up — not new physical evidence
+
+The [M1 investigation](../reviews/PHASE_2_M1_MISSING_BOXES.md) starts from PR #15 merge
+`21bbabf7cd0743d17337ee6cdd627c272abbf49c` and verified successful merge CI `40356764338`.
+Its runtime source is unchanged from the approved preview. Normal Linux Chromium probes did
+not reproduce unforced positive-current-count/empty-overlay behaviour. They did show expected
+LIVE INPUT with zero current detections and six retained tracks after loss/expiry/filtering.
+A deliberately unavailable overlay context produced a positive-count/no-paint lookalike; this
+forced fault is not a diagnosis of D12–D14. WebKit could not launch because host libraries are
+missing; physical Safari received no new pass. No speculative runtime fix or deployment was made.
+The new automated counts and reproduction limits are in the report, separate from this ledger's
+user observations. D12–D14 remains unresolved. Two consolidated M2 worksheets are prepared but
+not active. Earlier reported passes and accepted Phase 1 limitations remain; do not infer a root
+cause or accept a new limitation from this checkpoint.
+
+
+### D16 — User-supplied screenshot shows boxes; device/context unconfirmed
+
+Source: **user-supplied screenshot, visually inspected**, recorded 2026-10-26 16:53 UTC.
+Only these relevant observations are transcribed; the screenshot and camera footage are not
+committed or uploaded to the repository. It shows Running, LIVE INPUT, Segment 1, and visible
+labelled boxes **#2 tv 71%** and **#1 keyboard 71%**. The address-bar text includes the approved
+preview's `l8m3xumpt-harrisonjbailey-3896.vercel.app` suffix. The complete URL and exact source
+commit are not independently attested by the image. The Visible detections metric is outside
+the captured page area, so the earlier six-object ambiguity remains.
+
+The surrounding UI appears to be ChatGPT with an embedded browser panel; the actual device,
+OS and browser/container were not specified with the image. Do not attribute this to the iPhone
+Safari session, start an iPad test pass, or reinterpret D1's user-confirmed details without
+clarification. A still screenshot establishes visible boxes in this view, not moving-video
+behaviour, automatic recovery, reproducibility or resolution of D12–D14. It does not identify
+which earlier condition changed. Ask only for source-context attribution; no new device action
+or acceptance walkthrough is requested. All earlier evidence remains, with M1 unresolved.
+
+
+### D17 — Screenshot attributed to iPhone by user
+
+Source: **explicit user source attribution**, recorded 2026-10-26 17:16 UTC.
+The final clarification asked only which device took D16's screenshot: A iPhone / B iPad /
+C unsure. The user replied **A**. Attribute D16 to an iPhone on that basis; this is user-confirmed
+provenance, not independently verified device metadata. This A does not select an older browser
+choice or the older positive-current-count missing-box choice. The exact model/OS and browser/
+container for the image were not separately confirmed. Leave browser context unconfirmed;
+do not turn it into a standalone Safari pass or alter earlier D1 confirmation.
+D16 shows visible labelled boxes in the user-attributed iPhone view. No current Visible detections
+count, prior failure cause, recovery mechanism or stable duration is established. D12–D14 remains
+unresolved. No further device action or browser-identification question is requested now.
+
 ## Remaining gate
 
 Missing boxes (D12) remains unresolved pending state inspection/reproduction; no Phase 2

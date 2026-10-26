@@ -51,3 +51,14 @@ Keep untested checks Pending; neither this workflow change nor a milestone pass 
 closes Phase 2, approves merge/deployment or authorizes Phase 3. Missing boxes (ledger D12–D14)
 is unresolved; do not infer a root cause or waive it. No further device action is requested now.
 Future device requests still include the approved preview URL and fixed choices/batched reporting.
+
+## Current M1 investigation scope
+
+PR #15 merged at `21bbabf7cd0743d17337ee6cdd627c272abbf49c`; its exact merge CI
+`40356764338` succeeded. Current authorized work is the M1 missing-box investigation, focused
+reproduction/regression tests and findings on a separate draft PR. No speculative runtime fix.
+Use `docs/reviews/PHASE_2_M1_MISSING_BOXES.md` for findings and the prepared M2 worksheets only
+after readiness is established. Linux Chromium is not physical Safari evidence; WebKit launch
+is currently blocked by missing host libraries, and no dependencies were added. Keep D12–D14
+unresolved unless valid new evidence resolves them. One justified minimal device-only question
+may distinguish current Visible detections from retained Tracks; no routine walkthrough now.
