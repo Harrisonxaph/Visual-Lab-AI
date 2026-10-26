@@ -1,6 +1,6 @@
 # Phase 2 physical-device validation — 2026-10-26
 
-Status: **In progress; Phase 2 not accepted or closed.** iPhone pre-Start observations, small benchmark and numeric stress results have been supplied; validation remains in progress and remaining checks are Pending. This is a documentation-only validation branch; its commits are not
+Status: **In progress; Phase 2 not accepted or closed.** iPhone pre-Start observations, small benchmark and numeric stress results have been supplied; validation is in progress with an unresolved missing-box report (D12). Remaining checks are Pending. This is a documentation-only validation branch; its commits are not
 preview source and require no deployment.
 
 ## Authorized source and environment
@@ -31,9 +31,9 @@ preview source and require no deployment.
 ## Evidence rules and prior limitations
 
 Follow the [device testing plan](../phases/PHASE_2_TESTING_PLAN.md) and
-[stress-profile procedure](../phases/PHASE_2_STRESS_PROFILE.md). Every device request includes the
-approved preview URL and fixed answer choices. Test iPhone first, then iPad; confirm current
-versions and conditions. Do not mark a check passed from an unanswered template.
+[stress-profile procedure](../phases/PHASE_2_STRESS_PROFILE.md). Device requests are now milestone-based (D15), with the approved preview URL and fixed/batched
+answer choices. Preserve partial iPhone evidence, then test iPad at the device acceptance gate;
+confirm current versions and conditions. Do not mark a check passed from an unanswered template.
 
 Physical results are **user-reported observations**, not automated or independently certified.
 Copied logs, screenshots and synthetic numeric results must retain their provenance. No raw camera
@@ -83,11 +83,11 @@ Every cell starts Pending. A partial result covers only the steps actually repor
 | Clock step, uncertainty window/source, verdict, startup responsiveness | Step/window 1 ms observed, within, update p95 5 ms (D5); quantified startup delay Pending | Pending |
 | Stress cancellation/retry; Start/Resume/hide/page-exit cancellation | Manual Cancel (D7) and Start cancellation (D8) passed; phase-specific/Resume/hide/page-exit paths Pending | Pending |
 | Start/consent, live boxes, confirmed IDs; running/loading profile gate | Live video/conditional prompt timing (D8), labels/confidence/public IDs and running profile gate (D9) reported Pass; loading gate not separately observed | Pending |
-| Single-object ID continuity (30 seconds) | Pending | Pending |
+| Single-object ID continuity (30 seconds) | User-reported Pass (D10); qualitative, not independently timed | Pending |
 | Two-object motion/crossing qualitative observation | Pending | Pending |
-| Brief loss/reacquisition and longer expiry | Pending | Pending |
-| Tap/list selection, inspector/events/history/chart gaps | Pending | Pending |
-| Trails Off / 2 / 5 / 10 seconds; no bridging gaps | Pending | Pending |
+| Brief loss/reacquisition and longer expiry | Unresolved missing-box report during this request (D12); test not passed, cause unknown | Pending |
+| Tap/list selection, inspector/events/history/chart gaps | Both selection methods, inspector and confidence history reported Pass (D11); loss/event/gap checks Pending | Pending |
+| Trails Off / 2 / 5 / 10 seconds; no bridging gaps | All duration settings reported Pass (D11); gap handling Pending | Pending |
 | Display thresholds, returned near-threshold list, alternatives unavailable | Pending | Pending |
 | Searchable 80-label catalog | Pending | Pending |
 | Portrait/landscape/zoom, selection alignment, layout and scrolling | Pending | Pending |
@@ -305,7 +305,85 @@ values and wait duration were not separately supplied. Record visibility and run
 reported passes, not measured confirmation latency, ground-truth detection accuracy or stable
 tracking duration. The loading gate remains unobserved; no loading regression pass is inferred.
 
+
+### D10 — iPhone single-object ID continuity
+
+Source: **user-reported physical observation**, recorded 2026-10-26 15:20 UTC.
+The outstanding request asked the user to move one detected object slowly within the frame for
+30 seconds, keeping it visible, separate from other objects and in the same phone orientation.
+After a status discussion that explicitly retained this pending check, the user replied **A**.
+Interpret A against that outstanding fixed-choice request: box stayed visible and the same ID
+persisted throughout. This interpretation was stated back to the user. Record a qualitative
+user-reported pass for the requested duration, not independently timed tracking, objective
+accuracy, a measured fragmentation/switch rate or re-identification. Object class, numeric ID and
+confidence values were not supplied; no extra pass is inferred.
+
+
+### D11 — iPhone grouped selection, inspector/chart and trajectory controls
+
+Source: **user-reported physical observation**, recorded 2026-10-26 15:25 UTC.
+The user selected **A** for the grouped instructions: both track-list selection and tapping a
+video box worked; Object inspector showed selected ID/class/confidence; Confidence over time
+showed history; Off/2 s/5 s/10 s trajectory settings worked while gently moving the object.
+Record these as qualitative reported passes. No exact confidence series, selected numeric ID,
+trajectory-length measurement, event reason or intentional interruption was supplied. History
+and trail gap handling remain Pending; a working chart is not evidence that gaps are preserved.
+
+
+### D12 — iPhone missing-box report; investigation pending
+
+Source: **user-reported physical observation**, recorded 2026-10-26 15:27 UTC.
+Verbatim: **"Boxes not showing on inference"**.
+This followed the grouped brief/long cover and gap-cleanup request. The reply does not identify
+which step was performed, current Lab status, display threshold/counts, video motion, object,
+error message or whether inference is actually advancing. Prior D9–D11 observations remain
+historical evidence; no loss/recovery, expiry or gap-handling pass is inferred from this report.
+Pause the checklist for triage and reproduction. Possible state/filter/model-output/rendering
+causes are not yet distinguished. No cause, runtime defect or corrective fix is established.
+Initial request asks for current status/video without reloading or changing controls, to preserve
+state. No deployment, settings change or new camera-media collection is authorized or performed.
+
+
+### D13 — Missing-box triage: Running and moving video
+
+Source: **user-reported physical observation**, recorded 2026-10-26 15:30 UTC.
+In response to instructions to uncover the object, keep it in view, and avoid reload/Stop/Start,
+the user selected **A**: status Running, video moves, but no boxes. This confirms the reported
+UI/video state, not ongoing inference-frame completion. Current threshold, visible count,
+processing cadence, stale-analysis indication and detector outputs remain unknown. No error
+message was reported. D12 remains unresolved; no filter, worker or rendering cause is established.
+
+
+### D14 — Missing boxes with LIVE INPUT and six objects reported below
+
+Source: **user-reported physical observation**, recorded 2026-10-26 15:38 UTC.
+Verbatim: **"D. Life input with no boxes. Below marked 6 objects but nothing in camera"**.
+The preceding request distinguished the Visible detections metric and video status label. The
+user chose D (different wording / uncertainty) and described LIVE INPUT (typed "Life input")
+and six objects below. Preserve ambiguity: the reply does not explicitly identify whether six
+is the current Visible detections metric, retained Tracks, or another object list. Do not infer
+six current draw-ready detections or a proven rendering failure yet. D12 remains unresolved;
+no threshold/restart intervention has been requested or reported at this point.
+
+
+### D15 — User-directed milestone-based testing; continuous prompts stopped
+
+Source: **explicit user workflow instruction**, recorded 2026-10-26 15:45 UTC.
+Verbatim: **"Move to milestone-based testing instead of constant manual testing."**
+This is a workflow decision, not a device observation, pass, waiver or approval of a known limit.
+Stop the current stream of device questions, including the unanswered current-count clarification.
+Preserve D12–D14 as unresolved: six objects below has not been identified as the current Visible
+detections metric versus retained track history, and no rendering/worker/filter cause is proven.
+No new physical-device check is requested now. First investigate material issues in code/automation;
+request only minimal user-only evidence at a justified blocker checkpoint if necessary. Otherwise
+use one consolidated iPhone acceptance session, then one on iPad for the stable authorized build,
+and a final evidence/closeout review. Reuse unaffected observations; retest relevant behaviour
+only when a material fix warrants it. See the updated testing plan for M1/M2/M3 gate status.
+All existing Pending checks, accepted Phase 1 limitations and authorization boundaries remain.
+The one-preview authorization is consumed; no merge, further deployment or Phase 3 is approved.
+
 ## Remaining gate
 
-Remaining physical checks stay Pending unless supported by the observations above. This ledger does not close Phase 2, accept new limitations,
+Missing boxes (D12) remains unresolved pending state inspection/reproduction; no Phase 2
+readiness claim is made. Remaining physical checks stay Pending unless supported by the observations above. This ledger does not close Phase 2, accept new limitations,
 authorize merging or authorize another deployment.

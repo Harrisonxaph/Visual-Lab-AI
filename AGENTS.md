@@ -37,3 +37,17 @@ The CI gate succeeded and the one preview was created READY: deployment
 https://visual-lab-l8m3xumpt-harrisonjbailey-3896.vercel.app.
 That deployment authorization is consumed. Continue device validation and record evidence in
 `docs/validation/PHASE_2_DEVICES_2026-10-26.md`; no further deployment is authorized.
+
+## Milestone-based validation (user direction, 2026-10-26 UTC)
+
+Stop routine step-by-step physical-device prompts. Use automated checks and code review first,
+then one consolidated physical acceptance session per stable milestone (iPhone, then iPad),
+then an evidence/closeout review. Preserve already supplied observations; do not repeat unaffected
+passes or reopen accepted Phase 1 limits by default. Report milestone status and request user
+involvement at those gates. Retest only affected behaviour after material fixes; explain the
+scope and why device evidence is necessary. If a blocking incident requires user-only evidence,
+collect the minimum needed in one focused request, not an ongoing stream of routine questions.
+Keep untested checks Pending; neither this workflow change nor a milestone pass accepts risks,
+closes Phase 2, approves merge/deployment or authorizes Phase 3. Missing boxes (ledger D12–D14)
+is unresolved; do not infer a root cause or waive it. No further device action is requested now.
+Future device requests still include the approved preview URL and fixed choices/batched reporting.

@@ -1,9 +1,43 @@
-# Phase 2 proposed acceptance and physical testing plan
+# Phase 2 acceptance and milestone-based testing plan
 
-**Planning only — no Phase 2 runtime or device result exists yet.** These checks become executable
-after implementation approval, a passing build and a separately approved temporary preview.
+**In progress; not accepted or closed.** Tasks 1–6 and follow-ups through PR #14 are merged.
+The one approved preview is source `37ff7d4be571d56c21c1f74bae834c3fe16c7952`; partial iPhone
+observations are in the [device ledger](../validation/PHASE_2_DEVICES_2026-10-26.md).
+The iPad session has not started. Missing boxes on iPhone remains unresolved (D12–D14).
+On 2026-10-26 UTC the user replaced continuous manual prompts with milestone-based validation.
 Preserve the [Phase 1 closeout](PHASE_1_CLOSEOUT.md); acceptance of its limitations is not a new
 tracking/storage/UI test pass. No production deployment, merge or Phase 3 is authorized.
+
+## Milestone gates — current workflow
+
+The detailed rows below are a coverage inventory, not instructions to issue a chat prompt for
+every item. No further routine device prompt is requested now. Code/automated investigation of
+D12–D14 comes first; preserve the uncertainty about current detections versus retained tracks.
+The change in workflow does not convert an untested check to Pass or accept the incident as a limit.
+
+| Gate | Developer work and evidence | User involvement | Current state |
+| --- | --- | --- | --- |
+| M1 — Stable implementation | Reproduce material failures using code/automation where possible; appropriate regression coverage, relevant Phase 1/2 checks and review tied to the exact source. Explain remaining device-only uncertainty. Code fixes need their own appropriate PR; this ledger branch remains documentation-only. | Review the concrete readiness result. Only request minimum device-only evidence if genuinely necessary to investigate a blocker. | Existing source merge CI passed; missing-box report remains unresolved, so readiness for final acceptance is not established. |
+| M2 — Consolidated device acceptance | Prepare one concise checklist/report sheet against the stable, authorized preview; reuse earlier unaffected evidence. No new preview is authorized by this plan. | One planned session on iPhone, then one on iPad; grouped observations rather than continuous prompts. | Paused until M1 readiness; partial iPhone results retained, iPad Pending. |
+| M3 — Evidence and closeout | Summarize automated versus physical evidence, material issues, every untested item and proposed disposition; prepare the concrete review/closeout record. | Claude review and the user's explicit closeout/risk decisions. | Pending; no merge, production or Phase 3 approval implied. |
+
+M2 should combine the remaining checks into a single worksheet per device: tracking/inspector/
+gaps/trails/thresholds/explorer; touch/layout/rotation and lifecycle; note validation/opt-in/
+reload/deletion; synthetic jobs, cancellation and complete timing metadata; diagnostics copy;
+and a five-minute sustained-use observation. Target roughly 15–25 minutes per device if no
+failure blocks the session; this is an estimate, not a required quota or guarantee. Earlier
+unaffected passes need not be repeated. Conditions and numeric outputs can be supplied in one
+report. Use fixed choices per grouped section (Pass / Issue / Partial / Not tested), with exact
+values or error text where necessary. Partial does not mean all covered subchecks passed.
+
+A new material failure triggers investigation and focused regression/retest of affected behaviour,
+not an automatic complete device round. Explain any requested rerun's impact scope. If automation
+cannot distinguish a material device-only issue, ask once for the minimum necessary evidence;
+otherwise defer device requests to the milestone session. There is no predetermined series of
+extra test rounds. Untested or unavailable checks remain Pending until tested or explicitly
+accepted by the user as limitations, with reasons; do not invent Not applicable decisions.
+Accepted Phase 1 limitations remain accepted. Phase 3 requires its own authorization after the
+Phase 2 closeout decision; it is not started automatically by these gates.
 
 ## Proposed acceptance criteria
 
@@ -75,8 +109,8 @@ that authorization. No new runtime work, preview or Phase 3 is authorized by thi
 
 ## Implementation evidence and new physical checks
 
-Automated scope/results are in [implementation notes](PHASE_2_IMPLEMENTATION.md). Every Phase 2
-physical-device row remains Pending; no preview deployment was performed or authorized here.
+Automated scope/results are in [implementation notes](PHASE_2_IMPLEMENTATION.md). Partial physical-device evidence is recorded only in the linked ledger; this plan alone does
+not establish a pass. The single authorized preview exists; further deployments require approval.
 When a preview is separately approved, additionally verify on each device:
 
 - Dismiss segment notices; confirm they remain dismissed through slider/inference updates and
@@ -98,8 +132,8 @@ When a preview is separately approved, additionally verify on each device:
 For a camera-off measurement, use **Stress profile (synthetic, no camera)** after stopping this lab's camera, rather
 than inferring tracker time from inference ms/FPS or from the small ≤10-object benchmark. Follow
 [the exact on-device procedure](PHASE_2_STRESS_PROFILE.md). Record each device's p50/p95/max,
-metadata and observation support separately; no on-device run has been supplied yet. Results are
-Pending until a separately approved preview and real-device session. Existing live-camera and
+metadata and observation support separately. An iPhone report has been supplied; iPad remains Pending.
+Record status from the ledger rather than inferring device passes from this procedure. Existing live-camera and
 privacy checks remain required; a synthetic timing result does not replace them.
 
 The profile also follows the benchmark's paused-state allowance: paused preview remains live,
