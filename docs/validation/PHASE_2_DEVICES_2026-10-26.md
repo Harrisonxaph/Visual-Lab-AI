@@ -382,6 +382,22 @@ only when a material fix warrants it. See the updated testing plan for M1/M2/M3 
 All existing Pending checks, accepted Phase 1 limitations and authorization boundaries remain.
 The one-preview authorization is consumed; no merge, further deployment or Phase 3 is approved.
 
+
+## M1 automated follow-up — not new physical evidence
+
+The [M1 investigation](../reviews/PHASE_2_M1_MISSING_BOXES.md) starts from PR #15 merge
+`21bbabf7cd0743d17337ee6cdd627c272abbf49c` and verified successful merge CI `40356764338`.
+Its runtime source is unchanged from the approved preview. Normal Linux Chromium probes did
+not reproduce unforced positive-current-count/empty-overlay behaviour. They did show expected
+LIVE INPUT with zero current detections and six retained tracks after loss/expiry/filtering.
+A deliberately unavailable overlay context produced a positive-count/no-paint lookalike; this
+forced fault is not a diagnosis of D12–D14. WebKit could not launch because host libraries are
+missing; physical Safari received no new pass. No speculative runtime fix or deployment was made.
+The new automated counts and reproduction limits are in the report, separate from this ledger's
+user observations. D12–D14 remains unresolved. Two consolidated M2 worksheets are prepared but
+not active. Earlier reported passes and accepted Phase 1 limitations remain; do not infer a root
+cause or accept a new limitation from this checkpoint.
+
 ## Remaining gate
 
 Missing boxes (D12) remains unresolved pending state inspection/reproduction; no Phase 2

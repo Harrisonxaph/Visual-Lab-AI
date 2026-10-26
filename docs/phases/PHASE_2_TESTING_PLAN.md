@@ -39,6 +39,10 @@ accepted by the user as limitations, with reasons; do not invent Not applicable 
 Accepted Phase 1 limitations remain accepted. Phase 3 requires its own authorization after the
 Phase 2 closeout decision; it is not started automatically by these gates.
 
+Prepared artifacts: [M1 investigation](../reviews/PHASE_2_M1_MISSING_BOXES.md) and
+[separate consolidated iPhone/iPad worksheets](../validation/PHASE_2_M2_ACCEPTANCE_WORKSHEETS.md).
+The worksheets are not active; M1 remains blocked by the unresolved physical report.
+
 ## Proposed acceptance criteria
 
 - Within a continuous analysis segment, a clearly separated supported object moving within the
