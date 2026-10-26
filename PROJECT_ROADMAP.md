@@ -64,8 +64,10 @@ Scope:
 - Add images from a phone or tablet photo library (file picker), optionally from the camera.
 - Create categories (labels); assign, correct and remove labels.
 - Training / validation / test splits, created deterministically and kept stable.
-- Exact-duplicate detection (content hash) and near-duplicate detection (a small image
-  fingerprint); near-duplicates are kept in the same split so they cannot leak across splits.
+- Exact-duplicate detection (content hash) and likely near-duplicate detection (a small image
+  fingerprint). Images the app identifies as related are placed in one group, and a group is never
+  split across training, validation and test. Fingerprints miss some similar images (different
+  crops, angles or edits), so the app says that undetected similarity can still leak between splits.
 - Dataset statistics: images per label and per split, imbalance warnings, duplicates found.
 - A generated example dataset (simple shapes drawn in code) for automated tests and quick demos.
 - Local-only storage in the browser (IndexedDB); nothing uploaded. Clear-all deletion.
@@ -75,8 +77,10 @@ Done when, in plain terms:
 
 1. You can create a dataset of your own photos with at least two labels on your phone.
 2. The app shows how many images each label has in training, validation and test.
-3. Adding the same photo twice is detected; near-identical photos never end up in different splits.
-4. The example dataset loads in one tap, and automated tests prove splits are stable and leak-free.
+3. Adding the same photo twice is detected. Photos the app identifies as related stay in the same
+   split, and the app explains that it cannot catch every similar photo.
+4. The example dataset loads in one tap. Automated tests prove splits are stable and that
+   identified duplicate groups never cross splits.
 
 ## Phase 3 — First genuine AI training system (highest priority)
 
@@ -95,16 +99,25 @@ Scope:
 - "What learns / what stays frozen" panel: weight count, a view of weights changing, embedder frozen.
 - Before-and-after predictions on the same validation images.
 - Save and reload a trained model locally, with a compatibility check (same embedder, same labels).
-- Evidence that training changed the model: untrained accuracy ≈ chance; weights differ from start.
+- Evidence that training changed the model: weights differ from their starting values, and
+  training and validation loss and accuracy are shown before and after.
+
+Learning is **demonstrated** on a controlled fixture: the generated example dataset, where the
+expected outcome is known. On your own photos the app **reports** what happened, whatever it is.
+Your model may start above or below chance, the loss may stall, and validation accuracy may not
+improve (too few images, labels that look alike, or a frozen embedder that cannot separate them).
+The app shows that honestly instead of treating it as a failure of the training code.
 
 Done when, in plain terms:
 
-1. You train a model on your own dataset and watch the loss go down.
-2. Validation accuracy is shown separately from training accuracy.
+1. On the example dataset, training loss falls and validation accuracy rises well above chance,
+   both in the app and in automated tests.
+2. You can train on your own dataset and see training and validation loss and accuracy, reported
+   honestly even when they do not improve.
 3. The same validation images are predicted before and after training, side by side.
 4. Reloading the page and reloading the saved model gives the same predictions.
-5. Automated tests prove the maths is correct (gradient check), training reduces loss on the
-   example dataset, and results are reproducible with the same seed.
+5. Automated tests prove the maths is correct (gradient check) and results are reproducible with
+   the same seed.
 
 ## Phase 4 — Learning and evaluation laboratory
 
@@ -124,7 +137,8 @@ Scope:
 Done when, in plain terms:
 
 1. You can explain from the app's own charts why a model is overfitting.
-2. You can run two settings on the same data and see which generalises better on unseen images.
+2. You can run two settings on the same data and compare them on the validation split; the test
+   split is used once, for the final chosen setting.
 3. Every reported result can be re-run with the same settings and dataset version.
 
 ## Phase 5 — Active learning
@@ -134,14 +148,21 @@ Improve a model with human feedback and prove the improvement.
 1. Run the trained model on unlabelled images.
 2. Rank images by uncertainty (e.g. lowest top-score margin or highest entropy).
 3. Ask you to review a small batch: approve, correct or skip.
-4. Add approved examples to the training split (never to test).
+4. Add approved examples to the training split (never to validation or test).
 5. Retrain.
-6. Compare held-out test results before and after, against a random-selection baseline.
+6. Measure the change on the **validation** split, against a random-selection baseline.
+
+**Test-set reuse rule.** If test results guide later rounds (which batch to pick, when to stop,
+which settings to keep), the test set has influenced the model and no longer measures unseen
+performance. So every round uses validation results only. The test split is evaluated once, after
+the rounds are finished, and each test evaluation is recorded. If the test set is looked at again
+after further changes, the app labels those results as no longer independent.
 
 Done when, in plain terms:
 
-1. One loop of review → retrain → re-evaluate works end to end.
-2. The app shows test-set results before and after, not confidence scores.
+1. One loop of review → retrain → re-evaluate (on validation) works end to end.
+2. The app shows validation results before and after each round, not confidence scores, and a
+   single final test-set result at the end.
 3. An automated experiment on the example dataset shows whether uncertainty-picked examples beat
    randomly picked ones, reporting whichever result actually occurs.
 

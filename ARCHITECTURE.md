@@ -49,8 +49,11 @@ Photo library / camera ──► Dataset store (IndexedDB: image blobs + labels 
   Python/MediaPipe Model Maker training is needed for detector fine-tuning (type 5); not in-app.
 - **Storage:** IndexedDB for images (downscaled on import), labels, splits, cached embeddings and
   saved models. `navigator.storage.persist()` requested where supported. Clear-all deletion.
-- **Splits and leakage:** deterministic splits from a seed; exact duplicates by SHA-256; near
-  duplicates by a small perceptual hash, grouped so a group never spans splits.
+- **Splits and leakage:** deterministic splits from a seed; exact duplicates by SHA-256; likely
+  near duplicates by a small perceptual hash. Each identified related-image group is assigned to
+  one split as a unit. The hash cannot find every similar image, so undetected similarity may
+  still leak and the app discloses this. Iteration uses validation; the test split is evaluated
+  once at the end, and any later reuse is labelled as no longer independent.
 - **Model files:** saved classifier = JSON weights + label list + embedder model hash + training
   settings; reload refuses incompatible embedders or label sets.
 
