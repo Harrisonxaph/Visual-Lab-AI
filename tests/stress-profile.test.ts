@@ -81,3 +81,31 @@ test("long tasks overlapping measurement are retained even if they began just be
     vi.unstubAllGlobals();
   }
 });
+
+test("clock step is bounded and budget boundaries are inconclusive", async () => {
+  const { estimateClockStep, classifyBudget, formatTiming } = await import(
+    "../src/tracking/stress-profile"
+  );
+  let tick = 0;
+  expect(estimateClockStep(() => Math.floor(++tick / 4))).toBe(1);
+  expect(estimateClockStep(() => 0)).toBeNull();
+  expect(classifyBudget(7, 1)).toBe("inconclusive");
+  expect(classifyBudget(9, 1)).toBe("inconclusive");
+  expect(classifyBudget(6.9, 1)).toBe("within");
+  expect(classifyBudget(9.1, 1)).toBe("exceeded");
+  expect(classifyBudget(1, null)).toBe("inconclusive");
+  expect(formatTiming(8, 1)).toBe("8");
+  expect(formatTiming(1.234, 0.1)).toBe("1.23");
+});
+
+test("whole-millisecond profile reports the observed step and an inconclusive 8 ms p95", async () => {
+  let reads = 0,
+    clock = 0;
+  const report = await runStressProfile(new AbortController().signal, {
+    now: () => (clock += ++reads <= 4097 ? 1 : 8),
+    yieldTurn: async () => {},
+  });
+  expect(report.clockStepMs).toBe(1);
+  expect(report.updateIncludingReturnCopy.p95).toBe(8);
+  expect(report.budgetResult).toBe("inconclusive");
+});

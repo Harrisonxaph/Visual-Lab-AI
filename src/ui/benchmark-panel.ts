@@ -1,5 +1,5 @@
 import { runSyntheticBenchmark } from "../tracking/benchmark";
-import { runStressProfile } from "../tracking/stress-profile";
+import { runStressProfile, formatTiming } from "../tracking/stress-profile";
 import { SYNTHETIC_FIXTURES } from "../tracking/fixtures";
 import type { TrackerConfig } from "../tracking/types";
 import type { LabState } from "../lab";
@@ -91,12 +91,12 @@ export function mountBenchmark(
           row.append(label);
           for (const n of [metrics.p50, metrics.p95, metrics.max]) {
             const td = document.createElement("td");
-            td.textContent = n.toFixed(2);
+            td.textContent = formatTiming(n, report.clockStepMs);
             row.append(td);
           }
           table.append(row);
         }
-        intro.textContent = `Synthetic stress logic, not camera FPS, end-to-end latency, battery or thermal behaviour. ${report.samples} measured updates after ${report.warmupFrames} warmup frames: ${report.liveTracks} live tracks (${report.activeTracks} active / ${report.lostTracks} lost), ${report.detectionsPerFrame} detections, ${report.retainedSamples} retained samples including gap markers. ${report.budgetExceeded ? "8 ms update p95 investigation budget exceeded." : "Within the 8 ms update p95 investigation budget in this run."} This fixed fixture is not every possible worst case or a camera/accuracy benchmark. ${report.observedLongTasks.supported ? `${report.observedLongTasks.entries.length} recorded main-thread long tasks overlapping the measurement interval (whole-task durations; not attributable solely to tracking). ${report.observedLongTasks.dropped ? `${report.observedLongTasks.dropped} observation entries were dropped; the record is incomplete.` : ""}` : "Long-task observation unavailable in this browser; absence of long tasks is not established."}`;
+        intro.textContent = `Synthetic stress logic, not camera FPS, end-to-end latency, battery or thermal behaviour. ${report.samples} measured updates after ${report.warmupFrames} warmup frames: ${report.liveTracks} live tracks (${report.activeTracks} active / ${report.lostTracks} lost), ${report.detectionsPerFrame} detections, ${report.retainedSamples} retained samples including gap markers. ${report.budgetResult === "inconclusive" ? "Inconclusive against the 8 ms update p95 investigation budget: within one observed clock step, or clock step unavailable." : report.budgetResult === "exceeded" ? "8 ms update p95 investigation budget exceeded." : "Within the 8 ms update p95 investigation budget in this run."} Observed minimum clock step: ${report.clockStepMs === null ? "unavailable" : `${report.clockStepMs} ms`}; this finite probe does not establish timer accuracy. This fixed fixture is not every possible worst case or a camera/accuracy benchmark. ${report.observedLongTasks.supported ? `${report.observedLongTasks.entries.length} recorded main-thread long tasks overlapping the measurement interval (whole-task durations; not attributable solely to tracking). ${report.observedLongTasks.dropped ? `${report.observedLongTasks.dropped} observation entries were dropped; the record is incomplete.` : ""}` : "Long-task observation unavailable in this browser; absence of long tasks is not established."}`;
         summary.append(intro, table);
         status.textContent = "Completed synthetic stress profile.";
       } else {

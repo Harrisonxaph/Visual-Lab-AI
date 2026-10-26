@@ -14,7 +14,9 @@ supply physical-device evidence. No deployment, merge, new dependency or Phase 3
 - A separate tracker executes fixed numeric fixture v1: 184 warmup updates, then 50 measured
   updates; 100 live tracks (50 active / 50 lost), 50 detections/frame and 10,150 retained samples
   including 50 null gap markers. Synthetic time advances 5 ms/frame; elapsed wall time is unrelated.
-  This is one fixed dense-copy fixture, not all possible worst-case association layouts.
+  All 50 detections share a single box. The 50 lost tracks lie outside matching gates, so
+  half of the matching table cannot match. This is one fixed dense-copy fixture, not all possible
+  worst-case association layouts.
 - Reported milliseconds separate `Tracker.update` (validation, association, history and its returned
   defensive snapshot), an **extra** `Tracker.snapshot()` copy and combined work. Frame construction
   is outside these timing stamps. p50 is the median (average middle two for even counts); p95 uses
@@ -40,12 +42,17 @@ supply physical-device evidence. No deployment, merge, new dependency or Phase 3
 
 ## Automated evidence and current limits
 
-75 unit, 47 development-browser and 13 production tests pass locally on Linux Chromium 154.
+Merged PR #12 evidence: 75 unit, 47 development-browser and 13 production tests passed
+locally on Linux Chromium 154.
 Production includes the actual built profile UI under the existing CSP. Tests cover no camera
 request/storage write, unsupported long-task API, 390 px layout, loading/running gates, paused-mode availability and Resume cancellation,
 cancellation, non-default configuration provenance, native text limit/count, full sample counts,
 separate timing intervals, median and overlapping-task handling. Phase 1/2 regressions stay green.
-Type, format, build, documentation-link and diff checks pass. Exact final commit/CI is in the PR.
+Type, format, build, documentation-link and diff checks passed for that work.
+PR #12 merged on 2026-10-26 UTC as `4813abead5b674bc5cdcb0ada7f58a7ff1a1e8fc`,
+with final head `3be00120f8720e527624cba08606f9fd9efdfa84` and successful merge CI
+[40319920634](https://github.com/Harrisonxaph/Visual-Lab-AI/actions/runs/40319920634).
+The merge occurred before the designated review.
 
 A separate read-only Codex review found the start-only long-task filter could omit a long first
 update; an independent Chromium injection reproduced that before the overlap fix. The committed
@@ -77,7 +84,8 @@ physical camera performance, battery/thermal validation or evidence about upload
    camera with Stop; verify its indicator is off. Do not infer another tab/app's camera state.
 2. Scroll to Synthetic tracking benchmark; tap **Stress profile (synthetic, no camera)**. Confirm
    the camera stays off and progress/control interaction remains usable. Allow warmup to finish.
-3. Record all p50/p95/max values, config, fixture version, sample/live/result/retained counts,
+3. Record the observed clock step (or unavailable), budget verdict, all p50/p95/max values,
+   config, fixture version, sample/live/result/retained counts,
    elapsed time and long-task supported/unsupported/drop fields. Copy/select the raw JSON manually
    if useful. Keep this report distinct from live inference ms/FPS and user-observed tracking quality.
 4. Record battery/heat observations without treating one run as an energy benchmark. One run can
@@ -89,3 +97,21 @@ physical camera performance, battery/thermal validation or evidence about upload
 6. Log results separately for iPhone and iPad. Do not mark these steps Pass based on Chromium tests.
 
 This document does not authorize a preview; merge and any later preview require separate approval.
+
+## Timer precision follow-up
+
+A bounded 4,097-read probe (one initial read plus 4,096 comparisons) before warmup records the smallest observed positive clock delta
+(`clockStepMs`), or null if none is observed. This is an estimate, not guaranteed resolution or
+accuracy; scheduling and jitter can affect it. No Safari-specific resolution is assumed.
+Table timings use whole milliseconds when the observed step is at least 1 ms or unavailable.
+The budget verdict is **inconclusive** within one observed step of 8 ms (including both boundaries),
+or when the step is unavailable. Otherwise it reports within/exceeded for this run only.
+Record the step and verdict with device results; rounding does not add precision.
+All physical-device checks remain Pending. Accepted Phase 1 limitations are unchanged.
+
+Timer follow-up automated evidence (Linux Chromium, 2026-10-26 UTC): **77 unit,
+48 development-browser and 14 production tests passed**, alongside type, formatting, build and
+diff checks. New regressions cover bounded probes (including an unchanged clock), both inclusive
+budget boundaries, a whole-millisecond injected clock reporting 8 ms as inconclusive, and the
+built UI's integer timing cells/verdict with an injected coarse clock under the current CSP.
+These injected clocks are automated evidence, not Safari measurements. The note counter is unchanged.
