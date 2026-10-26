@@ -93,19 +93,45 @@ test("clock step is bounded and budget boundaries are inconclusive", async () =>
   expect(classifyBudget(9, 1)).toBe("inconclusive");
   expect(classifyBudget(6.9, 1)).toBe("within");
   expect(classifyBudget(9.1, 1)).toBe("exceeded");
-  expect(classifyBudget(1, null)).toBe("inconclusive");
+  expect(classifyBudget(1, null)).toBe("within");
+  expect(classifyBudget(20, null)).toBe("exceeded");
+  expect(classifyBudget(8, null)).toBe("inconclusive");
   expect(formatTiming(8, 1)).toBe("8");
   expect(formatTiming(1.234, 0.1)).toBe("1.23");
 });
 
 test("whole-millisecond profile reports the observed step and an inconclusive 8 ms p95", async () => {
-  let reads = 0,
+  let yields = 0,
     clock = 0;
   const report = await runStressProfile(new AbortController().signal, {
-    now: () => (clock += ++reads <= 4097 ? 1 : 8),
-    yieldTurn: async () => {},
+    now: () => (clock += yields < 184 ? 1 : 8),
+    yieldTurn: async () => {
+      yields++;
+    },
   });
   expect(report.clockStepMs).toBe(1);
   expect(report.updateIncludingReturnCopy.p95).toBe(8);
   expect(report.budgetResult).toBe("inconclusive");
+});
+
+test("probe observes two delayed ticks instead of stopping within the first tick", async () => {
+  const { estimateClockStep } = await import("../src/tracking/stress-profile");
+  let reads = 0;
+  expect(estimateClockStep(() => Math.floor(reads++ / 8192))).toBe(1);
+  expect(reads).toBeGreaterThanOrEqual(16385);
+  expect(reads).toBeLessThan(20000);
+});
+
+test("no observed probe tick uses a disclosed fallback rather than hiding a 20 ms p95", async () => {
+  let reads = 0,
+    clock = 0;
+  const report = await runStressProfile(new AbortController().signal, {
+    now: () => (++reads <= 1_048_577 ? 0 : (clock += 20)),
+    yieldTurn: async () => {},
+  });
+  expect(report.clockStepMs).toBeNull();
+  expect(report.budgetWindowMs).toBe(1);
+  expect(report.budgetWindowSource).toBe("fallback assumption");
+  expect(report.updateIncludingReturnCopy.p95).toBe(20);
+  expect(report.budgetResult).toBe("exceeded");
 });
