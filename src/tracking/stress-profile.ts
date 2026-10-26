@@ -16,17 +16,21 @@ export function summarizeTimings(values: readonly number[]) {
 /** Bounded observed minimum positive clock delta, not a guaranteed timer resolution. */
 export function estimateClockStep(now: () => number): number | null {
   let previous = now(),
-    step = Infinity;
-  for (let i = 0; i < 4096; i++) {
+    step = Infinity,
+    ticks = 0;
+  for (let i = 0; i < 1_048_576 && ticks < 2; i++) {
     const current = now(),
       delta = current - previous;
-    if (Number.isFinite(delta) && delta > 0) step = Math.min(step, delta);
+    if (Number.isFinite(delta) && delta > 0) {
+      step = Math.min(step, delta);
+      ticks++;
+    }
     previous = current;
   }
   return Number.isFinite(step) ? step : null;
 }
 export function classifyBudget(p95: number, step: number | null) {
-  if (step === null || Math.abs(p95 - 8) <= step) return "inconclusive";
+  if (Math.abs(p95 - 8) <= (step ?? 1)) return "inconclusive";
   return p95 > 8 ? "exceeded" : "within";
 }
 export function formatTiming(value: number, step: number | null) {
@@ -177,6 +181,9 @@ export async function runStressProfile(
     buildId: import.meta.env.VITE_BUILD_ID ?? "Unknown",
     investigationBudgetMs: 8,
     clockStepMs,
+    budgetWindowMs: clockStepMs ?? 1,
+    budgetWindowSource:
+      clockStepMs === null ? "fallback assumption" : "observed clock step",
     budgetResult: classifyBudget(summarizeTimings(update).p95, clockStepMs),
   };
 }

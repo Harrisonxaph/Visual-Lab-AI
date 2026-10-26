@@ -6,8 +6,9 @@ accepted limitations. The user approved Task 3 checkpoint `a73014743bc10b1a18747
 and authorized Phase 2 Tasks 4–6 against merged plan `559bd64` on 2026-10-26 UTC.
 Tasks 1–6 merged through PR #11 at `efdb1d9` on 2026-10-26 UTC. Physical acceptance remains
 pending. The stress-profile follow-up merged through PR #12 at `4813abe`.
-Current scope is the approved timer-precision and documentation correction PR. Preview and physical
-device validation may follow only once separately approved. Do not merge/deploy/change protection or automatic deployments, add dependencies,
+The timer-precision follow-up merged through PR #13 at `e984edd`.
+Current authorized scope is the clock-probe correction and documentation PR. The next scope is
+preview and physical-device validation, only once separately approved; no preview is authorized now. Do not merge/deploy/change protection or automatic deployments, add dependencies,
 or begin Phase 3 without explicit approval. Preserve every accepted Phase 1 limitation.
 
 

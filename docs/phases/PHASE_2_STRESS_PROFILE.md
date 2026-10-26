@@ -100,18 +100,36 @@ This document does not authorize a preview; merge and any later preview require 
 
 ## Timer precision follow-up
 
-A bounded 4,097-read probe (one initial read plus 4,096 comparisons) before warmup records the smallest observed positive clock delta
-(`clockStepMs`), or null if none is observed. This is an estimate, not guaranteed resolution or
-accuracy; scheduling and jitter can affect it. No Safari-specific resolution is assumed.
+PR #13 merged on 2026-10-26 UTC as `e984edd68463345ed61a757c11c8c78ca0da5c17`,
+with final head `ee8f3d6c09b5eb8eedb6831f988a71143f291c39` and successful merge CI
+[40329286959](https://github.com/Harrisonxaph/Visual-Lab-AI/actions/runs/40329286959).
+It merged before the designated review.
+
+The corrected probe reads until two positive clock changes, with a cap of 1,048,576 comparisons
+(plus one initial read). It records the smallest positive delta (`clockStepMs`), or null if none
+is observed. The cap bounds work if the clock never advances. The probe precedes warmup and
+measured intervals. This is an estimate, not guaranteed resolution or accuracy; scheduling and
+jitter can affect it. No Safari-specific resolution is assumed.
 Table timings use whole milliseconds when the observed step is at least 1 ms or unavailable.
-The budget verdict is **inconclusive** within one observed step of 8 ms (including both boundaries),
-or when the step is unavailable. Otherwise it reports within/exceeded for this run only.
+The budget uncertainty window is the observed step, or an explicit **1 ms fallback assumption**
+when no step is observed. The report records `budgetWindowMs` and `budgetWindowSource`; the UI
+also discloses the window. The fallback is not a proven timer bound. Verdicts are inconclusive
+within that window of 8 ms (both boundaries included), otherwise within/exceeded for this run.
+Thus an unavailable step no longer makes a 20 ms update p95 inconclusive. The conservative
+inclusive edge rule is unchanged; unknown/coarser-than-assumed clocks still limit interpretation.
 Record the step and verdict with device results; rounding does not add precision.
 All physical-device checks remain Pending. Accepted Phase 1 limitations are unchanged.
 
-Timer follow-up automated evidence (Linux Chromium, 2026-10-26 UTC): **77 unit,
+Historical PR #13 timer follow-up automated evidence (Linux Chromium, 2026-10-26 UTC): **77 unit,
 48 development-browser and 14 production tests passed**, alongside type, formatting, build and
 diff checks. New regressions cover bounded probes (including an unchanged clock), both inclusive
 budget boundaries, a whole-millisecond injected clock reporting 8 ms as inconclusive, and the
 built UI's integer timing cells/verdict with an injected coarse clock under the current CSP.
 These injected clocks are automated evidence, not Safari measurements. The note counter is unchanged.
+
+Clock-probe correction evidence (Linux Chromium 154, 2026-10-26 UTC): **79 unit,
+48 development-browser and 14 production tests passed**, with type, format, build and diff checks.
+The delayed-clock regression remains unchanged for 8,192 reads per tick and requires two changes
+before returning. A separate full-profile regression observes no probe step, then 20 ms timings;
+it records the 1 ms fallback assumption and an exceeded verdict. These are injected clocks,
+not physical-device evidence. All Phase 2 device checks remain Pending.
