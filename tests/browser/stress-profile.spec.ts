@@ -53,3 +53,31 @@ test("built UI profiles without camera or writes and explains unavailable long-t
     ),
   ).toBe(true);
 });
+
+test("coarse clock renders whole milliseconds and inconclusive budget verdict", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    let clock = 0;
+    Object.defineProperty(performance, "now", { value: () => (clock += 8) });
+  });
+  await page.locator("#run-stress-profile").click();
+  await expect(page.locator("#benchmark-status")).toHaveText(
+    "Completed synthetic stress profile.",
+    { timeout: 30000 },
+  );
+  const report = JSON.parse(
+    await page.locator("#benchmark-results").innerText(),
+  );
+  expect(report.clockStepMs).toBe(8);
+  expect(report.updateIncludingReturnCopy.p95).toBe(8);
+  expect(report.budgetResult).toBe("inconclusive");
+  await expect(page.locator("#stress-profile-summary")).toContainText(
+    "Inconclusive against the 8 ms",
+  );
+  const cells = await page
+    .locator("#stress-profile-summary td")
+    .allTextContents();
+  expect(cells).toEqual(["8", "8", "8", "8", "8", "8", "16", "16", "16"]);
+});

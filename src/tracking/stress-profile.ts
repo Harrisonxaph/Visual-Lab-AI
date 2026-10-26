@@ -13,6 +13,25 @@ export function summarizeTimings(values: readonly number[]) {
     max: sorted[sorted.length - 1],
   };
 }
+/** Bounded observed minimum positive clock delta, not a guaranteed timer resolution. */
+export function estimateClockStep(now: () => number): number | null {
+  let previous = now(),
+    step = Infinity;
+  for (let i = 0; i < 4096; i++) {
+    const current = now(),
+      delta = current - previous;
+    if (Number.isFinite(delta) && delta > 0) step = Math.min(step, delta);
+    previous = current;
+  }
+  return Number.isFinite(step) ? step : null;
+}
+export function classifyBudget(p95: number, step: number | null) {
+  if (step === null || Math.abs(p95 - 8) <= step) return "inconclusive";
+  return p95 > 8 ? "exceeded" : "within";
+}
+export function formatTiming(value: number, step: number | null) {
+  return value.toFixed(step === null || step >= 1 ? 0 : 2);
+}
 export interface StressOptions {
   config?: Partial<TrackerConfig>;
   now?: () => number;
@@ -34,6 +53,8 @@ export async function runStressProfile(
   const check = () => {
     if (signal.aborted) throw new Error("Synthetic stress profile cancelled.");
   };
+  check();
+  const clockStepMs = estimateClockStep(now);
   check();
   const tracker = new Tracker(options.config);
   tracker.startSession(1);
@@ -155,6 +176,7 @@ export async function runStressProfile(
       typeof navigator !== "undefined" ? navigator.hardwareConcurrency : null,
     buildId: import.meta.env.VITE_BUILD_ID ?? "Unknown",
     investigationBudgetMs: 8,
-    budgetExceeded: summarizeTimings(update).p95 > 8,
+    clockStepMs,
+    budgetResult: classifyBudget(summarizeTimings(update).p95, clockStepMs),
   };
 }
