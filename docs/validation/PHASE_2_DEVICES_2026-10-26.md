@@ -1,6 +1,6 @@
 # Phase 2 physical-device validation — 2026-10-26
 
-Status: **In progress; Phase 2 not accepted or closed.** iPhone details, pre-Start state and camera-off stress completion have been reported; numerical results and remaining checks are Pending. This is a documentation-only validation branch; its commits are not
+Status: **In progress; Phase 2 not accepted or closed.** iPhone pre-Start observations, small benchmark and numeric stress results have been supplied; validation remains in progress and remaining checks are Pending. This is a documentation-only validation branch; its commits are not
 preview source and require no deployment.
 
 ## Authorized source and environment
@@ -79,8 +79,8 @@ Every cell starts Pending. A partial result covers only the steps actually repor
 | Check | iPhone | iPad |
 | --- | --- | --- |
 | Fresh page: Idle, camera inactive, no prompt before Start | User-reported Pass (D2; tab closure not separately confirmed) | Pending |
-| Camera-off stress profile: counts/config/environment, full timing distributions | Completion/camera-off/responsiveness reported (D3); stress workload unconfirmed after D4; numbers/config Pending | Pending |
-| Clock step, uncertainty window/source, verdict, startup responsiveness | Controls responsive reported (D3); clock/window/verdict and quantified startup delay Pending | Pending |
+| Camera-off stress profile: counts/config/environment, full timing distributions | Correct 100×50 stress report supplied (D5); D3 observations retained separately | Pending |
+| Clock step, uncertainty window/source, verdict, startup responsiveness | Step/window 1 ms observed, within, update p95 5 ms (D5); quantified startup delay Pending | Pending |
 | Stress cancellation/retry; Start/Resume/hide/page-exit cancellation | Pending | Pending |
 | Start/consent, live boxes, confirmed IDs; running/loading profile gate | Pending | Pending |
 | Single-object ID continuity (30 seconds) | Pending | Pending |
@@ -102,14 +102,29 @@ Every cell starts Pending. A partial result covers only the steps actually repor
 
 ## Stress profile records
 
-Run completion was reported (D3), but D4 contains only the small benchmark output. Whether D3
-ran the stress profile or the small benchmark is unconfirmed; the shared results could also have
-been replaced by a later benchmark run. No numeric stress report has been supplied. For each run collect sample/warmup/live/active/lost/detection/retained
-counts, fixture version, actual tracker config, p50/p95/max for update including returned copy,
-extra snapshot and combined work; `clockStepMs`, `budgetWindowMs`, `budgetWindowSource`, verdict;
-long-task support/entries/drops; browser/hardware concurrency/build ID if available, wall-time
-field and stated conditions. Startup delay is separately observed: the synchronous probe precedes
-warmup and is excluded from update/copy and elapsed-time fields.
+D5 contains the first supplied 100-live-track × 50-detection stress report: 50 measured updates,
+184 warmups, 50 active / 50 lost tracks and 10,150 retained samples. Actual reported floors are
+model 0.05 and tracking 0.25, synthetic score 0.8 and fixture version 1.
+
+| Measured work | p50 ms | p95 ms | Max ms |
+| --- | --- | --- | --- |
+| Tracker update including returned copy | 4 | 5 | 5 |
+| Extra snapshot copy | 0 | 1 | 1 |
+| Combined | 4.5 | 5 | 5 |
+
+Observed minimum clock step/window: **1 ms / 1 ms**, source **observed clock step**, verdict
+**within** the 8 ms update p95 investigation budget for this run. No fallback assumption was used.
+The zero snapshot median does not establish zero copying cost; quantization limits interpretation.
+The raw combined median 4.5 is preserved even though whole-millisecond UI formatting may round it.
+No addition of separate percentiles or inference about real-camera performance is made.
+
+Long-task observation is **unsupported**, not evidence of zero long tasks. Reported hardware
+concurrency is 4, build ID Unknown, measurement interval 8747–9339 ms and elapsedMs 2235.
+`elapsedMs` includes warmup/yields but excludes probe/setup; it is not a probe-delay measurement.
+Charging, Low Power Mode, warmth, other workload and exact physical test time remain Pending.
+The report describes the synthetic job as camera not used; that alone does not establish the
+whole page's camera state. Prior user-reported camera-off observations remain separately in D3.
+No stress cancellation, retry, sustained performance or physical tracking acceptance is inferred.
 
 ## Session observations
 
@@ -183,6 +198,71 @@ establish whether D3's workload was the stress profile, the small benchmark, or 
 benchmark replaced shared results. Stress-specific completion and all stress timings remain
 unconfirmed pending the correct report. No cancellation, live-camera, storage or privacy pass is
 inferred. The next request identifies the exact stress button and completion status.
+
+
+### D5 — iPhone 100×50 synthetic stress report
+
+Source: **user-pasted application JSON reported from the physical-device session**, recorded 2026-10-26 14:40 UTC.
+After the request explicitly identified the stress-profile button and completion status, the
+user supplied the report below. This confirms the correct workload/result exists, without
+resolving which earlier job D3 ran. The build ID remains Unknown: the pasted result does not
+independently attest source, although the supplied testing URL is the approved preview recorded
+above. Preserve the UA as reported; do not replace D1's OS confirmation with a UA token.
+
+```json
+{
+  "source": "synthetic numeric stress fixture",
+  "fixtureVersion": 1,
+  "detectorInference": "not run",
+  "camera": "not used",
+  "config": {
+    "modelFloor": 0.05,
+    "trackingFloor": 0.25
+  },
+  "syntheticScore": 0.8,
+  "warmupFrames": 184,
+  "samples": 50,
+  "syntheticStepMs": 5,
+  "liveTracks": 100,
+  "activeTracks": 50,
+  "lostTracks": 50,
+  "retainedSamples": 10150,
+  "detectionsPerFrame": 50,
+  "updateIncludingReturnCopy": {
+    "p50": 4,
+    "p95": 5,
+    "max": 5
+  },
+  "explicitSnapshotCopy": {
+    "p50": 0,
+    "p95": 1,
+    "max": 1
+  },
+  "combined": {
+    "p50": 4.5,
+    "p95": 5,
+    "max": 5
+  },
+  "observedLongTasks": {
+    "supported": false,
+    "entries": [],
+    "dropped": 0
+  },
+  "measurementIntervalMs": {
+    "start": 8747,
+    "end": 9339
+  },
+  "elapsedMs": 2235,
+  "browser": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0.1 Mobile/15E148 Safari/604.1",
+  "hardwareConcurrency": 4,
+  "buildId": "Unknown",
+  "investigationBudgetMs": 8,
+  "clockStepMs": 1,
+  "budgetWindowMs": 1,
+  "budgetWindowSource": "observed clock step",
+  "budgetResult": "within"
+}
+```
 
 ## Remaining gate
 
