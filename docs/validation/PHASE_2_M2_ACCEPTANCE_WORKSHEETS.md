@@ -1,5 +1,11 @@
 # Phase 2 M2 — consolidated device acceptance worksheets
 
+> **Roadmap reset, 2026-10-26:** This is a historical camera/tracking record, not a current manual
+> testing assignment. The [training-first roadmap](../../PROJECT_ROADMAP.md) and
+> [development workflow](../DEVELOPMENT_WORKFLOW.md) supersede future phase scope, agent roles and routine test gates.
+> Claude now develops; Codex reviews. Preserve the evidence and untested items below; no old
+> checklist repetition is requested by this reset.
+
 **Prepared, not started. M1 is blocked by the unresolved missing-box report.** These sheets do
 not authorize a session, deployment, merge, risk acceptance, Phase 2 closure or Phase 3. Use after
 the [M1 investigation/readiness review](../reviews/PHASE_2_M1_MISSING_BOXES.md), against an exact

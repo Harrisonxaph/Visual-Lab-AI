@@ -1,4 +1,109 @@
-# Visual Labs AI architecture
+# Visual Labs AI architecture — training-first reset
+
+## Actual repository state, inspected 2026-10-26
+
+Main `6dca0108cf40523fc49afc0aa5e786d07703b4e7` contains a framework-free TypeScript/Vite app;
+MediaPipe Tasks Vision 0.10.32 runs EfficientDet-Lite0 CPU/WASM in a module worker. Camera/capture,
+inference, Lab scheduling, overlay/UI, tracking/inspection and metadata-only failure storage are
+separate modules. Vitest and Playwright cover pure logic, mocked lifecycle and actual model inference.
+There is no backend, image dataset repository or trainable classifier. Main CI 40367378678 succeeded
+on attempt 2. Existing runtime, configuration and test files are unchanged by this documentation reset.
+
+## Recommended learning architecture — proposed, not implemented
+
+Keep the detector path intact. Add independent typed modules for:
+
+- **Dataset repository:** IndexedDB for explicitly imported image Blobs and annotations; localStorage
+  is unsuitable for image collections. Use schema versions, guarded transactions, bounded decode/
+  image counts and pixel sizes, failure reporting and explicit deletion. Quota/eviction remains possible.
+  Decode according to a documented orientation/colour/resize policy; revoke object URLs on cleanup.
+- **Dataset integrity/splits:** stable example IDs, provenance, label vocabulary, content hashes,
+  related/duplicate groups, deterministic split seed and immutable dataset manifests. Exact decoded
+  image equality and similarity warnings have different guarantees. Related examples and derivatives
+  stay together, with conflicts resolved before training. Tiny classes may make valid splits impossible;
+  show an actionable error rather than silently emptying validation or test sets.
+- **Feature extractor adapter:** pinned pretrained image encoder, explicit preprocessing, tensor shape,
+  output dimension, licence/source/checksum and version. EfficientDet's current postprocessed boxes
+  are not an image-embedding API; do not pretend the detector exposes trainable features.
+- **Training worker:** feature extraction plus a small softmax classifier using a suitable browser ML
+  library, initially a CPU baseline. UI sends a frozen training manifest/configuration and receives
+  progress/loss/metrics. Bound batches, yield, support cancellation, reject stale completion and dispose
+  tensors/workers. Do not run camera inference and training concurrently by default.
+- **Evaluation/experiments:** pure metric functions, split-bound evaluation, model/configuration/dataset
+  provenance and explicit final-test runs. Keep results distinct from the existing tracker benchmark.
+- **Learning UI:** upload-first, camera optional; explain each quantity in plain language and keep touch
+  controls responsive. Charts and model-info patterns can be reused, not detector-score semantics.
+
+Dataset-selected files are explicitly permitted local examples; they are not permission to upload.
+Training and image processing remain on-device initially. Saved artifacts should contain weights,
+class order and extractor/preprocessing compatibility metadata, without silently including raw images.
+Any future export/import needs validation, resource limits and explicit user intent.
+
+## Minimal first training stack and alternatives
+
+Recommend TensorFlow.js with a frozen MobileNet-family image feature extractor and a single trainable
+linear softmax head, using categorical cross-entropy and gradient-based optimisation. This is a
+recommendation, not a verified dependency/model selection. Claude must first pin an appropriate
+licensed artifact/version and prove real feature extraction, head updates and save/reload under the
+current worker/CSP restrictions in automated browser tests. No packages or assets are added now.
+
+CPU is a practical baseline for small cached-embedding datasets and avoids requiring WebGPU. It may
+be slower; dataset bounds must follow measurements. A WASM backend is an alternative if its workers,
+asset paths and policy are verified. GPU support is optional, not assumed. Do not casually weaken CSP
+or add a remote CDN to make a runtime work. File uploads may require narrowly scoped local Blob image
+rendering permissions; review the actual chosen rendering path and test any future CSP change.
+
+A custom TypeScript linear classifier avoids a library but requires maintaining gradients, numerical
+stability and serialisation. A Python/PyTorch service offers wider fine-tuning support but adds setup,
+remote-image privacy and infrastructure concerns. Neither is preferred for the first browser lesson.
+Full-network fine-tuning and a small network from scratch are later, separate experiments. TensorFlow.js
+is not needed for the first dataset milestone; keep interfaces library-independent until compatibility
+is proven. No paid API or compute service is required by this proposal.
+
+## What learns and how to prove it
+
+A frozen encoder converts images into numeric feature vectors. A new head computes scores from those
+vectors using adjustable weights/biases. Optimisation changes those parameters to reduce training loss;
+validation measures behaviour without gradient updates. This is transfer learning using frozen
+features, not extractor fine-tuning or EfficientDet retraining. The saved classifier depends on the
+exact encoder and preprocessing; incompatible artifacts must be rejected.
+
+Cache embeddings by content ID plus extractor/preprocessing version; label or split edits invalidate
+experiment manifests, not image identity. Any learned normalisation or augmentation configuration
+must be derived from training only. Class ordering and split grouping are fixed in each run.
+
+Record initial/final parameter digests and update magnitude, baseline predictions, training/validation
+curves and model round-trip checks. Use a known learnable synthetic fixture for deterministic numerical
+tests and a separate pinned real-image/encoder smoke test. Neither alone proves broad real-world
+accuracy. Phase 4 adds held-out comparisons with counts, reproducible settings and small-sample limits.
+Phase 5 never recruits test examples into its training feedback pool while keeping them as holdout.
+
+## Reuse and unresolved risks
+
+Reuse worker lifecycle/cancellation patterns, modular configuration, model metadata/provenance,
+responsive UI, chart patterns, bounded storage/error patterns and existing CI/tests. Existing confidence
+history is not a training-loss chart until supplied genuine training data. Detection failure notes lack
+approved images/labels and must not automatically become a training dataset. Tracker synthetic truth
+cannot establish classifier accuracy. Imported datasets require explicit storage intent unlike camera
+frames, which remain transient under the existing camera path.
+
+IndexedDB adds local persistence but not guaranteed durability, privacy from other local users or
+unlimited capacity. Large image decoding and tensor leaks are principal mobile risks; use bounds and
+automation rather than routine owner heat/battery sessions. Duplicate warnings cannot establish zero
+leakage across unrelated uploads; capture grouping and honest limits matter.
+
+D12–D14 and S1/S2 remain unexplained. D16/D17 is a working iPhone-attributed still view with browser
+unconfirmed. Legacy iPad Phase 2 physical acceptance is not established. Accepted Phase 1 network,
+headers, diagnostic and storage-denial limits remain. Independent upload-based work can proceed when
+authorized without first completing old camera worksheets. See [workflow](docs/DEVELOPMENT_WORKFLOW.md).
+
+## Historical design record
+
+The following retains the original foundation and tracking decisions. Old future-phase references
+and role/test gates are historical; the [new roadmap](PROJECT_ROADMAP.md) and AGENTS.md govern current
+work. Planning-only statements below describe their original point in time; tracking later shipped.
+
+# Historical computer-vision architecture
 
 Status: Phase 1 merged into main through [PR #1](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/1)
 on **2026-10-23 at 23:17:42 UTC**, merge commit `a5bb085627c226b4c4a9bd768dfa12ba6133c408`.

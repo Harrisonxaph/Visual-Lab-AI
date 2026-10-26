@@ -55,11 +55,13 @@ or measured throttling result exists. See the original device ledger for conditi
 
 Permission is requested only after Start. Pause retains camera preview, Stop releases tracks.
 Backgrounding pauses inference; camera preview may still be active until Stop or page exit.
-Only the threshold is optionally persisted. Frames and detections remain transient and local.
+The threshold can be persisted; metadata-only failure notes can be explicitly saved. Camera frames
+remain transient and local; future uploaded datasets require separate explicit local storage intent.
 The model is served locally after initial setup; no offline/PWA guarantee exists yet.
 
-No tracking, identity persistence, active learning, training, retraining, ground-truth evaluation
-or model comparison is implemented. Corrections cannot improve this detector in Phase 1.
+The pretrained detector itself does not learn from corrections. Geometric session tracking and
+labelled synthetic tracker evaluation have since shipped; classifier training, active learning and
+detector fine-tuning have not. Synthetic tracker metrics are not detector accuracy.
 
 ## Diagnostic and CSP change
 
@@ -98,7 +100,7 @@ See the [recorded decisions](docs/phases/PHASE_1_CLOSEOUT.md). Phase 2 remains s
 production diagnostic inclusion must be decided before the first production deployment. No merge,
 deployment or protection/automatic-deployment change is authorized by those decisions.
 
-## Phase 2 proposed interpretation — not implemented
+## Legacy Phase 2 interpretation — original planning context
 
 Planning proposes geometric, session-scoped association, not appearance/person re-identification.
 IDs may change at control/geometry boundaries or when motion/occlusion prevents matching. Current
@@ -144,6 +146,27 @@ and every other accepted Phase 1 evidence limitation remain unchanged.
 
 The [on-device synthetic stress profiler](docs/phases/PHASE_2_STRESS_PROFILE.md) makes tracker/copy
 timings measurable from the app, independently of model inference. It uses no camera and cannot
-establish real-scene accuracy, battery/thermal safety or absence of uploads. Physical results and
-the inconsistent 8 ms investigation budget remain unresolved. Unsupported long-task observation
+establish real-scene accuracy, battery/thermal safety or absence of uploads. The legacy ledger records one user-supplied iPhone synthetic timing report (D5);
+this does not establish an iPad pass or a universal 8 ms performance guarantee. Unsupported long-task observation
 is explicitly unavailable; whole overlapping task durations may include unrelated main-thread work.
+
+## Training-first roadmap reset — 2026-10-26
+
+Current future scope is the [training-first roadmap](PROJECT_ROADMAP.md). Historical Phase 2 means
+tracking, while new Phase 2 means Dataset Laboratory. Historical planning/validation evidence above
+and in the ledgers is not silently promoted to acceptance. D12–D14 missing boxes remains unexplained;
+D16/D17 shows boxes in a user-attributed iPhone screenshot with browser/container unconfirmed. No
+physical iPad legacy Phase 2 pass is established. These facts and S1/S2 remain open records; unrelated
+upload/training milestones do not require another routine camera walkthrough.
+
+No classifier has been trained by the app yet. The proposed frozen-embedding classifier changes only
+its head weights/biases; it does not fine-tune the encoder or retrain EfficientDet. Encoder/runtime
+compatibility and exact artifact/licence/preprocessing remain to be verified before implementation.
+Small datasets, duplicate leakage, class imbalance, domain shift and repeated test-set tuning can make
+improvement claims unreliable. Higher confidence or changed weights alone does not establish accuracy.
+Imported images must remain local by default, with consent, bounded storage, deletion and provenance.
+The proposed browser model stack adds no new compatibility or privacy guarantee today.
+
+The reset removes routine repeated hardware checks, not essential privacy, security or ML integrity
+requirements. Accepted Phase 1 limits remain accepted; other deferred observations remain untested.
+Production inclusion of the existing opt-in diagnostics still needs a decision before first production.

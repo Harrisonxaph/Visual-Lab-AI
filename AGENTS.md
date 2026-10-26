@@ -1,64 +1,80 @@
-# Assistant instructions
+# Assistant instructions — Visual Labs AI
 
-Build Visual Labs AI as a private, educational computer-vision laboratory. Read ARCHITECTURE.md,
-PROJECT_ROADMAP.md and MODEL_LIMITATIONS.md before changes. Phase 1 is closed with documented
-accepted limitations. The user approved Task 3 checkpoint `a73014743bc10b1a187474ffbc0ebb147a27d9f7`
-and authorized Phase 2 Tasks 4–6 against merged plan `559bd64` on 2026-10-26 UTC.
-Tasks 1–6 merged through PR #11 at `efdb1d9` on 2026-10-26 UTC. Physical acceptance remains
-pending. The stress-profile follow-up merged through PR #12 at `4813abe`.
-The timer-precision follow-up merged through PR #13 at `e984edd`.
-PR #14 merged at `37ff7d4be571d56c21c1f74bae834c3fe16c7952` on 2026-10-26 UTC,
-with final head `f7bc39fcacc5b1a644a727dac908ad225ceb7848`.
-Current authorized scope is one temporary preview of that exact merge only after CI run
-`40334009325` succeeds, followed by Phase 2 iPhone then iPad validation and a documentation ledger
-on a separate branch/draft PR. The documentation branch is not the deployed source.
-Include the preview URL in every device request and offer fixed response choices.
-No additional deployment, production promotion/alias change, public share/bypass link, protection
-or project-settings change, automatic Git deployment, merge, dependency addition,
-or begin Phase 3 without explicit approval. Preserve every accepted Phase 1 limitation.
+Canonical instructions, reset by the owner on 2026-10-26 UTC. `agent.md` points here.
+Read PROJECT_ROADMAP.md, ARCHITECTURE.md, MODEL_LIMITATIONS.md and
+[development workflow](docs/DEVELOPMENT_WORKFLOW.md) before work. Historical phase plans remain
+records; the training-first roadmap supersedes their future scope, role assignments and routine
+manual-test requirements. The new Phase 2 means Dataset Laboratory, not legacy tracking.
 
+## Responsibilities and authorization
 
-Use one development branch and PR per phase. Never push to main, merge, deploy or modify production
-without approval. Preserve working functionality. Codex implements; Claude is the intended reviewer.
-Do not claim Claude reviewed work without an actual review.
+- **Claude is lead developer:** architecture, short scoped plans, implementation, automated tests,
+  model training, documentation, branches/PRs and responses to material findings.
+- **Codex is independent reviewer:** functional defects, architecture, training/evaluation correctness,
+  leakage, privacy/security and missing critical tests. Separate blockers from optional improvements;
+  request testing proportionate to feature risk. Do not implement unless the owner explicitly asks.
+- **Owner:** feature decisions, occasional focused acceptance and approval of merges/deployments.
+  Agents do not automatically communicate. Handoffs include PR URL, exact SHA, evidence and questions.
 
-Separate camera, inference, scheduling, visualization, tracking, experiments and UI through typed
-interfaces. No paid API requirements. Keep camera frames local by default; no capture/persistence/
-upload without explicit consent. Prioritize iPhone/iPad and desktop, accessibility and touch controls.
+This reset authorizes documentation only, including its dedicated branch and draft PR. It does not
+approve Dataset Laboratory implementation, dependency additions, merge or deployment. Claude next
+inspects and proposes a bounded dataset milestone for owner approval. No paid APIs/compute/services
+without approval. Never push to main, merge, deploy, promote, change production/protection/project
+settings/automatic deployments or create public sharing/bypass links without explicit authorization.
+The existing preview authorization is consumed. Keep disabled automatic Git deployments unchanged.
 
-Add meaningful unit/integration/browser tests plus manual real-device instructions. Run available
-checks before claiming success; distinguish mocked tests, actual inference and real-device evidence.
-Confidence is not accuracy; classifier training is not detector fine-tuning. Never fabricate detector
-alternatives, tracking metrics or supported-platform claims. Update documentation with limitations.
-At each phase end report changes, exact test results, known limits, PR URL and next action.
+## Preserve and explain
 
-The CI gate succeeded and the one preview was created READY: deployment
-`dpl_GbpjZHimvmfWf5hBiPioXcjRqJ7F`,
-https://visual-lab-l8m3xumpt-harrisonjbailey-3896.vercel.app.
-That deployment authorization is consumed. Continue device validation and record evidence in
-`docs/validation/PHASE_2_DEVICES_2026-10-26.md`; no further deployment is authorized.
+Preserve functioning camera, EfficientDet-Lite0/MediaPipe, workers, UI, privacy safeguards, tracking,
+inspection and automated tests. Avoid rewrites for their own sake. Keep typed boundaries between
+acquisition, inference, datasets, training, evaluation and UI. Prefer free/open-source tools.
 
-## Milestone-based validation (user direction, 2026-10-26 UTC)
+Inference is not learning. Training a classifier on frozen features does not fine-tune the extractor
+or retrain EfficientDet. Distinguish head training, network fine-tuning, training from scratch and
+object-detector fine-tuning. Confidence is not accuracy. Never invent alternatives or evidence.
+Explain concepts with short, beginner-friendly descriptions alongside working experiments.
 
-Stop routine step-by-step physical-device prompts. Use automated checks and code review first,
-then one consolidated physical acceptance session per stable milestone (iPhone, then iPad),
-then an evidence/closeout review. Preserve already supplied observations; do not repeat unaffected
-passes or reopen accepted Phase 1 limits by default. Report milestone status and request user
-involvement at those gates. Retest only affected behaviour after material fixes; explain the
-scope and why device evidence is necessary. If a blocking incident requires user-only evidence,
-collect the minimum needed in one focused request, not an ongoing stream of routine questions.
-Keep untested checks Pending; neither this workflow change nor a milestone pass accepts risks,
-closes Phase 2, approves merge/deployment or authorizes Phase 3. Missing boxes (ledger D12–D14)
-is unresolved; do not infer a root cause or waive it. No further device action is requested now.
-Future device requests still include the approved preview URL and fixed choices/batched reporting.
+Images are private by default. Import/save/export requires clear user intent; no cloud uploads or
+remote inference without explicit opt-in/approval. Do not put personal images, labels or logs in GitHub.
+Existing failure notes are reports, not trusted training labels. Guard storage failures and bound
+image decoding, memory and training jobs. Split related images together before augmentation; keep
+validation/test examples out of training; record provenance, versions, seeds and preprocessing.
 
-## Current M1 investigation scope
+## Testing without owner fatigue
 
-PR #15 merged at `21bbabf7cd0743d17337ee6cdd627c272abbf49c`; its exact merge CI
-`40356764338` succeeded. Current authorized work is the M1 missing-box investigation, focused
-reproduction/regression tests and findings on a separate draft PR. No speculative runtime fix.
-Use `docs/reviews/PHASE_2_M1_MISSING_BOXES.md` for findings and the prepared M2 worksheets only
-after readiness is established. Linux Chromium is not physical Safari evidence; WebKit launch
-is currently blocked by missing host libraries, and no dependencies were added. Keep D12–D14
-unresolved unless valid new evidence resolves them. One justified minimal device-only question
-may distinguish current Visible detections from retained Tracks; no routine walkthrough now.
+Automate by default. Claude runs available relevant checks before review. Preserve the existing test
+suite and require appropriate regression evidence for runtime changes; documentation-only changes
+need documentation checks, not another hardware session. Distinguish unit fixtures, real-model browser
+integration, physical reports and untested cases. Do not classify incomplete checks as passed.
+
+No routine battery/warmth monitoring, repeated five-minute runs, repeated camera-permission checks,
+unchanged cross-browser checks or rechecking prior passes. Ask for owner involvement only for a
+specific gap that automation cannot reasonably cover. At most one focused acceptance session per
+milestone where practical; short in-app Pass / Fail / Skip guidance is preferred when useful, not
+an excuse to build a testing platform. Reuse unaffected evidence. Investigate failures with logs and
+reproducible tests first; retest only affected behaviour. Do not demand a perfect improvement score:
+report honest negative ML results and distinguish them from implementation defects.
+
+Each handoff lists automated checks, essential manual checks (if any), known/deferred limits and
+material blockers. A ledger approval is not risk acceptance, deployment permission or phase closure.
+
+## Historical evidence remains valid within its scope
+
+Phase 1 closeout was accepted on 2026-10-25 with documented limitations. Legacy tracking merged
+through PR #11, with later stress-profile changes through PR #14. PR #16 main baseline is
+`6dca0108cf40523fc49afc0aa5e786d07703b4e7`; merge CI 40367378678 succeeded on attempt 2.
+Do not rewrite the old ledgers or retroactively pass legacy Phase 2 acceptance.
+
+D12–D14 missing boxes remains unexplained; D16/D17 shows boxes in a user-attributed iPhone screenshot,
+with browser/container unconfirmed. No physical iPad legacy Phase 2 pass exists. Historical S1/S2 is
+unexplained. Network/deployed headers/HTML remain uninspected; CSP allows same-origin requests.
+Actual Safari storage denial remains untested. Diagnostics see only the main page after installation,
+with stated log-provenance limits; they do not prove absence of uploads. Retain existing opt-in
+instrumentation; decide production inclusion before first production deployment.
+
+Existing preview: https://visual-lab-l8m3xumpt-harrisonjbailey-3896.vercel.app
+Source `37ff7d4be571d56c21c1f74bae834c3fe16c7952`, deployment
+`dpl_GbpjZHimvmfWf5hBiPioXcjRqJ7F`. No new deployment is authorized. A future device request must
+identify its tested source, include its URL and use grouped fixed choices. Historical worksheets are
+not pending instructions to the owner under this reset. Unobserved items remain untested/deferred,
+not passed, waived or automatically blocking unrelated upload-based learning work.

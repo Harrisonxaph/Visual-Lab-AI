@@ -1,13 +1,17 @@
 # Visual Labs AI
 
-A private, on-device computer-vision laboratory for investigating what a detector sees,
-how confident it is, and how its outputs change.
+A local-first educational lab for learning how AI models are trained, evaluated and improved.
+The current app runs a **pretrained** object detector with tracking and inspection; it does not yet
+train a model. Camera observation and failure notes do not retrain EfficientDet.
 
-Phase 1 provides live camera detection, labelled boxes, confidence filtering, pause/resume/stop,
-processing FPS and inference latency, plus educational model explanations. Later phases are
-recorded in [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md), including every stretch target.
-Phase 2 adds tracking, inspection, local user reports and labelled synthetic
-evaluation. Active learning, retraining and PWA installation remain later roadmap work.
+The [training-first roadmap](PROJECT_ROADMAP.md) preserves that working app and proposes an upload-based
+dataset lab, genuine classifier training, evaluation experiments and active learning. Phase 3 supplies
+the first training system; Phase 4 completes the core learning lab. Later features are planned,
+not implemented. Camera use will be optional for dataset/training experiments.
+
+Claude develops; Codex independently reviews; the owner approves scope, merges and deployments.
+See [workflow and proportionate testing](docs/DEVELOPMENT_WORKFLOW.md). No routine repeated camera,
+battery or warmth walkthrough is required. Existing evidence is reused and untested items stay untested.
 
 ## Run locally
 
@@ -33,7 +37,8 @@ If the model checksum fails, remove `public/models/efficientdet_lite0.tflite` an
 **Pause** stops inference and clears detections; camera preview remains on. **Stop** releases
 camera tracks, terminates inference and clears results. Backgrounding pauses inference; returning
 requires Resume. Leaving the page stops the session. Frames and detections are not recorded;
-only the confidence threshold is optionally saved in local storage. Blocked storage is supported.
+the confidence threshold can be saved and failure notes can be explicitly saved in local storage.
+Camera frames are not saved. Storage errors are handled; actual Safari storage denial remains untested.
 
 ## Checks
 
@@ -74,20 +79,20 @@ actual speed depends on hardware. Model-load timeout is 45 seconds, frame infere
 ## Documentation
 
 - [Architecture and actual repository inspection](ARCHITECTURE.md)
-- [All five phases and stretch targets](PROJECT_ROADMAP.md)
+- [Training-first phases and optional stretch targets](PROJECT_ROADMAP.md)
 - [Model limitations](MODEL_LIMITATIONS.md) and [supported categories](docs/COCO_LABELS.md)
 - [Experiment evidence](EXPERIMENTS.md)
 - [Phase 1 approved closeout and decisions](docs/phases/PHASE_1_CLOSEOUT.md)
 - [Phase 1 testing and delivery notes](docs/phases/PHASE_1.md)
-- [Claude review handoff](docs/CLAUDE_REVIEW.md)
+- [Developer/reviewer handoff](docs/DEVELOPMENT_WORKFLOW.md)
+- [Historical Phase 1 review handoff](docs/CLAUDE_REVIEW.md)
 - [Assistant instructions](AGENTS.md)
 - [Third-party provenance and notices](THIRD_PARTY_NOTICES.md)
 
-Codex implements; Claude is the intended reviewer. The user supplied the Phase 1 review; findings and the implementation response are recorded
-in [the review response](docs/reviews/PHASE_1_RESPONSE.md). Physical evidence is recorded, and
-the user approved Phase 1 closeout with the documented limitations on 2026-10-25 UTC.
-Phase 2 remains separately gated.
-Each phase uses a separate branch and PR. Merging or deployment requires explicit user approval.
+Historical Phase 1 review and accepted closeout remain in the [review response](docs/reviews/PHASE_1_RESPONSE.md)
+and [closeout](docs/phases/PHASE_1_CLOSEOUT.md). Old documents named Phase 2 concern tracking;
+the new Phase 2 means Dataset Laboratory. Historical tracking acceptance remains partial, not passed
+by renaming the roadmap. Use scoped branches/PRs; merges and deployments require owner approval.
 Application source: MIT. Third-party assets retain their own terms and attribution.
 
 Vercel Git integration automatically created previews of earlier branch pushes. `vercel.json` now
@@ -97,8 +102,9 @@ events, pushes limited to main, or manual dispatch. PR branch pushes do not also
 
 Phase 1 privacy follow-up: [diagnostics, policy limits and pending device checklist](docs/phases/PHASE_1_PRIVACY.md).
 
-Phase 2 Tasks 1–6 were merged via [PR #11](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/11) on 2026-10-26 UTC (`efdb1d9`); physical acceptance remains pending.
+Legacy tracking Phase 2 Tasks 1–6 were merged via [PR #11](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/11) on 2026-10-26 UTC (`efdb1d9`); physical acceptance remains pending.
 See [scope, automated evidence, profiling and remaining checks](docs/phases/PHASE_2_IMPLEMENTATION.md).
-Phase 2 is not closed; no deployment approval is implied.
+Legacy tracking acceptance remains incomplete; no deployment approval is implied.
 The [device stress-profile follow-up](docs/phases/PHASE_2_STRESS_PROFILE.md) adds an inference-inactive
-synthetic timing button (paused preview stays on) and note-form corrections; its physical results remain Pending.
+synthetic timing button (paused preview stays on) and note-form corrections; its iPhone synthetic timing evidence is recorded in the legacy device ledger;
+iPad legacy Phase 2 acceptance remains unestablished.

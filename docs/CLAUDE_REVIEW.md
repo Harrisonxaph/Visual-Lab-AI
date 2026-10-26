@@ -1,5 +1,11 @@
 # Phase 1 handoff for Claude
 
+> **Roadmap reset, 2026-10-26:** This is a historical camera/tracking record, not a current manual
+> testing assignment. The [training-first roadmap](../PROJECT_ROADMAP.md) and
+> [development workflow](DEVELOPMENT_WORKFLOW.md) supersede future phase scope, agent roles and routine test gates.
+> Claude now develops; Codex reviews. Preserve the evidence and untested items below; no old
+> checklist repetition is requested by this reset.
+
 Status: the user supplied the designated Phase 1 review in this conversation. Its findings are
 recorded in docs/reviews/PHASE_1_RESPONSE.md and addressed in the merged Phase 1 changes.
 This records receipt of the supplied review, not a new Claude invocation or merge approval.

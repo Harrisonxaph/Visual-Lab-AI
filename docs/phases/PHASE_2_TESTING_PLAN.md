@@ -1,5 +1,11 @@
 # Phase 2 acceptance and milestone-based testing plan
 
+> **Roadmap reset, 2026-10-26:** This is a historical camera/tracking record, not a current manual
+> testing assignment. The [training-first roadmap](../../PROJECT_ROADMAP.md) and
+> [development workflow](../DEVELOPMENT_WORKFLOW.md) supersede future phase scope, agent roles and routine test gates.
+> Claude now develops; Codex reviews. Preserve the evidence and untested items below; no old
+> checklist repetition is requested by this reset.
+
 **In progress; not accepted or closed.** Tasks 1–6 and follow-ups through PR #14 are merged.
 The one approved preview is source `37ff7d4be571d56c21c1f74bae834c3fe16c7952`; partial iPhone
 observations are in the [device ledger](../validation/PHASE_2_DEVICES_2026-10-26.md).
