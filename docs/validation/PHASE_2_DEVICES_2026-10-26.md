@@ -398,6 +398,25 @@ user observations. D12–D14 remains unresolved. Two consolidated M2 worksheets 
 not active. Earlier reported passes and accepted Phase 1 limitations remain; do not infer a root
 cause or accept a new limitation from this checkpoint.
 
+
+### D16 — User-supplied screenshot shows boxes; device/context unconfirmed
+
+Source: **user-supplied screenshot, visually inspected**, recorded 2026-10-26 16:53 UTC.
+Only these relevant observations are transcribed; the screenshot and camera footage are not
+committed or uploaded to the repository. It shows Running, LIVE INPUT, Segment 1, and visible
+labelled boxes **#2 tv 71%** and **#1 keyboard 71%**. The address-bar text includes the approved
+preview's `l8m3xumpt-harrisonjbailey-3896.vercel.app` suffix. The complete URL and exact source
+commit are not independently attested by the image. The Visible detections metric is outside
+the captured page area, so the earlier six-object ambiguity remains.
+
+The surrounding UI appears to be ChatGPT with an embedded browser panel; the actual device,
+OS and browser/container were not specified with the image. Do not attribute this to the iPhone
+Safari session, start an iPad test pass, or reinterpret D1's user-confirmed details without
+clarification. A still screenshot establishes visible boxes in this view, not moving-video
+behaviour, automatic recovery, reproducibility or resolution of D12–D14. It does not identify
+which earlier condition changed. Ask only for source-context attribution; no new device action
+or acceptance walkthrough is requested. All earlier evidence remains, with M1 unresolved.
+
 ## Remaining gate
 
 Missing boxes (D12) remains unresolved pending state inspection/reproduction; no Phase 2
