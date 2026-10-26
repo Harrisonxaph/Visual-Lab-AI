@@ -108,7 +108,13 @@ It merged before the designated review.
 The corrected probe reads until two positive clock changes, with a cap of 1,048,576 comparisons
 (plus one initial read). It records the smallest positive delta (`clockStepMs`), or null if none
 is observed. The cap bounds work if the clock never advances. The probe precedes warmup and
-measured intervals. This is an estimate, not guaranteed resolution or accuracy; scheduling and
+measured intervals. In the worst case it performs the full comparison cap synchronously on the
+main thread without yielding. This can briefly block controls/progress before warmup starts.
+There is no wall-clock timeout or guaranteed maximum delay in milliseconds; device speed and
+clock-call cost determine it, and the physical-device delay has not been measured. Normal runs
+stop early after two changes. The probe delay is outside reported update/copy timings and
+`elapsedMs` (which starts after probe/setup), so those fields cannot establish startup responsiveness.
+This is an estimate, not guaranteed resolution or accuracy; scheduling and
 jitter can affect it. No Safari-specific resolution is assumed.
 Table timings use whole milliseconds when the observed step is at least 1 ms or unavailable.
 The budget uncertainty window is the observed step, or an explicit **1 ms fallback assumption**
@@ -129,7 +135,15 @@ These injected clocks are automated evidence, not Safari measurements. The note 
 
 Clock-probe correction evidence (Linux Chromium 154, 2026-10-26 UTC): **79 unit,
 48 development-browser and 14 production tests passed**, with type, format, build and diff checks.
-The delayed-clock regression remains unchanged for 8,192 reads per tick and requires two changes
-before returning. A separate full-profile regression observes no probe step, then 20 ms timings;
+In the delayed-clock regression, the injected clock holds the same value for 8,192 reads
+per tick. The probe waits for two positive changes before returning. A separate full-profile regression observes no probe step, then 20 ms timings;
 it records the 1 ms fallback assumption and an exceeded verdict. These are injected clocks,
 not physical-device evidence. All Phase 2 device checks remain Pending.
+
+
+PR #14 merged on 2026-10-26 UTC as `37ff7d4be571d56c21c1f74bae834c3fe16c7952`,
+with final head `f7bc39fcacc5b1a644a727dac908ad225ceb7848`. The separately authorized temporary
+preview and physical-device session are recorded in the
+[Phase 2 device ledger](../validation/PHASE_2_DEVICES_2026-10-26.md).
+Approval is limited to one preview of that exact merge after CI run `40334009325` succeeds;
+this documentation branch does not authorize an additional deployment.
