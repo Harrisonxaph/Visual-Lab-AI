@@ -18,7 +18,7 @@ export function mountFailureLog(
   store.load();
   container.insertAdjacentHTML(
     "beforeend",
-    `<p>User reports are not verified truth, approved corrections or training. Metadata only; no images. Limit: 100 notes / 256 KiB in page memory and saved storage. Free text may contain personal information you enter. Browser storage is not encrypted or guaranteed durable.</p><label>Report type <select id="failure-type"><option value="missed">Missed object</option><option value="incorrect">Incorrect detection (selected track)</option><option value="unstable">Unstable detection (selected track)</option></select></label><label>Expected category <select id="failure-label"><option value="">Unknown</option></select></label><label for="failure-text">Optional note (500 characters)</label><textarea id="failure-text" maxlength="500" aria-describedby="failure-character-count"></textarea><p id="failure-character-count">0 / 500</p><button id="add-failure" type="button">Add failure note</button><label><input type="checkbox" id="save-failures"> Save notes on this device</label><button id="clear-failures" type="button">Clear all failure notes</button><p id="failure-status" role="status"></p><ul id="failure-list"></ul>`,
+    `<p>User reports are not verified truth, approved corrections or training. Metadata only; no images. Limit: 100 notes / 256 KiB in page memory and saved storage. Free text may contain personal information you enter. Browser storage is not encrypted or guaranteed durable.</p><label>Report type <select id="failure-type"><option value="missed">Missed object</option><option value="incorrect">Incorrect detection (selected track)</option><option value="unstable">Unstable detection (selected track)</option></select></label><label>Expected category <select id="failure-label"><option value="">Unknown</option></select></label><label for="failure-text">Optional note (500 characters)</label><textarea id="failure-text" maxlength="500" aria-describedby="failure-character-count failure-character-help"></textarea><p id="failure-character-count">0 / 500</p><p id="failure-character-help">This counter follows your browser’s input limit: emoji can count as more than one character.</p><button id="add-failure" type="button">Add failure note</button><label><input type="checkbox" id="save-failures"> Save notes on this device</label><button id="clear-failures" type="button">Clear all failure notes</button><p id="failure-status" role="status"></p><ul id="failure-list"></ul>`,
   );
   const q = <T extends HTMLElement = HTMLElement>(id: string) =>
     container.querySelector<T>(id)!;
@@ -66,7 +66,8 @@ export function mountFailureLog(
       type = q<HTMLSelectElement>("#failure-type").value as FailureNote["type"],
       t = type === "missed" ? null : c.selected;
     if (type !== "missed" && !t) {
-      q("#failure-status").textContent = "Select a track first.";
+      q("#failure-status").textContent =
+        "Select a confirmed track first (list or video tap).";
       return;
     }
     if (textInput.value.length > 500) {

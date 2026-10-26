@@ -99,6 +99,9 @@ test("on-device stress button reports copy-inclusive metrics without camera requ
     samples: 50,
     detectionsPerFrame: 50,
   });
+  await expect(page.locator("#stress-profile-summary")).toContainText(
+    "synthetic, no camera",
+  );
   for (const field of [
     "updateIncludingReturnCopy",
     "explicitSnapshotCopy",

@@ -1,4 +1,4 @@
-name: Phase 1 checks
+name: Application checks
 on:
   pull_request:
   push:

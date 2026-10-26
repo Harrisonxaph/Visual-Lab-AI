@@ -100,5 +100,5 @@ Phase 1 privacy follow-up: [diagnostics, policy limits and pending device checkl
 Phase 2 Tasks 1–6 were merged via [PR #11](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/11) on 2026-10-26 UTC (`efdb1d9`); physical acceptance remains pending.
 See [scope, automated evidence, profiling and remaining checks](docs/phases/PHASE_2_IMPLEMENTATION.md).
 Phase 2 is not closed; no deployment approval is implied.
-The [device stress-profile follow-up](docs/phases/PHASE_2_STRESS_PROFILE.md) adds a stopped-camera
-synthetic timing button and note-form corrections; its physical results remain Pending.
+The [device stress-profile follow-up](docs/phases/PHASE_2_STRESS_PROFILE.md) adds an inference-inactive
+synthetic timing button (paused preview stays on) and note-form corrections; its physical results remain Pending.

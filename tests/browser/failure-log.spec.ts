@@ -50,8 +50,9 @@ test("note form asks for a selected track and enforces its visible character lim
     await page.locator("#failure-type").selectOption(type);
     await page.locator("#add-failure").click();
     await expect(page.locator("#failure-status")).toHaveText(
-      "Select a track first.",
+      "Select a confirmed track first (list or video tap).",
     );
+    await expect(page.locator("#failure-list li")).toHaveCount(0);
   }
   await expect(page.locator("#failure-text")).toHaveAttribute(
     "maxlength",
@@ -97,4 +98,27 @@ test("failure notes use the supplied active tracker configuration rather than a 
     key,
   );
   expect(note.thresholds.tracking).toBe(0.63);
+});
+
+test("native note limit and counter explain emoji units and reject programmatic excess", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.locator("#failure-text").fill("🧪");
+  await expect(page.locator("#failure-character-count")).toHaveText("2 / 500");
+  await expect(page.locator("#failure-character-help")).toContainText("emoji");
+  await page.locator("#failure-text").fill("a".repeat(600));
+  expect((await page.locator("#failure-text").inputValue()).length).toBe(500);
+  await expect(page.locator("#failure-character-count")).toHaveText(
+    "500 / 500",
+  );
+  await page.locator("#failure-text").evaluate((t: HTMLTextAreaElement) => {
+    t.value = "a".repeat(501);
+    t.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.locator("#add-failure").click();
+  await expect(page.locator("#failure-status")).toHaveText(
+    "Keep the note within 500 characters.",
+  );
+  await expect(page.locator("#failure-list li")).toHaveCount(0);
 });

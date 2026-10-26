@@ -94,7 +94,10 @@ must never be represented as detector fine-tuning.
 
 ## Phase 2 numeric association evaluation (2026-10-26 UTC)
 
-Code is on draft PR #11; exact final SHA/CI are recorded there. Approved design baseline `559bd64`.
+PR #11 merged as `efdb1d98825d4960e91882156f08b3f1067abe91`, from final PR head
+`c4f7312ebd015b3fb6f76befaf874d6662cc15c3`. Merge CI
+[40311618092](https://github.com/Harrisonxaph/Visual-Lab-AI/actions/runs/40311618092) succeeded.
+Approved design baseline: `559bd64`.
 Built-in fixture version 1 uses numeric boxes/labels/scores with separate annotated truth; detector
 inference is **not run**. These are developer fixtures, not held-out detector evaluation.
 Configuration: model floor .05, tracking floor .25; display threshold does not affect matching.
@@ -135,3 +138,8 @@ support/drops accompany the numbers. Older developer-driver results above remain
 One local Chromium run measured update p95 8.20 ms and extra-copy p95 1.80 ms; the investigation
 flag correctly reported the 8 ms budget exceeded. This is not evidence from iPhone or iPad.
 All physical-device timing results remain Pending, and no preview deployment is authorized here.
+
+Independent review profiling, supplied by the user: Chromium 153, 4 cores as reported, update
+p95 6.5 ms, extra snapshot-copy p95 1.0 ms and combined approximately 7 ms. Raw samples, hardware
+model and full test conditions were not supplied. This is another shared-desktop observation,
+not a controlled comparison or mobile evidence. It does not resolve the inconsistent 8 ms budget.

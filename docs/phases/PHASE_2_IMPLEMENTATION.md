@@ -4,8 +4,13 @@ Merged [PR #11](https://github.com/Harrisonxaph/Visual-Lab-AI/pull/11) on 2026-1
 commit `efdb1d98825d4960e91882156f08b3f1067abe91`; this preceded Phase 2 physical acceptance.
 Approved design/plan baseline: `559bd645aa5c9be636169435e02b74df5a6374df`.
 Task 3 checkpoint `a73014743bc10b1a187474ffbc0ebb147a27d9f7` was approved; the user
-separately authorized Tasks 4–6 on 2026-10-26 UTC. Exact final source SHA and remote CI are
-recorded in the PR. This document does not close Phase 2 or authorize merge/deployment/Phase 3.
+separately authorized Tasks 4–6 on 2026-10-26 UTC. The final PR #11 head was
+`c4f7312ebd015b3fb6f76befaf874d6662cc15c3`; merge commit
+`efdb1d98825d4960e91882156f08b3f1067abe91` passed merge CI
+[40311618092](https://github.com/Harrisonxaph/Visual-Lab-AI/actions/runs/40311618092).
+PR #11 was merged before the designated final review, which differed from the planned sequence.
+The later user-supplied review reported no runtime blockers; that does not establish physical
+validation. This document does not close Phase 2 or authorize further merge/deployment/Phase 3.
 
 ## Implemented scope
 
@@ -96,7 +101,7 @@ Fragments and ID changes follow the fixture definitions, not standard MOT metric
 Recovery uses the last matched pre-occlusion identity and the first matched ID in the first
 post-occlusion visible interval, bounded by next occlusion, sequence end or 1000 ms. A wrong
 first ID fails even if the original returns later. Missing recovery stays in the eligible
-denominator; unscorable cases are excluded and reported. No denominator displays Not measured.
+denominator; unscorable cases are excluded and reported. A missing denominator displays *Not measured*.
 Reports preserve actual outcomes, including long-expiry ID changes. The bundled crossing fixture
 yielded zero ID changes; this does not prove stability for other crossings.
 
