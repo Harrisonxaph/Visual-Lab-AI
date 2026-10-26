@@ -250,16 +250,12 @@ export class Tracker {
       this.finish(c, "expired", c.track.lastMatchedAtMs + 1500);
       return false;
     });
-    const matrix = this.live.map((c) =>
-      eligible.map((d) =>
-        associationEvidence(
-          this.predict(c, f.sampledAtMs),
-          c.track.label,
-          c.track.state,
-          d,
-        ),
-      ),
-    );
+    const matrix = this.live.map((c) => {
+      const predicted = this.predict(c, f.sampledAtMs);
+      return eligible.map((d) =>
+        associationEvidence(predicted, c.track.label, c.track.state, d),
+      );
+    });
     const assigned = minimumCostAssignment(
         matrix.map((row) => row.map((e) => e?.cost ?? Infinity)),
         1.1,
@@ -301,7 +297,7 @@ export class Tracker {
       used.add(j);
       const d = eligible[j],
         e = matrix[i][j]!;
-      evidence[d.sourceIndex] = e;
+      evidence[d.sourceIndex] = { ...e };
       if (t.state === "lost") {
         t.reacquisitions++;
         t.gapMs += f.sampledAtMs - t.lastMatchedAtMs;
@@ -395,17 +391,27 @@ export class Tracker {
     };
   }
   snapshot(): TrackingSnapshot {
-    return structuredClone({
+    return {
       sessionId: this.sessionId,
       segment: this.segment,
       tracks: [
         ...this.ended,
         ...this.live.filter((c) => c.track.id).map((c) => c.track),
-      ],
-      events: this.events,
-      counters: this.counts,
+      ].map((t) => ({
+        ...t,
+        box: { ...t.box },
+        samples: t.samples.map((s) => ({
+          ...s,
+          box: s.box ? { ...s.box } : null,
+        })),
+      })),
+      events: this.events.map((e) => ({
+        ...e,
+        ...(e.evidence ? { evidence: { ...e.evidence } } : {}),
+      })),
+      counters: { ...this.counts },
       candidates: this.live.filter((c) => !c.track.id).length,
       closed: this.closed,
-    });
+    };
   }
 }

@@ -60,8 +60,15 @@ for (const diagnosticQuery of ["", "?diag=1"]) {
     await expect(page.locator("#inference-time")).not.toContainText("—");
     await expect(page.locator("#processing-fps")).not.toContainText("—");
     await expect(page.locator("#track-list")).toContainText("#1");
+    await expect(page.locator("#run-benchmark")).toBeDisabled();
+    await page.getByRole("button", { name: /Select track 1,/ }).click();
+    await expect(page.locator("#inspector-content")).toContainText("Track #1");
+    await expect(page.locator("#confidence-summary")).toContainText(
+      "Raw confidence",
+    );
+    await expect(page.locator("#alternatives")).toContainText("not supplied");
     const overlay = await page
-      .locator("canvas")
+      .locator(".video-stage canvas")
       .evaluate((c: HTMLCanvasElement) => ({
         width: c.width,
         height: c.height,

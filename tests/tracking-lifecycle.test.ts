@@ -194,3 +194,14 @@ test("bounded capacity, history, events and independent snapshots", () => {
   snap.tracks[0].samples.length = 0;
   expect(t.snapshot().tracks[0].samples.length).toBeGreaterThan(0);
 });
+
+test("returned association evidence and nested snapshot boxes cannot mutate retained history", () => {
+  const t = tracker();
+  t.update(frame(1));
+  const r = t.update(frame(2));
+  const expected = t.snapshot();
+  r.evidence[0].cost = 999;
+  r.tracks[0].samples[0].box!.x = 999;
+  r.tracks[0].box.x = 999;
+  expect(t.snapshot()).toEqual(expected);
+});

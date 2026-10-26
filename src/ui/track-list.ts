@@ -7,7 +7,11 @@ export function mountTrackList(
 ) {
   const nodes = new Map<number, HTMLButtonElement>();
   return {
-    update(tracks: readonly TrackSnapshot[], selected: number | null) {
+    update(
+      tracks: readonly TrackSnapshot[],
+      selected: number | null,
+      analysisStatus = "observing",
+    ) {
       for (const [id, node] of nodes)
         if (!tracks.some((t) => t.id === id)) {
           node.remove();
@@ -29,7 +33,7 @@ export function mountTrackList(
           nodes.set(t.id, button);
           container.append(button);
         }
-        button.textContent = `#${t.id} · ${t.label} · ${formatScore(t.score)} · ${t.state}${t.state !== "active" ? " (last observed)" : ""}`;
+        button.textContent = `#${t.id} · ${t.label} · ${formatScore(t.score)} · ${t.state}${analysisStatus === "stale" ? " (analysis stale; last observed)" : t.state !== "active" ? " (last observed)" : ""}`;
         button.setAttribute(
           "aria-label",
           `Select track ${t.id}, ${t.label}, ${t.state}`,

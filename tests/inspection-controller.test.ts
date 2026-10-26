@@ -27,7 +27,13 @@ test("controller consumes once, projections do not update tracker and gaps start
   c.onFrame(f(3, 2, 300));
   expect(c.notice).toContain("Resume");
   expect(c.snapshot().events.filter((e) => e.kind === "exit")).toHaveLength(0);
-  c.onFrame(f(4, 2, 2501));
+  c.onBoundary({
+    sessionId: 1,
+    segment: 2,
+    reason: "analysis-gap",
+    atMs: 2501,
+  });
+  c.onFrame(f(4, 3, 2501));
   expect(c.notice).toContain("analysis-gap");
   expect(c.snapshot().segment).toBe(3);
   c.clearSession();

@@ -111,3 +111,108 @@ test("diagnostic logs are bounded and synthetic Start is identified", async ({
     ),
   ).toBe(true);
 });
+
+test("Copy log copies a stable full JSON snapshot and offers selectable fallback on denial", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator.mediaDevices, "getUserMedia", {
+      writable: true,
+      configurable: true,
+      value: () =>
+        Promise.reject(new DOMException("Denied", "NotAllowedError")),
+    });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          (window as any).copiedLog = text;
+        },
+      },
+    });
+  });
+  await page.goto("/?diag=1");
+  await page.evaluate(() =>
+    document.dispatchEvent(
+      new SecurityPolicyViolationEvent("securitypolicyviolation", {
+        effectiveDirective: "script-src-elem",
+        blockedURI: "https://example.test/script?private=redacted",
+        disposition: "enforce",
+      }),
+    ),
+  );
+  await page.locator("#start").click();
+  await expect(page.locator("#camera-diagnostics-log")).toContainText(
+    '"event": "camera-settled"',
+  );
+  await page.getByRole("button", { name: "Copy log", exact: true }).click();
+  const copied = await page.evaluate(() => (window as any).copiedLog);
+  expect(JSON.parse(copied).map((e: any) => e.event)).toEqual([
+    "installed",
+    "csp-violation",
+    "start-click",
+    "camera-request",
+    "camera-settled",
+  ]);
+  expect(copied).not.toContain("private=redacted");
+  await page.evaluate(() =>
+    document
+      .querySelector("#start")!
+      .dispatchEvent(new MouseEvent("click", { bubbles: true })),
+  );
+  expect(await page.evaluate(() => (window as any).copiedLog)).toBe(copied);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: async () => {
+          throw new Error("Denied");
+        },
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Copy log", exact: true }).click();
+  await expect(page.locator("#camera-diagnostics-copy-fallback")).toBeVisible();
+  expect(
+    JSON.parse(
+      await page.locator("#camera-diagnostics-copy-fallback").inputValue(),
+    ).length,
+  ).toBeGreaterThanOrEqual(5);
+});
+
+test("Clear removes fallback data and prevents late clipboard rejection restoring it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: () => Promise.reject(new Error("denied")) },
+      configurable: true,
+    });
+  });
+  await page.goto("/?diag=1");
+  await page.getByRole("button", { name: "Copy log", exact: true }).click();
+  await expect(page.locator("#camera-diagnostics-copy-fallback")).toBeVisible();
+  await page.getByRole("button", { name: "Clear diagnostic log" }).click();
+  await expect(page.locator("#camera-diagnostics-copy-fallback")).toBeHidden();
+  await expect(page.locator("#camera-diagnostics-copy-fallback")).toHaveValue(
+    "",
+  );
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: () =>
+          new Promise((_, reject) => {
+            (window as any).rejectCopy = reject;
+          }),
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Copy log", exact: true }).click();
+  await page.getByRole("button", { name: "Clear diagnostic log" }).click();
+  await page.evaluate(() =>
+    (window as any).rejectCopy(new Error("late denial")),
+  );
+  await expect(page.locator("#camera-diagnostics-copy-fallback")).toBeHidden();
+  await expect(page.locator("#camera-diagnostics-copy-fallback")).toHaveValue(
+    "",
+  );
+});

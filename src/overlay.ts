@@ -9,6 +9,7 @@ export function drawDetections(
   height: number,
   tracks: readonly TrackSnapshot[] = [],
   selected: number | null = null,
+  trailSeconds = 5,
 ): void {
   if (canvas.width !== width) canvas.width = width;
   if (canvas.height !== height) canvas.height = height;
@@ -18,12 +19,12 @@ export function drawDetections(
   const font = Math.max(14, width / 40);
   ctx.font = `600 ${font}px system-ui, sans-serif`;
   ctx.lineWidth = Math.max(2, width / 320);
-  for (const track of tracks) {
+  for (const track of trailSeconds ? tracks : []) {
     ctx.strokeStyle = track.id === selected ? "#ffffff" : "#83bf65";
     ctx.beginPath();
     let connected = false;
     for (const s of track.samples) {
-      if (!s.box || s.atMs < track.lastMatchedAtMs - 5000) {
+      if (!s.box || s.atMs < track.lastMatchedAtMs - trailSeconds * 1000) {
         connected = false;
         continue;
       }

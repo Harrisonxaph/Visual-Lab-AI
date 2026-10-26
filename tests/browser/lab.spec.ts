@@ -335,7 +335,7 @@ test("camera aspect change clears old boxes while the next result is pending", a
     .toBe(0.5);
   await expect(page.getByTestId("detection-count")).toHaveText("0");
   expect(
-    await page.locator("canvas").evaluate((c: HTMLCanvasElement) =>
+    await page.locator(".video-stage canvas").evaluate((c: HTMLCanvasElement) =>
       c
         .getContext("2d")!
         .getImageData(0, 0, c.width, c.height)

@@ -111,3 +111,20 @@ test("dismiss hides segment notices through rerenders until the next boundary", 
   await page.locator("#stop").click();
   await expect(page.locator("#video-segment-notice")).toBeHidden();
 });
+
+test("stale analysis labels selected list history as last observed without inventing loss", async ({
+  page,
+}) => {
+  await page.route("**/src/inference/detector.worker.ts*", (route) =>
+    route.fulfill({
+      contentType: "text/javascript",
+      body: `let n=0;self.onmessage=({data})=>{if(data.type==='init')postMessage({type:'ready'});else{data.bitmap.close();if(++n<=2)postMessage({type:'result',id:data.id,inferenceMs:20,detections:[{label:'cup',score:.8,box:{x:100,y:100,width:100,height:100}}]});}};`,
+    }),
+  );
+  await page.goto("/");
+  await page.locator("#start").click();
+  await expect(page.locator("#track-list")).toContainText("#1");
+  await expect(page.locator("#track-list")).toContainText("analysis stale");
+  await expect(page.locator("#frame-label")).toContainText("STALE");
+  await page.locator("#stop").click();
+});

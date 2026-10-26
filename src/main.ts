@@ -1,3 +1,10 @@
+import { mountBenchmark } from "./ui/benchmark-panel";
+import { mountFailureLog } from "./ui/failure-log-panel";
+import { mountTrackInspector } from "./ui/track-inspector";
+import { drawConfidenceChart, confidenceSummary } from "./ui/confidence-chart";
+import { mountCategoryExplorer } from "./ui/category-explorer";
+import { describeQuality } from "./ui/quality-panel";
+import { containedVideoRect, hitTestTracks } from "./tracking/geometry";
 import { TrackingController } from "./inspection/controller";
 import { mountTrackList } from "./ui/track-list";
 import "./style.css";
@@ -62,6 +69,10 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
           <div class="privacy-note">${icon("shield", 20)}<p><strong>Private by design</strong>Frames stay in your browser. No image uploads, recordings or paid APIs. Model assets download before inference.</p></div>
         </aside>
       </div>
+      <div class="inspection-pair"><section class="panel lab-section" id="object-inspector"><h2>Object inspector</h2><label for="trails">Trajectory duration</label><select id="trails"><option value="0">Off</option><option value="2">2 s</option><option value="5" selected>5 s</option><option value="10">10 s</option></select><div id="inspector-content"></div><p id="live-quality"></p></section><section class="panel lab-section" id="confidence-panel"><h2>Confidence over time</h2><canvas id="confidence-chart" role="img"></canvas><p id="confidence-summary">Select a track. Gaps represent missing observations.</p></section></div>
+      <section class="panel lab-section" id="category-explorer"><h2>Supported category explorer</h2><p id="category-filter">Showing all observed tracks</p></section>
+      <section class="panel lab-section" id="failure-log"><h2>Local detection failure notes</h2></section>
+      <section class="panel lab-section" id="synthetic-benchmark"><h2>Synthetic tracking benchmark</h2></section>
       <div class="learn-grid">
         <section class="panel explanation"><div class="learn-icon">${icon("info", 23)}</div><div><div class="eyebrow">A NOTE FROM THE LAB</div><h2>Confidence isn’t accuracy.</h2><p>An 80% score expresses the model’s confidence in a label. It does not mean the model is correct 80% of the time. Try changing lighting, distance or angle, and watch the scores change. Displayed scores are rounded and capped at 99%; thresholds use the original scores.</p><div class="tip"><span>TRY THIS</span> Find an object, then slowly cover part of it.</div></div></section>
         <section class="panel model-panel"><h2>${icon("layers", 18)} Inside the model</h2><dl><div><dt>Detector</dt><dd><span id="model-name"></span> <span id="model-version"></span></dd></div><div><dt>Runtime</dt><dd><span id="model-runtime"></span></dd></div><div><dt>Coverage</dt><dd><span id="model-coverage"></span></dd></div><div><dt>Model size</dt><dd><span id="model-size"></span> <span>+ runtime assets</span></dd></div></dl><details><summary>Model & compatibility notes</summary><p>Model source: <span id="model-source"></span>. <span id="model-compatibility"></span></p><p id="model-output-notes"></p><p>Processing FPS uses a 2-second rolling window, including transfer and scheduling; inference time measures the worker’s detection call. FPS is capped at 10 to limit work. Neither measures accuracy.</p><a id="model-documentation" target="_blank" rel="noopener noreferrer">Read model documentation ↗</a></details></section>
@@ -72,7 +83,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 const element = <T extends HTMLElement = HTMLElement>(selector: string) =>
   document.querySelector<T>(selector)!;
 const video = element<HTMLVideoElement>("video"),
-  canvas = element<HTMLCanvasElement>("canvas");
+  canvas = element<HTMLCanvasElement>(".video-stage canvas");
 const slider = element<HTMLInputElement>("#threshold");
 const details = modelDetails(MODEL);
 for (const [id, value] of Object.entries({
@@ -108,11 +119,37 @@ const detector = new WorkerDetector(MODEL);
 const tracking = new TrackingController(MODEL.floor);
 let lastListAt = -Infinity;
 let lastState = "";
+let cachedTracking = tracking.snapshot();
+let trailSeconds = 5,
+  categoryFilter = "";
+const inspector = mountTrackInspector(element("#inspector-content"));
+const explorer = mountCategoryExplorer(
+  element("#category-explorer"),
+  MODEL,
+  (label) => {
+    categoryFilter = label;
+    element("#category-filter").textContent = label
+      ? `Observed tracks labelled ${label}`
+      : "Showing all observed tracks";
+    lastListAt = -Infinity;
+    render(lab.snapshot);
+  },
+);
 const trackList = mountTrackList(element("#track-list"), (id) => {
   tracking.select(id);
   lastListAt = -Infinity;
   render(lab.snapshot);
 });
+const failureLog = mountFailureLog(element("#failure-log"), MODEL, () => {
+  const v = tracking.projection(threshold, performance.now());
+  return {
+    sessionId: v.snapshot.sessionId,
+    segment: v.snapshot.segment,
+    selected: v.selected,
+    threshold,
+  };
+});
+const benchmark = mountBenchmark(element("#synthetic-benchmark"));
 let ageTimer: ReturnType<typeof setInterval> | undefined;
 let lab: Lab;
 const camera = new Camera(video, () => lab.cameraEnded());
@@ -132,6 +169,7 @@ lab = new Lab(
 detector.onFatal = (error) => lab.fail(error);
 function render(snapshot: Snapshot): void {
   const { state } = snapshot;
+  benchmark.setState(state);
   const running = state === "running",
     paused = state === "paused",
     loading = state === "loading";
@@ -265,14 +303,32 @@ function render(snapshot: Snapshot): void {
     running && !stale && frameMatchesVideo
       ? tracking.visible(threshold, now)
       : [];
-  const view = tracking.snapshot();
   if (now - lastListAt >= 250 || state !== lastState) {
-    trackList.update(view.tracks, tracking.selected);
+    const projection = tracking.projection(threshold, now);
+    const view = projection.snapshot;
+    cachedTracking = view;
+    trackList.update(
+      categoryFilter
+        ? view.tracks.filter((t) => t.label === categoryFilter)
+        : view.tracks,
+      tracking.selected,
+      projection.status,
+    );
+    inspector.update(projection);
+    drawConfidenceChart(
+      element<HTMLCanvasElement>("#confidence-chart"),
+      projection.selected?.samples ?? [],
+    );
+    element("#live-quality").textContent = describeQuality(projection.selected);
+    element("#confidence-summary").textContent = confidenceSummary(
+      projection.selected?.samples ?? [],
+    );
     element("#tracking-counts").textContent =
       `Candidates: ${view.candidates} · Confirmed IDs: ${view.counters.publicIds} · Below floor: ${view.counters.belowFloor} · Capacity drops: ${view.counters.capacityDrops} · Histories pruned: ${view.counters.droppedHistories} · Events pruned: ${view.counters.droppedEvents}`;
     lastListAt = now;
     lastState = state;
   }
+  const view = cachedTracking;
   element("#segment-chip").textContent = view.segment
     ? `Segment ${view.segment}${view.closed ? " · ended" : ""}`
     : "No segment";
@@ -294,6 +350,7 @@ function render(snapshot: Snapshot): void {
     snapshot.height,
     current,
     tracking.selected,
+    trailSeconds,
   );
 }
 function unsupported(): string | null {
@@ -311,6 +368,7 @@ function unsupported(): string | null {
   return null;
 }
 element("#start").addEventListener("click", () => {
+  benchmark.cancel();
   const issue = unsupported();
   if (issue) lab.fail(new Error(issue));
   else {
@@ -320,12 +378,15 @@ element("#start").addEventListener("click", () => {
   }
 });
 element("#pause").addEventListener("click", () => {
-  if (lab.snapshot.state === "paused") lab.resume();
-  else lab.pause();
+  if (lab.snapshot.state === "paused") {
+    benchmark.cancel();
+    lab.resume();
+  } else lab.pause();
 });
 element("#stop").addEventListener("click", () => lab.stop());
 slider.addEventListener("input", () => {
   threshold = Number(slider.value);
+  lastListAt = -Infinity;
   try {
     localStorage.setItem("visual-labs.threshold", String(threshold));
   } catch {
@@ -338,7 +399,49 @@ video.addEventListener("resize", () => {
   render(lab.snapshot);
 });
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) lab.pause("hidden");
+  if (document.hidden) {
+    benchmark.cancel();
+    lab.pause("hidden");
+  }
+});
+element<HTMLSelectElement>("#trails").addEventListener("change", (event) => {
+  trailSeconds = Number((event.target as HTMLSelectElement).value);
+  render(lab.snapshot);
+});
+let pointer: { id: number; x: number; y: number } | null = null;
+const stage = element(".video-stage");
+stage.addEventListener("pointerdown", (event) => {
+  pointer = event.isPrimary
+    ? { id: event.pointerId, x: event.clientX, y: event.clientY }
+    : null;
+});
+stage.addEventListener("pointercancel", () => {
+  pointer = null;
+});
+stage.addEventListener("pointerup", (event) => {
+  const start = pointer;
+  pointer = null;
+  if (
+    !start ||
+    start.id !== event.pointerId ||
+    Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8 ||
+    lab.snapshot.state !== "running"
+  )
+    return;
+  const r = stage.getBoundingClientRect();
+  tracking.select(
+    hitTestTracks(
+      { x: event.clientX, y: event.clientY },
+      containedVideoRect(
+        { x: r.x, y: r.y, width: r.width, height: r.height },
+        video.videoWidth,
+        video.videoHeight,
+      ),
+      tracking.visible(threshold, performance.now()),
+    ),
+  );
+  lastListAt = -Infinity;
+  render(lab.snapshot);
 });
 element("#dismiss-segment-notice").addEventListener("click", () => {
   tracking.dismissNotice();
@@ -351,8 +454,17 @@ element("#clear-tracking").addEventListener("click", () => {
   render(lab.snapshot);
 });
 window.addEventListener("pagehide", () => {
+  benchmark.cancel();
   lab.stop();
   tracking.clearSession();
-  trackList.destroy();
+  pointer = null;
+  lastListAt = -Infinity;
+  render(lab.snapshot);
+  // Keep static DOM/listeners intact: a page in the back/forward cache can return.
+  // Genuine unload lets the browser reclaim the document; no background work remains.
+});
+window.addEventListener("pageshow", () => {
+  lastListAt = -Infinity;
+  render(lab.snapshot);
 });
 render(lab.snapshot);
