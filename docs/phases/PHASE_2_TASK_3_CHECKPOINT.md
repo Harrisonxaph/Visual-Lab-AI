@@ -22,11 +22,11 @@ Task 4 adds configuration and detailed inspection. Metadata stays in bounded pag
 
 ## Automated evidence (Linux Chromium 154; not physical Safari)
 
-- Unit: 49 tests pass, including all existing Phase 1 tests. New coverage includes global assignment
+- Unit: 51 tests pass, including all existing Phase 1 tests. New coverage includes global assignment
   versus exhaustive small-matrix costs, confirmation-only IDs, inclusive floor/expiry boundaries,
   300-frame noise, capacity/history bounds, observer cleanup, late geometry/capture rejection,
   stale projections and exact overlay associations for overlapping boxes.
-- Development browser: 29 tests pass, including real CPU/WASM worker tests and a raw-category probe;
+- Development browser: 30 tests pass, including real CPU/WASM worker tests and a raw-category probe;
   synthetic camera/worker fixtures check selection, threshold projections, Resume segment notices,
   phone stacking, loss/reacquisition/expiry and stopped camera tracks.
 - Production: 10 tests pass under the existing CSP, with GPU disabled. Actual Lite0 inference
@@ -68,3 +68,17 @@ The developer also corrected expiry gap accounting and terminal notice visibilit
 Stop here. Review the exact draft-PR checkpoint commit and CI; Tasks 4–6 require the user's
 review approval of that commit. Do not merge, deploy, change protection/automatic deployments
 or begin Phase 3.
+
+## Task 3 review corrections (2026-10-26 UTC)
+
+- Capture-size stall: if capture reveals an intrinsic size change before the video resize event,
+  Lab now advances geometry and closes that bitmap. Subsequent matching-size frames resume
+  commits in a new segment. The regression first failed with no new-size commits, then passed
+  with exactly one geometry boundary, sequential new-size commits and no camera restart.
+- The on-video notice now has a keyboard/touch Dismiss button (44 px minimum target). Dismiss
+  clears both notice presentations without changing track history, selection or segment number.
+  It survives inference/slider rerenders and the next boundary displays a new notice. Controller
+  and browser regressions failed before implementation and pass afterward.
+
+These corrections remain Task 3 only. Physical-device confirmation remains Pending. Full local
+checks and exact-head CI are recorded in PR #11; no Task 4–6, dependency or deployment change.

@@ -142,3 +142,31 @@ test("analysis-gap boundary failure cannot commit another frame after cleanup", 
   expect(frames).toBe(1);
   expect(h.lab.snapshot.state).toBe("error");
 });
+
+test("capture size change without a resize event starts a new segment and resumes commits", async () => {
+  const frames: any[] = [],
+    boundaries: any[] = [];
+  const h = setup({
+    onFrame: (f: any) => frames.push(f),
+    onBoundary: (b: any) => boundaries.push(b),
+  });
+  const start = vi.spyOn(h.deps.camera, "start");
+  await h.lab.start();
+  await h.tick();
+  const close = vi.fn();
+  h.deps.capture = async () => ({ width: 480, height: 640, close }) as any;
+  await h.tick();
+  expect(close).toHaveBeenCalledOnce();
+  await h.tick();
+  await h.tick();
+  expect(frames.map((f) => [f.width, f.height])).toEqual([
+    [640, 480],
+    [480, 640],
+    [480, 640],
+  ]);
+  expect(frames[1].segment).toBe(2);
+  expect(boundaries.map((b) => b.reason)).toEqual(["geometry"]);
+  expect(start).toHaveBeenCalledOnce();
+  expect(h.deps.detector.close).toHaveBeenCalledOnce();
+  expect(h.lab.snapshot.state).toBe("running");
+});

@@ -65,6 +65,9 @@ export class TrackingController {
     this.reason = b.reason;
     if (["stop", "error", "camera-ended"].includes(b.reason)) this.notice = "";
   };
+  dismissNotice() {
+    this.notice = "";
+  }
   snapshot() {
     return this.tracker.snapshot();
   }

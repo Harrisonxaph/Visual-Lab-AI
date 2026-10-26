@@ -239,7 +239,10 @@ export class Lab {
         this.dimensions &&
         (width !== this.dimensions.width || height !== this.dimensions.height)
       ) {
+        // A capture may reveal a new intrinsic size before the video's resize event.
+        // Advance geometry here so subsequent new-size frames are not rejected forever.
         bitmap.close();
+        this.geometryChanged(width, height);
         return;
       }
       this.dimensions = { width, height };

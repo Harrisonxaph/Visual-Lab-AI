@@ -46,7 +46,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
             <div class="stage-grid" aria-hidden="true"></div>
             <div class="stage-corner top-left" aria-hidden="true"></div><div class="stage-corner top-right" aria-hidden="true"></div><div class="stage-corner bottom-left" aria-hidden="true"></div><div class="stage-corner bottom-right" aria-hidden="true"></div>
             <div class="stage-intro"><div class="intro-icon">${icon("scan", 38)}</div><h3 id="stage-title">A new perspective starts here</h3><p id="stage-description">Point your camera at everyday objects.<br>Explore how a model makes sense of them.</p><span class="stage-caption">CAMERA OFF · NOTHING IS RECORDED</span></div>
-            <div id="video-segment-notice" hidden></div><div class="stage-footer"><span id="frame-label">WAITING FOR INPUT</span><span><span id="stage-model"></span></span></div>
+            <div id="video-segment-notice" hidden><span id="video-segment-notice-text"></span><button id="dismiss-segment-notice" type="button" aria-label="Dismiss tracking segment notice">Dismiss</button></div><div class="stage-footer"><span id="frame-label">WAITING FOR INPUT</span><span><span id="stage-model"></span></span></div>
           </div>
           <section class="track-panel" aria-labelledby="track-title"><h3 id="track-title">Tracks</h3><span id="segment-chip">No segment</span><div id="track-list"></div><p id="tracking-counts"></p></section></div>
           <div id="segment-notice" role="status" hidden></div>
@@ -278,7 +278,9 @@ function render(snapshot: Snapshot): void {
     : "No segment";
   for (const selector of ["#segment-notice", "#video-segment-notice"]) {
     const n = element(selector);
-    n.textContent = tracking.notice;
+    if (selector === "#video-segment-notice")
+      element("#video-segment-notice-text").textContent = tracking.notice;
+    else n.textContent = tracking.notice;
     n.hidden = !tracking.notice || (!running && !paused);
   }
   if (stale)
@@ -337,6 +339,10 @@ video.addEventListener("resize", () => {
 });
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) lab.pause("hidden");
+});
+element("#dismiss-segment-notice").addEventListener("click", () => {
+  tracking.dismissNotice();
+  render(lab.snapshot);
 });
 element("#clear-tracking").addEventListener("click", () => {
   lab.stop();

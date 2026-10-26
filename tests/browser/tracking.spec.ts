@@ -85,3 +85,29 @@ test("brief loss retains ID; expiry confirms a new ID; lost boxes are not drawn"
   await expect(page.locator("#video-segment-notice")).toBeHidden();
   await expect(page.locator("#track-list")).not.toContainText("active");
 });
+
+test("dismiss hides segment notices through rerenders until the next boundary", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.locator("#start").click();
+  await expect(page.locator("#track-list")).toContainText("#1");
+  await page.locator("#pause").click();
+  await page.locator("#pause").click();
+  await expect(page.locator("#video-segment-notice")).toContainText("Resume");
+  await page
+    .getByRole("button", { name: "Dismiss tracking segment notice" })
+    .click();
+  await expect(page.locator("#video-segment-notice")).toBeHidden();
+  await expect(page.locator("#segment-notice")).toBeHidden();
+  await page.locator("#threshold").fill("0.05");
+  await expect(page.locator("#track-list")).toContainText("#2");
+  await expect(page.locator("#video-segment-notice")).toBeHidden();
+  await expect(page.locator("#segment-chip")).toContainText("Segment 2");
+  await page.locator("#pause").click();
+  await page.locator("#pause").click();
+  await expect(page.locator("#video-segment-notice")).toContainText("Resume");
+  await page.locator("#stop").click();
+  await expect(page.locator("#video-segment-notice")).toBeHidden();
+});

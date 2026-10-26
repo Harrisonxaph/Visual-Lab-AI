@@ -33,3 +33,21 @@ test("controller consumes once, projections do not update tracker and gaps start
   c.clearSession();
   expect(c.snapshot().tracks).toHaveLength(0);
 });
+
+test("dismissing a segment notice changes no tracking state and survives projections", () => {
+  const c = new TrackingController(0.05);
+  c.onFrame(f(1));
+  c.onFrame(f(2));
+  c.onBoundary({ sessionId: 1, segment: 1, reason: "pause", atMs: 250 });
+  c.onFrame(f(3, 2, 300));
+  const before = c.snapshot();
+  expect(c.notice).toContain("Resume");
+  c.dismissNotice();
+  expect(c.notice).toBe("");
+  expect(c.snapshot()).toEqual(before);
+  c.onFrame(f(4, 2, 400));
+  expect(c.notice).toBe("");
+  c.onBoundary({ sessionId: 1, segment: 2, reason: "geometry", atMs: 450 });
+  c.onFrame({ ...f(5, 3, 500), geometry: 2 });
+  expect(c.notice).toContain("geometry");
+});

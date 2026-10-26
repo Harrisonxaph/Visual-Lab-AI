@@ -1355,3 +1355,21 @@ input[type="range"]::-moz-range-thumb {
     }
   }
 }
+
+#video-segment-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+#dismiss-segment-notice {
+  min-height: 44px;
+  min-width: 44px;
+  flex-shrink: 0;
+  padding: 8px;
+  border: 1px solid #b9d3a3;
+  border-radius: 4px;
+  background: #203b27;
+  color: white;
+  font: inherit;
+}
