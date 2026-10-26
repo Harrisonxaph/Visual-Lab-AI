@@ -10,6 +10,22 @@
 - Classifier accuracy on small personal datasets can be misleading. Phase 4 adds held-out test
   evaluation, precision/recall and overfitting checks; confidence is never treated as accuracy.
 
+## Dataset lab limitations (Phase 2)
+
+- Similarity detection is a 64-bit difference hash with a 6-bit threshold. It finds exact copies,
+  re-saved and resized copies and small brightness changes. It misses crops, rotations and new
+  viewpoints, and it is unreliable for very plain images: flat areas give identical bits, so
+  unrelated plain images can be wrongly grouped (use "Not related"). Identified groups always stay
+  in one split; undetected similar photos can still leak across splits.
+- Exact-duplicate detection compares the original file bytes. The same photo exported twice with
+  different encoding is not an exact duplicate (the near-duplicate check may still flag it).
+- Data lives only in this browser. Safari may delete stored data for a site unused for about a
+  week; clearing website data deletes it. `navigator.storage.persist()` is requested but may be
+  refused. Export/import is not available yet.
+- HEIC photos decode in Safari but not in desktop Chromium; automated tests use PNG/JPEG. Very large
+  photos are fully decoded before downscaling, which can use a lot of memory on older devices.
+- Two tabs editing the same dataset at once are not coordinated; the last write wins.
+
 ## Verified combination
 
 EfficientDet-Lite0 float32 / v1, MediaPipe Tasks Vision 0.10.32, CPU/WASM in a module worker.

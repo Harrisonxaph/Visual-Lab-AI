@@ -6,6 +6,7 @@ export default defineConfig({
     "privacy.spec.ts",
     "diagnostics.spec.ts",
     "stress-profile.spec.ts",
+    "datasets-production.spec.ts",
   ],
   timeout: 90000,
   workers: 1,

@@ -1,0 +1,196 @@
+import type {
+  BlobRecord,
+  DatasetRecord,
+  ImageRecord,
+  LabelRecord,
+} from "./types";
+
+export const DB_NAME = "visual-labs-datasets";
+const DB_VERSION = 1;
+
+interface StoreMap {
+  datasets: DatasetRecord;
+  labels: LabelRecord;
+  images: ImageRecord;
+  blobs: BlobRecord;
+}
+type StoreName = keyof StoreMap;
+const STORES: StoreName[] = ["datasets", "labels", "images", "blobs"];
+
+/** A batch of writes applied together: all succeed or none do. */
+export interface Commit {
+  put?: { [K in StoreName]?: StoreMap[K][] };
+  delete?: { [K in StoreName]?: string[] };
+}
+
+export class StorageError extends Error {
+  constructor(
+    message: string,
+    readonly kind: "quota" | "unavailable" | "failed",
+  ) {
+    super(message);
+  }
+}
+
+function describe(error: unknown): StorageError {
+  const name = (error as { name?: string } | null)?.name;
+  if (name === "QuotaExceededError")
+    return new StorageError(
+      "Not enough storage space on this device. Delete some images or datasets and try again.",
+      "quota",
+    );
+  return new StorageError(
+    "The browser could not save dataset changes. Nothing from this step was saved.",
+    "failed",
+  );
+}
+
+const request = <T>(r: IDBRequest<T>) =>
+  new Promise<T>((resolve, reject) => {
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+
+/** Thin, typed wrapper over IndexedDB. All data stays in this browser on this device. */
+export class DatasetDb {
+  private constructor(private db: IDBDatabase) {}
+
+  static async open(name = DB_NAME): Promise<DatasetDb> {
+    let factory: IDBFactory | undefined;
+    try {
+      factory = globalThis.indexedDB;
+    } catch {
+      factory = undefined;
+    }
+    if (!factory)
+      throw new StorageError(
+        "This browser does not allow saving datasets here (storage is unavailable, for example in some private modes).",
+        "unavailable",
+      );
+    try {
+      const open = factory.open(name, DB_VERSION);
+      open.onupgradeneeded = () => {
+        const db = open.result;
+        db.createObjectStore("datasets", { keyPath: "id" });
+        db.createObjectStore("labels", { keyPath: "id" }).createIndex(
+          "datasetId",
+          "datasetId",
+        );
+        db.createObjectStore("images", { keyPath: "id" }).createIndex(
+          "datasetId",
+          "datasetId",
+        );
+        db.createObjectStore("blobs", { keyPath: "id" });
+      };
+      const db = await request(open);
+      // Let "Delete all" (here or in another tab) proceed instead of being blocked.
+      db.onversionchange = () => db.close();
+      return new DatasetDb(db);
+    } catch {
+      throw new StorageError(
+        "The browser refused to open local dataset storage. Datasets cannot be saved in this session.",
+        "unavailable",
+      );
+    }
+  }
+
+  async listDatasets(): Promise<DatasetRecord[]> {
+    const tx = this.db.transaction("datasets", "readonly");
+    const all = await request(tx.objectStore("datasets").getAll());
+    return (all as DatasetRecord[]).sort((a, b) =>
+      a.createdAt.localeCompare(b.createdAt),
+    );
+  }
+
+  async loadDataset(
+    datasetId: string,
+  ): Promise<{ labels: LabelRecord[]; images: ImageRecord[] }> {
+    const tx = this.db.transaction(["labels", "images"], "readonly");
+    const [labels, images] = await Promise.all([
+      request(tx.objectStore("labels").index("datasetId").getAll(datasetId)),
+      request(tx.objectStore("images").index("datasetId").getAll(datasetId)),
+    ]);
+    return {
+      labels: (labels as LabelRecord[]).sort((a, b) =>
+        a.createdAt.localeCompare(b.createdAt),
+      ),
+      images: (images as ImageRecord[]).sort((a, b) => a.order - b.order),
+    };
+  }
+
+  async getBlob(id: string): Promise<BlobRecord | undefined> {
+    const tx = this.db.transaction("blobs", "readonly");
+    return (await request(tx.objectStore("blobs").get(id))) as
+      | BlobRecord
+      | undefined;
+  }
+
+  /** Applies every put and delete in one transaction. */
+  async commit(change: Commit): Promise<void> {
+    const names = STORES.filter(
+      (s) => change.put?.[s]?.length || change.delete?.[s]?.length,
+    );
+    if (!names.length) return;
+    let tx: IDBTransaction;
+    try {
+      tx = this.db.transaction(names, "readwrite");
+    } catch (error) {
+      throw describe(error);
+    }
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(describe(tx.error));
+      tx.onerror = (e) => e.preventDefault();
+      try {
+        for (const s of names) {
+          const store = tx.objectStore(s);
+          for (const item of change.put?.[s] ?? []) store.put(item);
+          for (const key of change.delete?.[s] ?? []) store.delete(key);
+        }
+      } catch (error) {
+        try {
+          tx.abort();
+        } catch {
+          /* already finished */
+        }
+        reject(describe(error));
+      }
+    });
+  }
+
+  close() {
+    this.db.close();
+  }
+
+  /** Removes the whole dataset database from this device. */
+  static async destroy(name = DB_NAME, timeoutMs = 10000): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      const r = indexedDB.deleteDatabase(name);
+      // "blocked" only means another connection is still open; deletion completes once it
+      // closes. Give up with an honest message if that does not happen in time.
+      const timer = setTimeout(
+        () =>
+          reject(
+            new StorageError(
+              "Deletion is waiting because another tab is using Visual Labs datasets. Close other tabs; the data may still exist until then.",
+              "failed",
+            ),
+          ),
+        timeoutMs,
+      );
+      r.onsuccess = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      r.onerror = () => {
+        clearTimeout(timer);
+        reject(
+          new StorageError(
+            "Deletion failed. Dataset data may still exist on this device.",
+            "failed",
+          ),
+        );
+      };
+    });
+  }
+}

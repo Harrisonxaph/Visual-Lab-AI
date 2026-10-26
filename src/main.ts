@@ -8,6 +8,7 @@ import { containedVideoRect, hitTestTracks } from "./tracking/geometry";
 import { TrackingController } from "./inspection/controller";
 import { mountTrackList } from "./ui/track-list";
 import "./style.css";
+import { mountDatasetLab } from "./ui/dataset-lab";
 import { Camera } from "./camera";
 import { captureFrame } from "./capture";
 import { visibleDetections, formatScore } from "./detections";
@@ -38,12 +39,14 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     <a class="brand" href="./" aria-label="Visual Labs AI home"><span class="brand-mark">${icon("scan", 25)}</span><span>visual labs<span class="brand-ai">AI</span></span></a>
     <div class="nav-label">YOUR WORKSPACE</div>
     <div class="nav-current" aria-current="page">${icon("scan")}<span>Detection lab</span><span class="nav-dot"></span></div>
-    <div class="sidebar-roadmap"><div class="nav-label">ON THE ROADMAP</div><p><span>02</span> Object tracking</p><p><span>03</span> Learning & experiments</p><p><span>04</span> Interactive modes</p><p><span>05</span> Advanced AI</p></div>
+    <div class="sidebar-roadmap"><div class="nav-label">ON THE ROADMAP</div><p><span>02</span> Datasets</p><p><span>03</span> Training</p><p><span>04</span> Evaluation</p><p><span>05</span> Active learning</p></div>
     <div class="sidebar-bottom"><span class="local-dot"></span> Built to run locally<p>Your camera. Your data.<br>Your laboratory.</p><span class="sidebar-version">PHASE 01 / v0.1.0</span></div>
   </aside>
   <div class="workspace">
-    <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong>Detection lab</strong></div><div class="private-badge">${icon("shield", 15)} On-device inference</div></header>
+    <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb-current">Detection lab</strong></div><div class="private-badge">${icon("shield", 15)} On-device inference</div></header>
     <main>
+      <nav class="lab-tabs" role="tablist" aria-label="Labs"><button type="button" role="tab" id="tab-detection" aria-controls="detection-view" aria-selected="true">Detection lab</button><button type="button" role="tab" id="tab-datasets" aria-controls="dataset-view" aria-selected="false">Dataset lab</button></nav>
+      <div id="detection-view" role="tabpanel" aria-labelledby="tab-detection">
       <div class="page-heading"><div><div class="eyebrow">OBSERVE. QUESTION. UNDERSTAND.</div><h1>See what AI sees<span>.</span></h1><p>A live laboratory for exploring object detection.</p></div><span class="phase-badge">LAB 01 <span>LIVE DETECTION</span></span></div>
       <div class="lab-grid">
         <section class="panel camera-panel" aria-labelledby="camera-title">
@@ -77,6 +80,8 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
         <section class="panel explanation"><div class="learn-icon">${icon("info", 23)}</div><div><div class="eyebrow">A NOTE FROM THE LAB</div><h2>Confidence isn’t accuracy.</h2><p>An 80% score expresses the model’s confidence in a label. It does not mean the model is correct 80% of the time. Try changing lighting, distance or angle, and watch the scores change. Displayed scores are rounded and capped at 99%; thresholds use the original scores.</p><div class="tip"><span>TRY THIS</span> Find an object, then slowly cover part of it.</div></div></section>
         <section class="panel model-panel"><h2>${icon("layers", 18)} Inside the model</h2><dl><div><dt>Detector</dt><dd><span id="model-name"></span> <span id="model-version"></span></dd></div><div><dt>Runtime</dt><dd><span id="model-runtime"></span></dd></div><div><dt>Coverage</dt><dd><span id="model-coverage"></span></dd></div><div><dt>Model size</dt><dd><span id="model-size"></span> <span>+ runtime assets</span></dd></div></dl><details><summary>Model & compatibility notes</summary><p>Model source: <span id="model-source"></span>. <span id="model-compatibility"></span></p><p id="model-output-notes"></p><p>Processing FPS uses a 2-second rolling window, including transfer and scheduling; inference time measures the worker’s detection call. FPS is capped at 10 to limit work. Neither measures accuracy.</p><a id="model-documentation" target="_blank" rel="noopener noreferrer">Read model documentation ↗</a></details></section>
       </div>
+      </div>
+      <section id="dataset-view" class="dataset-view" role="tabpanel" aria-labelledby="tab-datasets" hidden></section>
       <footer class="page-footer"><span>VISUAL LABS AI <span class="footer-divider">/</span> Make it a lab.</span><span>Local processing. Curious minds.</span></footer>
     </main>
   </div>`;
@@ -472,3 +477,33 @@ window.addEventListener("pageshow", () => {
   render(lab.snapshot);
 });
 render(lab.snapshot);
+
+let datasetLabMounted = false;
+/** Switches between labs. Leaving the Detection lab pauses inference (camera preview stays on). */
+function showLab(name: "detection" | "datasets") {
+  const datasets = name === "datasets";
+  if (datasets && lab.snapshot.state === "running") lab.pause();
+  if (datasets && !datasetLabMounted) {
+    mountDatasetLab(element("#dataset-view"));
+    datasetLabMounted = true;
+  }
+  element("#detection-view").hidden = datasets;
+  element("#dataset-view").hidden = !datasets;
+  element("#tab-detection").setAttribute("aria-selected", String(!datasets));
+  element("#tab-datasets").setAttribute("aria-selected", String(datasets));
+  element("#breadcrumb-current").textContent = datasets
+    ? "Dataset lab"
+    : "Detection lab";
+  try {
+    history.replaceState(
+      null,
+      "",
+      datasets ? "#datasets" : location.pathname + location.search,
+    );
+  } catch {
+    /* URL update is optional */
+  }
+}
+element("#tab-detection").addEventListener("click", () => showLab("detection"));
+element("#tab-datasets").addEventListener("click", () => showLab("datasets"));
+if (location.hash === "#datasets") showLab("datasets");
