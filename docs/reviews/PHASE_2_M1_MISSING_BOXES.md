@@ -94,11 +94,12 @@ package manifest, lockfile or CI workflow changed.
 
 Ledger D16 records a user-supplied screenshot with Running/LIVE INPUT, Segment 1 and visible
 #2 tv 71% / #1 keyboard 71% boxes. The image appears to show a browser panel over ChatGPT;
-device, OS and browser/container attribution is unconfirmed. The Visible detections metric
+D17 subsequently attributes it to an iPhone by explicit user answer. Exact model/OS and
+browser/container for the image remain unconfirmed. The Visible detections metric
 is not shown, so this is not an answer to the earlier six-current-versus-history ambiguity.
-The raw screenshot/footage was not added to the repository. This working still view does not
-explain the earlier failure, prove automatic recovery or pass physical iPhone/iPad testing.
-Only a source-context clarification is requested; no new routine device test is started.
+The raw screenshot/footage was not added to the repository. This working still view supports visible boxes on the user-attributed iPhone, but does not
+explain the earlier failure, prove automatic recovery or pass the broader physical-device
+acceptance checklist. No further attribution question or routine device test is requested now.
 
 ## M1 decision and smallest necessary device evidence
 

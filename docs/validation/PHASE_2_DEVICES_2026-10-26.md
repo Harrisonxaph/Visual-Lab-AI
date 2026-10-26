@@ -417,6 +417,20 @@ behaviour, automatic recovery, reproducibility or resolution of D12–D14. It do
 which earlier condition changed. Ask only for source-context attribution; no new device action
 or acceptance walkthrough is requested. All earlier evidence remains, with M1 unresolved.
 
+
+### D17 — Screenshot attributed to iPhone by user
+
+Source: **explicit user source attribution**, recorded 2026-10-26 17:16 UTC.
+The final clarification asked only which device took D16's screenshot: A iPhone / B iPad /
+C unsure. The user replied **A**. Attribute D16 to an iPhone on that basis; this is user-confirmed
+provenance, not independently verified device metadata. This A does not select an older browser
+choice or the older positive-current-count missing-box choice. The exact model/OS and browser/
+container for the image were not separately confirmed. Leave browser context unconfirmed;
+do not turn it into a standalone Safari pass or alter earlier D1 confirmation.
+D16 shows visible labelled boxes in the user-attributed iPhone view. No current Visible detections
+count, prior failure cause, recovery mechanism or stable duration is established. D12–D14 remains
+unresolved. No further device action or browser-identification question is requested now.
+
 ## Remaining gate
 
 Missing boxes (D12) remains unresolved pending state inspection/reproduction; no Phase 2
