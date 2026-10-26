@@ -117,3 +117,27 @@ Accepted Phase 1 limitations remain in force and are not new Phase 2 device pass
 Geometric tracking is now implemented on the draft Phase 2 branch; it is not full Phase 2
 acceptance. See [checkpoint evidence and risks](docs/phases/PHASE_2_TASK_3_CHECKPOINT.md).
 No new physical Safari tracking evidence or measured ground-truth accuracy is supplied.
+
+## Phase 2 inspector, notes and synthetic evaluation
+
+The full Phase 2 runtime is implemented on draft PR #11, not yet accepted on physical devices.
+Current association evidence explains geometric matching, not the model's internal reasoning.
+The near-threshold band contains actual returned boxes only; alternatives remain unavailable.
+Tracks can switch identities in crossings, expire during low scores or occlusion, and reset at
+analysis/control boundaries. No appearance re-identification or live ground-truth ID metric exists.
+
+Notes store metadata and user-entered text only; users may put personal information in that text.
+Storage is not encrypted, durable or universally available. Page-RAM and saved serialized content
+are capped at 100 entries / 256 KiB; JS heap overhead is larger than serialized bytes. Real Safari
+storage refusal remains untested. Notes never automatically retrain or correct the detector.
+
+Synthetic reports evaluate known numeric inputs, not detector accuracy or held-out improvement.
+Initial confirmation misses count. Missing recovery denominators show Not measured. Recovery
+requires the same first returning ID in a bounded labelled interval; later return cannot rescue
+an earlier wrong-ID recovery. Raw confidence is not accuracy. See implementation/profiling notes.
+
+Copy log is opt-in within diagnostics and copies the complete bounded JSON snapshot. Clipboard
+content and OS sync are outside page memory; Clear removes page records/fallback text and invalidates
+pending UI callbacks, but cannot revoke an already initiated clipboard write. Production inclusion
+of diagnostics still requires a decision before the first production deployment. Historical S1/S2
+and every other accepted Phase 1 evidence limitation remain unchanged.

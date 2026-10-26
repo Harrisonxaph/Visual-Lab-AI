@@ -173,3 +173,24 @@ controller normalizes once and updates the pure bounded tracker; slider/selectio
 project existing state. Intrinsic geometry invalidates old generations; analysis/control boundaries
 close segments. Tracking, catalog, controller and keyed list remain separate modules.
 See [Tasks 1–3 checkpoint](docs/phases/PHASE_2_TASK_3_CHECKPOINT.md); later features remain gated.
+
+## Phase 2 Tasks 4–6
+
+Inspector projections are pure reads of once-committed tracking results. DOM/chart work is capped
+at 4 Hz except explicit controls; video overlay follows observations. Chart time coordinates use
+actual sample times and break at null samples. Near-threshold boxes come only from returned
+valid normalized detections; the adapter supplies no alternative class scores. The pinned catalog
+is enabled only for matching model provenance. Stage selection respects contain-fit letterboxes
+and short single-pointer taps without preventing scroll or pinch.
+
+Failure notes use a bounded canonical RAM store and guarded localStorage key
+`visual-labs.phase2.failure-notes.v1`. Loading does not enable writes. Saving requires per-page
+opt-in; deletion is explicit and failure never reports successful saved-data removal. Corrupt
+saved data is preserved until explicit reset. Notes are user reports, not training/ground truth.
+
+Synthetic evaluation uses a separate tracker and separate labelled truth. Bounded bitmask assignment
+maximizes eligible matches, then total IoU, then stable truth-ID/birth-order ties; binary64 sums
+within 10 machine epsilons are treated as numerical ties. It is distinct from live association.
+Benchmark chunks yield every 10 frames; cancellation tokens block late/partial completed reports.
+Start/Resume and hide/page exit cancel it. It runs only with inference inactive; a paused camera
+preview can remain on, as explicitly disclosed. See [Phase 2 implementation](docs/phases/PHASE_2_IMPLEMENTATION.md).

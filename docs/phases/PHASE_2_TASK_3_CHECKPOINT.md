@@ -1,5 +1,9 @@
 # Phase 2 — Task 3 review checkpoint
 
+Historical checkpoint: the user approved `a730147` on 2026-10-26 UTC and authorized Tasks 4–6.
+See [current implementation and pending acceptance](PHASE_2_IMPLEMENTATION.md).
+The scope and counts below describe the Task 3 checkpoint, not the later implementation.
+
 Approved implementation baseline: `559bd645aa5c9be636169435e02b74df5a6374df`.
 Its merge CI [40246823872](https://github.com/Harrisonxaph/Visual-Lab-AI/actions/runs/40246823872)
 completed successfully. The user authorized Tasks 1–3 only on 2026-10-26 UTC.
