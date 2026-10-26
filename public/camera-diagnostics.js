@@ -131,19 +131,53 @@
     title.textContent = "Camera diagnostics — local page memory only";
     const explanation = document.createElement("p");
     explanation.textContent =
-      "Observes calls through this page’s wrapped getUserMedia after installation. Other tabs, frames, earlier calls and saved original references are not covered. Activation and nearby Start clicks do not prove user intent. CSP violations observed in this document after installation are also logged; earlier events and worker/frame events are not covered. No footage, device identifiers or constraints are logged. Reload clears records. Screenshots: before Start only, or Stop first and exclude the video area.";
+      "Observes calls through this page’s wrapped getUserMedia after installation. Other tabs, frames, earlier calls and saved original references are not covered. Activation and nearby Start clicks do not prove user intent. CSP violations observed in this document after installation are also logged; earlier events and worker/frame events are not covered. No footage, device identifiers or constraints are logged. Reload clears records. Screenshots: before Start only, or Stop first and exclude the video area. Copy log explicitly sends JSON to your device clipboard; Clear cannot erase previously copied text or clipboard sync.";
+    let copyVersion = 0;
     const clear = document.createElement("button");
     clear.type = "button";
     clear.textContent = "Clear diagnostic log";
     clear.addEventListener("click", () => {
+      copyVersion++;
+      fallback.value = "";
+      fallback.hidden = true;
+      status.textContent = "";
       records.length = 0;
       lastStart = null;
       output.textContent = "[]";
     });
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.textContent = "Copy log";
+    const status = document.createElement("p");
+    status.setAttribute("role", "status");
+    const fallback = document.createElement("textarea");
+    fallback.id = "camera-diagnostics-copy-fallback";
+    fallback.readOnly = true;
+    fallback.hidden = true;
+    fallback.setAttribute("aria-label", "Diagnostic JSON to select and copy");
+    copy.addEventListener("click", async () => {
+      const version = ++copyVersion;
+      const snapshot = JSON.stringify(records, null, 2);
+      const count = records.length;
+      fallback.hidden = true;
+      try {
+        await navigator.clipboard.writeText(snapshot);
+        if (version !== copyVersion) return;
+        status.textContent = `Copied ${count} entries. Your device clipboard and any clipboard sync are outside this page's memory.`;
+      } catch {
+        if (version !== copyVersion) return;
+        fallback.value = snapshot;
+        fallback.hidden = false;
+        fallback.focus();
+        fallback.select();
+        status.textContent =
+          "Clipboard unavailable. Select and copy the complete JSON below. Clipboard handling is outside page memory.";
+      }
+    });
     output = document.createElement("pre");
     output.id = "camera-diagnostics-log";
     output.textContent = JSON.stringify(records, null, 2);
-    panel.append(title, explanation, clear, output);
+    panel.append(title, explanation, clear, copy, status, fallback, output);
     document.body.append(panel);
   };
   if (document.readyState === "loading")

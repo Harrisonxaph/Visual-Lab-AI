@@ -91,3 +91,35 @@ latency distribution and completed-frame FPS. Separate asset loading from infere
 Retain errors and unsupported combinations. Comparisons require identical inputs and conditions.
 Accuracy needs labelled held-out ground truth and an appropriate metric; classifier training
 must never be represented as detector fine-tuning.
+
+## Phase 2 numeric association evaluation (2026-10-26 UTC)
+
+Code is on draft PR #11; exact final SHA/CI are recorded there. Approved design baseline `559bd64`.
+Built-in fixture version 1 uses numeric boxes/labels/scores with separate annotated truth; detector
+inference is **not run**. These are developer fixtures, not held-out detector evaluation.
+Configuration: model floor .05, tracking floor .25; display threshold does not affect matching.
+Each fixture has 40 frames at 100 ms intervals. Initial confirmation misses are included.
+
+| Fixture | Visible truth observations | Misses | Fixture ID changes | Fragments | Same-ID recovery |
+| --- | --- | --- | --- | --- | --- |
+| Single motion | 40 | 1 | 0 | 0 | Not measured (no eligible occlusion) |
+| Crossing | 80 | 2 | 0 | 0 | Not measured |
+| Stationary/class flip | 40 | 1 | 0 | 0 | Not measured |
+| Short occlusion | 35 | 1 | 0 | 0 | 1 / 1 |
+| Long expiry | 20 | 2 | 1 | 1 | 0 / 1 |
+| Empty/invalid | 0 | 0 | 0 | 0 | Not measured |
+
+Long-expiry failure is preserved: the configured retention policy expires identity and a later
+candidate confirms with a new ID. This crossing fixture's zero changes does not prove real-scene
+identity stability. Metrics are fixture-defined, not standard MOT scores or detector accuracy.
+Reports include actual config, source/version, processing versus elapsed time, browser-reported
+environment and build ID (Unknown unless supplied). UI reports are local and transient; no saved
+experiment/dataset system is implemented in Phase 2.
+
+Profiling the 100-live/50-result path, including returned snapshot and an explicit extra copy,
+found generic clone overhead. Typed defensive copies, once-per-track prediction and fewer UI
+copies reduced it. Final shared-Linux Chromium runs varied: update p95 4.7–8.5 ms, extra copy
+p95 .6–1.9 ms, combined p95 5.5–9.8 ms; no observed long tasks in those measured intervals.
+The 8 ms update budget is not consistently met. See the full conditions and initial/final table
+in [Phase 2 implementation notes](docs/phases/PHASE_2_IMPLEMENTATION.md). These are not mobile,
+battery, thermal or end-to-end camera measurements; real-device profiling remains Pending.

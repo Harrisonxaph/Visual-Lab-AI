@@ -3,9 +3,9 @@
 Phase 1 merged into main through PR #1 on 2026-10-23 at 23:17:42 UTC (`a5bb085`).
 The merge preceded real iPhone/iPad testing. Those observations and the focused offline retest are
 now recorded; the user approved [Phase 1 closeout](docs/phases/PHASE_1_CLOSEOUT.md) with its
-documented limitations on **2026-10-25 UTC**. The user has now authorized Phase 2 **planning only**;
-runtime implementation remains blocked until the reviewed plan is explicitly approved.
-Phases 2–5 and all stretch/exploratory targets remain planned, not implemented.
+documented limitations on **2026-10-25 UTC**. The user separately authorized Phase 2 implementation after approving its plan and Task 3
+checkpoint. Tasks 1–6 are implemented on draft PR #11, awaiting final review and physical
+acceptance; Phase 2 is not closed. Phases 3–5 and stretch/exploratory targets remain planned.
 Deliver each phase in a separate branch and PR into main.
 Codex develops; Claude reviews. Never merge, deploy or modify production without user approval.
 
@@ -18,8 +18,8 @@ Acceptance: actual camera detections, live threshold updates and graceful unsupp
 
 ## Phase 2 — Tracking and decision inspector
 
-Planning entry: [Phase 2 proposal and scope](docs/phases/PHASE_2.md). Design and implementation
-plan are proposals, not implemented functionality or deployment approval.
+Planning entry: [Phase 2 proposal and scope](docs/phases/PHASE_2.md). The reviewed design and implementation plan remain the baseline; see the
+[implementation evidence and pending acceptance](docs/phases/PHASE_2_IMPLEMENTATION.md). No deployment is approved.
 
 Persistent IDs, association, configurable trajectories, confidence histories/charts, entry/exit/loss/
 reacquisition events, selectable object history, searchable 80-category COCO explorer where applicable,

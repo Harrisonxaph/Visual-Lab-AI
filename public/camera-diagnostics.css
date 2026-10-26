@@ -21,3 +21,9 @@
   white-space: pre-wrap;
   font-size: 0.8rem;
 }
+
+#camera-diagnostics-copy-fallback {
+  width: 100%;
+  min-height: 160px;
+  font-family: monospace;
+}

@@ -72,3 +72,23 @@ failures and untested cases; keep prior Phase 1 ledgers unchanged. Claude review
 code and evidence. The intermediate stop requires pushed SHA/CI and Phase 1 regression results;
 review approval of that commit must be supplied before continuing. User approval is required for merge/deployment; a plan or device pass is not
 that authorization. No new runtime work, preview or Phase 3 is authorized by this testing plan.
+
+## Implementation evidence and new physical checks
+
+Automated scope/results are in [implementation notes](PHASE_2_IMPLEMENTATION.md). Every Phase 2
+physical-device row remains Pending; no preview deployment was performed or authorized here.
+When a preview is separately approved, additionally verify on each device:
+
+- Dismiss segment notices; confirm they remain dismissed through slider/inference updates and
+  return at the next real boundary. Confirm the segment chip persists.
+- Navigate away/back: camera remains stopped, explorer/notes/benchmark controls remain usable,
+  Start explicitly restores analysis. Confirm portrait/wide layout and actual camera size changes.
+- Copy diagnostic JSON only after Stop, inspect full JSON/fallback, Clear and verify fallback is
+  removed. Understand Clear cannot revoke clipboard contents or device clipboard sync.
+- Save note metadata only after opt-in; reload, disable saving, delete individual/all notes;
+  verify text displays safely. Do not infer actual storage refusal from Private Browsing success.
+- Run the labelled numeric benchmark only with inference inactive. Start/Resume, hide or page exit
+  must cancel it; partial/cancelled data must not appear as a completed report.
+- Record actual matching/snapshot/UI latency alongside inference time/FPS and sustained heat/battery
+  observations. Shared-Linux profiling exceeded the proposed budget in one final run; no mobile
+  budget claim has been established.

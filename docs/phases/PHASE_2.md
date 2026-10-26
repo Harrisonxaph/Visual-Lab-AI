@@ -79,3 +79,16 @@ stop, localStorage, paired phone layout, on-video segment notices and diagnostic
 user-supplied O6 plain-link comparison is now preserved in the Phase 1 focused ledger and linked
 from README Checks, with its device/tab-closure limits; it is not Phase 2 evidence. All changes remain
 planning only; no proposed test has been executed as a Phase 2 runtime test.
+
+## Tasks 1–3 implementation checkpoint
+
+The user separately authorized Tasks 1–3 against merged plan `559bd645` on 2026-10-26 UTC.
+See [checkpoint scope, evidence and pending review](PHASE_2_TASK_3_CHECKPOINT.md).
+Earlier planning sections describe the full target; later tasks remain unimplemented.
+
+## Current implementation status
+
+The user approved Task 3 commit `a730147` and separately authorized Tasks 4–6 on 2026-10-26 UTC.
+Tasks 1–6 are now implemented in draft PR #11; earlier sections record the planning scope.
+See [implementation evidence and remaining acceptance checks](PHASE_2_IMPLEMENTATION.md).
+No merge/deployment/Phase 3 approval is implied.
