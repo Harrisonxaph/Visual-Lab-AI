@@ -47,6 +47,18 @@ function readStore<T = Record<string, unknown>>(page: Page, store: string) {
   ) as Promise<T[]>;
 }
 
+/**
+ * Installs Playwright's fake clock and pauses it, so zero-delay timers (training yields between
+ * epochs with one) run only when the test calls clock.runFor. The clock starts at a fixed time and
+ * pauses one second later: pausing at a fixed wall-clock date fails ("Cannot fast-forward to the
+ * past") whenever the real time is already later than that date.
+ */
+async function holdClock(page: Page) {
+  const start = new Date("2026-01-01T00:00:00Z");
+  await page.clock.install({ time: start });
+  await page.clock.pauseAt(new Date(start.getTime() + 1000));
+}
+
 async function train(page: Page, epochs = "50") {
   await page.locator("#tr-epochs").fill(epochs);
   await page.getByTestId("tr-train").click();
@@ -110,8 +122,7 @@ test("cancelling keeps the epochs completed so far", async ({ page }) => {
   await loadExample(page);
   // Training yields to the browser between epochs with a zero-delay timer. A paused fake clock
   // holds it between epochs, so the test can cancel at a known point.
-  await page.clock.install();
-  await page.clock.pauseAt(new Date("2026-10-27T12:00:00Z"));
+  await holdClock(page);
   await page.locator("#tr-epochs").fill("300");
   await page.getByTestId("tr-train").click();
   const text = page.locator("#tr-progress-text");
@@ -340,8 +351,7 @@ test("regression: deleting the dataset in the Dataset lab during training discar
   await loadExample(page);
   await train(page, "1"); // fills the embedding cache, as in the reported reproduction
   // Hold training between epochs with a paused fake clock.
-  await page.clock.install();
-  await page.clock.pauseAt(new Date("2026-10-27T12:00:00Z"));
+  await holdClock(page);
   await page.locator("#tr-epochs").fill("300");
   await page.getByTestId("tr-train").click();
   await expect(page.locator("#tr-progress-text")).toContainText(
