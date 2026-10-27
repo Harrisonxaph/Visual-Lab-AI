@@ -1,26 +1,33 @@
 import { mkdir, readFile, writeFile, copyFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { MODEL } from "../src/inference/types.ts";
-const modelPath = new URL(`../public/${MODEL.modelPath}`, import.meta.url);
-const expected = MODEL.sha256;
-await mkdir(new URL(".", modelPath), { recursive: true });
+import { ENCODER } from "../src/learning/encoder.ts";
+
+/** Downloads (or reuses) a pinned model file and refuses it unless the checksum matches. */
+async function prepareModel({ modelPath, assetUrl, sha256, name }) {
+  const path = new URL(`../public/${modelPath}`, import.meta.url);
+  await mkdir(new URL(".", path), { recursive: true });
+  let bytes;
+  try {
+    bytes = await readFile(path);
+  } catch {
+    const response = await fetch(assetUrl, {
+      signal: AbortSignal.timeout(60000),
+    });
+    if (!response.ok)
+      throw new Error(`${name} download failed: ${response.status}`);
+    bytes = Buffer.from(await response.arrayBuffer());
+  }
+  if (createHash("sha256").update(bytes).digest("hex") !== sha256)
+    throw new Error(`${name} checksum mismatch`);
+  await writeFile(path, bytes);
+}
+
+await prepareModel(MODEL);
+await prepareModel(ENCODER);
 await mkdir(new URL(`../public/${MODEL.wasmPath}`, import.meta.url), {
   recursive: true,
 });
-let bytes;
-try {
-  bytes = await readFile(modelPath);
-} catch {
-  const response = await fetch(MODEL.assetUrl, {
-    signal: AbortSignal.timeout(60000),
-  });
-  if (!response.ok)
-    throw new Error(`Model download failed: ${response.status}`);
-  bytes = Buffer.from(await response.arrayBuffer());
-}
-if (createHash("sha256").update(bytes).digest("hex") !== expected)
-  throw new Error("Model checksum mismatch");
-await writeFile(modelPath, bytes);
 for (const variant of ["internal", "nosimd_internal"]) {
   const name = `vision_wasm_${variant}`;
   for (const extension of ["js", "wasm"]) {
@@ -47,7 +54,7 @@ for (const variant of ["internal", "nosimd_internal"]) {
   );
 }
 console.log(
-  `${MODEL.name} checksum verified; ${MODEL.runtime} WASM assets copied.`,
+  `${MODEL.name} and ${ENCODER.name} checksums verified; ${MODEL.runtime} WASM assets copied.`,
 );
 
 await copyFile(

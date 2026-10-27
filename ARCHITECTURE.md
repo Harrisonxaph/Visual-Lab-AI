@@ -8,7 +8,7 @@ A static Vite + TypeScript app with a framework-free DOM UI, no backend and no p
 | --- | --- | --- |
 | Camera and capture | `camera.ts`, `capture.ts` | Optional image source for datasets |
 | Inference worker | `inference/client.ts`, `inference/detector.worker.ts`, `inference/types.ts` | Same MediaPipe loader adaptations, worker lifecycle, timeouts and typed configuration pattern for the image embedder |
-| Assets | `scripts/prepare-assets.mjs`, `THIRD_PARTY_NOTICES.md` | Pinned download + SHA-256 check for the embedder model |
+| Assets | `scripts/prepare-assets.mjs`, `THIRD_PARTY_NOTICES.md` | Pinned download + SHA-256 check for the detector and (since Phase 3) the embedder model |
 | Lifecycle and scheduling | `lab.ts` | Unchanged; detection-only |
 | Tracking and inspection | `tracking/*`, `inspection/*`, `ui/*` | Patterns: seeded synthetic fixtures, cancellable jobs, bounded state, canvas charts |
 | Local storage | `failures/store.ts` | Patterns: guarded storage, schema validation, size limits, honest deletion status |
@@ -31,6 +31,38 @@ A static Vite + TypeScript app with a framework-free DOM UI, no backend and no p
 
 The Dataset lab is mounted only when its tab is opened, so the detector path is unchanged;
 opening it pauses running detection. Thumbnails are drawn on canvases, so the CSP is unchanged.
+
+## Training lab (Phase 3, implemented)
+
+| Module | Role |
+| --- | --- |
+| `learning/encoder.ts` | Pinned frozen encoder: MobileNetV3-Small embedder (float32 v1, SHA-256 checked by `prepare-assets.mjs`), 1,024 dimensions, `ENCODER_KEY` = model hash + runtime + preprocessing (`stretch-224/l2norm/v1`) |
+| `learning/embedder.worker.ts`, `embedder-client.ts`, `embedder-types.ts` | MediaPipe `ImageEmbedder` in a module worker (CPU, IMAGE mode, L2-normalised), same loader adaptations as the detector worker; the model loads lazily on first use |
+| `learning/embeddings.ts` | Embedding cache: reuses stored vectors with the same `ENCODER_KEY`, computes and saves the rest one at a time; refuses test-split photos; cancellable |
+| `learning/examples.ts` | Picks training (optional seeded per-label cap) and validation photos of the chosen labels; `assertNoTestImages` guard |
+| `learning/softmax.ts` | Softmax regression in Float64: stable softmax/log-sum-exp, mean cross-entropy, exact gradient, mini-batch SGD epoch, non-finite guard, parameter evidence |
+| `learning/trainer.ts` | Settings ranges, epoch loop that yields to the browser between epochs, cancellation keeps completed epochs, honest outcome sentence |
+| `learning/models.ts`, `learning/types.ts` | Saved-model record and compatibility check (damaged weights, encoder key, dataset, missing labels refused; changed dataset version warns) |
+| `ui/training-lab.ts`, `ui/training-chart.ts` | Training lab tab: data and settings, live loss/accuracy charts, before/after table, parameter evidence, saved models |
+
+- **Storage:** the dataset database moves to version 2, which only adds two stores: `embeddings`
+  (key `imageId`, one vector per photo for the current encoder) and `models` (up to 5 per dataset,
+  weights stored as `Float64Array` by IndexedDB structured clone rather than JSON). Deleting a
+  photo deletes its embedding; deleting a label with its photos or a dataset deletes their
+  embeddings, and deleting a dataset deletes its saved models, in the same transaction.
+- **Where code runs:** embeddings in a worker; training on the main thread one epoch at a time,
+  yielding between epochs (a 500-photo, 10-label epoch is about 10 M multiply-adds).
+- **Saved-model independence:** a saved model records its training photos (id, SHA-256,
+  difference hash). On load, `independentValidation` (`learning/models.ts`) leaves out current
+  validation photos it learned from, re-imported copies and likely near-copies, so a re-split
+  cannot turn training photos into its "validation" check.
+- **Stale work:** `DatasetDb.commit` accepts `require` (dataset or photo ids checked inside the
+  write transaction); model and embedding saves use it. The Training lab cancels a job whose
+  dataset is deleted and re-checks before showing results.
+- **Test split sealed:** test photos are never embedded or evaluated in Phase 3 (code guard plus
+  unit and browser tests). Phase 4 will open them once for a final check.
+- The Training lab reopens its own storage connection whenever its tab is shown, so it sees the
+  Dataset lab's latest changes; the detector path and the CSP are unchanged.
 
 ## Planned learning-lab architecture (Phases 2–5)
 

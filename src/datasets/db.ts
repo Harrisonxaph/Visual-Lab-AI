@@ -1,3 +1,4 @@
+import type { EmbeddingRecord, ModelRecord } from "../learning/types";
 import type {
   BlobRecord,
   DatasetRecord,
@@ -6,27 +7,43 @@ import type {
 } from "./types";
 
 export const DB_NAME = "visual-labs-datasets";
-const DB_VERSION = 1;
+/** v1: datasets, labels, images, blobs. v2 adds cached embeddings and saved models. */
+export const DB_VERSION = 2;
 
 interface StoreMap {
   datasets: DatasetRecord;
   labels: LabelRecord;
   images: ImageRecord;
   blobs: BlobRecord;
+  embeddings: EmbeddingRecord;
+  models: ModelRecord;
 }
 type StoreName = keyof StoreMap;
-const STORES: StoreName[] = ["datasets", "labels", "images", "blobs"];
+const STORES: StoreName[] = [
+  "datasets",
+  "labels",
+  "images",
+  "blobs",
+  "embeddings",
+  "models",
+];
 
 /** A batch of writes applied together: all succeed or none do. */
 export interface Commit {
   put?: { [K in StoreName]?: StoreMap[K][] };
   delete?: { [K in StoreName]?: string[] };
+  /**
+   * Records that must still exist when the batch is written, checked inside the same
+   * transaction. If any is missing, nothing is written. Prevents saving data that belongs to a
+   * dataset or photo deleted while slower work (embedding, training) was running.
+   */
+  require?: { datasets?: string[]; images?: string[] };
 }
 
 export class StorageError extends Error {
   constructor(
     message: string,
-    readonly kind: "quota" | "unavailable" | "failed",
+    readonly kind: "quota" | "unavailable" | "failed" | "missing",
   ) {
     super(message);
   }
@@ -69,18 +86,30 @@ export class DatasetDb {
       );
     try {
       const open = factory.open(name, DB_VERSION);
-      open.onupgradeneeded = () => {
+      // Each step only adds stores, so upgrading keeps every existing dataset.
+      open.onupgradeneeded = ({ oldVersion }) => {
         const db = open.result;
-        db.createObjectStore("datasets", { keyPath: "id" });
-        db.createObjectStore("labels", { keyPath: "id" }).createIndex(
-          "datasetId",
-          "datasetId",
-        );
-        db.createObjectStore("images", { keyPath: "id" }).createIndex(
-          "datasetId",
-          "datasetId",
-        );
-        db.createObjectStore("blobs", { keyPath: "id" });
+        if (oldVersion < 1) {
+          db.createObjectStore("datasets", { keyPath: "id" });
+          db.createObjectStore("labels", { keyPath: "id" }).createIndex(
+            "datasetId",
+            "datasetId",
+          );
+          db.createObjectStore("images", { keyPath: "id" }).createIndex(
+            "datasetId",
+            "datasetId",
+          );
+          db.createObjectStore("blobs", { keyPath: "id" });
+        }
+        if (oldVersion < 2) {
+          db.createObjectStore("embeddings", {
+            keyPath: "imageId",
+          }).createIndex("datasetId", "datasetId");
+          db.createObjectStore("models", { keyPath: "id" }).createIndex(
+            "datasetId",
+            "datasetId",
+          );
+        }
       };
       const db = await request(open);
       // Let "Delete all" (here or in another tab) proceed instead of being blocked.
@@ -125,10 +154,51 @@ export class DatasetDb {
       | undefined;
   }
 
+  async getEmbeddings(imageIds: readonly string[]) {
+    const tx = this.db.transaction("embeddings", "readonly");
+    const store = tx.objectStore("embeddings");
+    const found = await Promise.all(
+      imageIds.map((id) => request(store.get(id))),
+    );
+    return found.filter((e): e is EmbeddingRecord => !!e);
+  }
+
+  /** Ids of every cached embedding and saved model belonging to a dataset. */
+  async learningKeys(datasetId: string) {
+    const tx = this.db.transaction(["embeddings", "models"], "readonly");
+    const [embeddings, models] = await Promise.all([
+      request(
+        tx.objectStore("embeddings").index("datasetId").getAllKeys(datasetId),
+      ),
+      request(
+        tx.objectStore("models").index("datasetId").getAllKeys(datasetId),
+      ),
+    ]);
+    return { embeddings: embeddings as string[], models: models as string[] };
+  }
+
+  async listModels(datasetId: string): Promise<ModelRecord[]> {
+    const tx = this.db.transaction("models", "readonly");
+    const all = await request(
+      tx.objectStore("models").index("datasetId").getAll(datasetId),
+    );
+    return (all as ModelRecord[]).sort((a, b) =>
+      a.createdAt.localeCompare(b.createdAt),
+    );
+  }
+
   /** Applies every put and delete in one transaction. */
   async commit(change: Commit): Promise<void> {
+    const required = {
+      datasets: change.require?.datasets ?? [],
+      images: change.require?.images ?? [],
+    };
     const names = STORES.filter(
-      (s) => change.put?.[s]?.length || change.delete?.[s]?.length,
+      (s) =>
+        change.put?.[s]?.length ||
+        change.delete?.[s]?.length ||
+        (s === "datasets" && required.datasets.length) ||
+        (s === "images" && required.images.length),
     );
     if (!names.length) return;
     let tx: IDBTransaction;
@@ -146,8 +216,32 @@ export class DatasetDb {
       tx.onerror = (e) => {
         firstError ??= (e.target as IDBRequest | null)?.error ?? tx.error;
       };
-      tx.onabort = () => reject(describe(firstError ?? tx.error));
+      tx.onabort = () =>
+        reject(
+          firstError instanceof StorageError
+            ? firstError
+            : describe(firstError ?? tx.error),
+        );
       try {
+        // Existence checks run before the writes; a missing record aborts (rolls back) them all.
+        for (const s of ["datasets", "images"] as const)
+          for (const key of required[s]) {
+            const r = tx.objectStore(s).getKey(key);
+            r.onsuccess = () => {
+              if (r.result !== undefined) return;
+              firstError ??= new StorageError(
+                s === "datasets"
+                  ? "The dataset this belongs to was deleted, so nothing was saved."
+                  : "A photo this belongs to was deleted, so nothing was saved.",
+                "missing",
+              );
+              try {
+                tx.abort();
+              } catch {
+                /* already finished */
+              }
+            };
+          }
         for (const s of names) {
           const store = tx.objectStore(s);
           for (const item of change.put?.[s] ?? []) store.put(item);
@@ -162,6 +256,11 @@ export class DatasetDb {
         reject(describe(error));
       }
     });
+  }
+
+  async datasetExists(id: string): Promise<boolean> {
+    const tx = this.db.transaction("datasets", "readonly");
+    return (await request(tx.objectStore("datasets").getKey(id))) !== undefined;
   }
 
   close() {

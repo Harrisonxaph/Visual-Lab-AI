@@ -4,11 +4,42 @@
 
 - The EfficientDet-Lite0 detector is **pretrained and fixed**. It never learns from camera input,
   failure notes or user corrections. Its 80 COCO categories cannot be extended in this app.
-- Planned Phase 3 training updates only a **small new classifier** on top of a **frozen** image
-  embedder. That is transfer learning (training on pretrained features), not detector retraining
-  and not fine-tuning of the embedder.
+- Phase 3 training (Training lab) updates only a **small new classifier** (one weight per
+  embedding number per label, plus one bias per label) on top of a **frozen** image embedder. That
+  is transfer learning (training on pretrained features), not detector retraining and not
+  fine-tuning of the embedder.
 - Classifier accuracy on small personal datasets can be misleading. Phase 4 adds held-out test
   evaluation, precision/recall and overfitting checks; confidence is never treated as accuracy.
+
+## Training lab limitations (Phase 3)
+
+- Learning is demonstrated on the generated example dataset (automated test, four runs: validation
+  accuracy from near chance, between 33% and 67%, to 100% on 9 validation photos; training loss 1.10 → 0.27
+  in 50 epochs). Each run uses a new random seed, so the starting point varies. Generated shapes are
+  easy; on personal photos the app reports whatever happens, including no improvement.
+- Validation sets are small (15% of each label), so one photo can move accuracy by many points.
+  Accuracy is never shown as a reliable measure; precision, recall and test evaluation are Phase 4.
+- The model's "sure" percentage is its own confidence, not its accuracy, and is not calibrated.
+- The encoder stretches every photo to 224 × 224 (no crop), which distorts very wide or tall
+  photos. Everything about a photo that the frozen encoder does not capture cannot be learned.
+- No regularisation, early stopping or learning-rate schedule yet (Phase 4). With length-1
+  embeddings the allowed learning rates (0.01–2) cannot make the numbers overflow; the
+  non-finite guard is tested directly with out-of-range values.
+- Training runs on the main thread between frames; very large selections on slow phones may make
+  the page briefly less responsive. The encoder file (about 4 MB) downloads on first training.
+- **Device status: untested.** The encoder has run only in desktop Chromium (automated tests). It
+  uses the same MediaPipe runtime and worker loader as the detector, which has run on iPhone, so
+  Safari compatibility is plausible, but this encoder has not been run on a physical iPhone or in
+  Safari. A device check is not required to use or review this phase.
+- Saved models record which photos they learned from. When a saved model is loaded after a
+  re-split or other changes, current validation photos it learned from, the same file imported
+  again, or likely near-copies (difference-hash rule) are left out of its check, and the app says
+  how many. Similar photos the hash cannot detect may still overlap, as in the Dataset lab.
+- A dataset deleted while training runs (from another lab tab or "Delete all") cancels the run and
+  discards its results; storage also refuses, in the same transaction, any model or embedding whose
+  dataset or photo no longer exists.
+- Saved models refer to labels by id: renaming a label keeps the model usable; deleting one makes
+  it unloadable.
 
 ## Dataset lab limitations (Phase 2)
 
