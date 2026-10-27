@@ -247,7 +247,8 @@ test("limits and validation: label names, duplicate labels, dataset count and fi
   for (let i = 0; i < 4; i++) {
     await page.locator("#ds-new-name").fill(`Extra ${i}`);
     await page.getByTestId("ds-create").click();
-    await expect(page.locator("#ds-select")).toHaveValue(/.+/);
+    // Wait for this creation to finish: the list grows by one each time.
+    await expect(page.locator("#ds-select option")).toHaveCount(i + 2);
   }
   await page.locator("#ds-new-name").fill("One too many");
   await page.getByTestId("ds-create").click();
@@ -342,18 +343,34 @@ test("acceptance checklist records Pass / Fail / Skip into one summary", async (
 test("cancelling an import keeps photos already added and leaves nothing half-saved", async ({
   page,
 }) => {
+  // Pause decoding of the third picked file until the test releases it, so Cancel always lands
+  // mid-import regardless of machine speed.
+  await page.addInitScript(() => {
+    const original = window.createImageBitmap;
+    let files = 0;
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    Object.assign(window, { __releaseDecode: () => release() });
+    window.createImageBitmap = (async (
+      ...args: Parameters<typeof original>
+    ) => {
+      if (args[0] instanceof File && ++files === 3) await gate;
+      return original(...args);
+    }) as typeof original;
+  });
   await openLab(page);
   await createDataset(page, "Cancel", ["a"]);
-  const files = await makePngs(page, 25);
+  const files = await makePngs(page, 10);
   await page.locator("#ds-file").setInputFiles(files);
   await expect(page.locator("#ds-status")).toContainText(
-    /Adding photos: [2-9]/,
+    "Adding photos: 2 / 10",
   );
   await page.getByTestId("ds-cancel").click();
+  await page.evaluate(() => (window as any).__releaseDecode());
   await expect(page.locator("#ds-status")).toContainText("Cancelled");
+  await expect(page.locator("#ds-status")).toContainText("Added 3 photos.");
   const images = await storedImages(page);
-  expect(images.length).toBeGreaterThan(0);
-  expect(images.length).toBeLessThan(25);
+  expect(images).toHaveLength(3);
   const blobCount = await page.evaluate(
     () =>
       new Promise<number>((resolve) => {
@@ -440,4 +457,124 @@ test("a storage-full error while saving is reported and nothing is half-saved", 
   );
   expect(await storedImages(page)).toHaveLength(0);
   await expect(page.getByTestId("ds-stat-line")).toContainText("0 photos");
+});
+
+test("an asynchronous storage error rolls back the whole save and leaves the screen unchanged", async ({
+  page,
+}) => {
+  await openLab(page);
+  await createDataset(page, "Rollback", ["a"]);
+  const versionBefore = await page.getByTestId("ds-stat-line").innerText();
+  // Make every blob write fail asynchronously (a duplicate-key request error is reported after
+  // the request is queued, like a quota error), while the image record write succeeds.
+  await page.evaluate(() => {
+    const original = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (
+      ...args: Parameters<typeof original>
+    ) {
+      if (this.name === "blobs") {
+        this.add(args[0]);
+        return this.add(args[0]);
+      }
+      return original.apply(this, args);
+    };
+  });
+  await page.locator("#ds-file").setInputFiles(await makePngs(page, 2));
+  await expect(page.locator("#ds-summary")).toContainText(
+    "could not save dataset changes",
+  );
+  expect(await storedImages(page)).toHaveLength(0);
+  const blobs = await page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        const open = indexedDB.open("visual-labs-datasets");
+        open.onsuccess = () => {
+          const r = open.result
+            .transaction("blobs")
+            .objectStore("blobs")
+            .count();
+          r.onsuccess = () => {
+            open.result.close();
+            resolve(r.result);
+          };
+        };
+      }),
+  );
+  expect(blobs).toBe(0);
+  await expect(page.getByTestId("ds-stat-line")).toHaveText(versionBefore);
+});
+
+test("an incomplete example dataset is reported honestly and replaced on retry", async ({
+  page,
+}) => {
+  await openLab(page);
+  await page.evaluate(() => {
+    const original = IDBObjectStore.prototype.put;
+    Object.assign(window, {
+      __restorePut: () => (IDBObjectStore.prototype.put = original),
+    });
+    IDBObjectStore.prototype.put = function (
+      ...args: Parameters<typeof original>
+    ) {
+      if (this.name === "blobs")
+        throw new DOMException("full", "QuotaExceededError");
+      return original.apply(this, args);
+    };
+  });
+  await page.getByTestId("ds-example").click();
+  await expect(page.locator("#ds-status")).toContainText(
+    "Example dataset is incomplete: 0 of 61 images were saved",
+    { timeout: 60000 },
+  );
+  await expect(page.locator("#ds-status")).toContainText("Not enough storage");
+  await expect(page.getByTestId("ds-stat-line")).toContainText("0 photos");
+  await page.evaluate(() => (window as any).__restorePut());
+  await page.getByTestId("ds-example").click();
+  await expect(page.locator("#ds-status")).toContainText(
+    "Example dataset ready",
+    { timeout: 60000 },
+  );
+  await expect(page.getByTestId("ds-stat-line")).toContainText("61 photos");
+  await expect(page.locator("#ds-select option")).toHaveCount(1);
+  // A complete example is reopened, not regenerated.
+  await page.getByTestId("ds-example").click();
+  await expect(page.locator("#ds-status")).toContainText(
+    "Opened the existing example dataset",
+  );
+});
+
+test("delete all while another tab holds storage open: explains the wait, then finishes when it closes", async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  await openLab(page);
+  await createDataset(page, "Blocked", ["a"]);
+  await page.locator("#ds-file").setInputFiles(await makePngs(page, 1));
+  await expect(page.locator("#ds-status")).toContainText("Added 1 photo.");
+  // Simulates another tab: an open connection that ignores deletion requests.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const open = indexedDB.open("visual-labs-datasets");
+        open.onsuccess = () => {
+          Object.assign(window, { __otherTab: open.result });
+          resolve();
+        };
+      }),
+  );
+  await page.getByTestId("ds-delete-all").click();
+  await expect(page.locator("#ds-status")).toContainText(
+    "Deletion is waiting because another tab",
+    { timeout: 15000 },
+  );
+  await expect(page.locator("#ds-pending")).toBeVisible();
+  // Not claimed as done while the other tab is open.
+  await expect(page.locator("#ds-status")).not.toContainText("was deleted");
+  await page.evaluate(() => (window as any).__otherTab.close());
+  await expect(page.locator("#ds-status")).toContainText(
+    "All dataset data was deleted",
+  );
+  await expect(page.locator("#ds-pending")).toHaveCount(0);
+  expect(await storedImages(page)).toHaveLength(0);
+  await expect(page.locator("#ds-select")).toHaveCount(0);
 });

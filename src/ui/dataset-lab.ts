@@ -2,6 +2,7 @@ import { StorageError } from "../datasets/db";
 import { LIMITS } from "../datasets/limits";
 import {
   DatasetService,
+  DeletionPendingError,
   UserError,
   type ImportSummary,
 } from "../datasets/service";
@@ -63,6 +64,8 @@ export function mountDatasetLab(root: HTMLElement) {
   let filter = "all";
   let lastSummary: ImportSummary | null = null;
   let progressText = "";
+  /** "Delete all" is queued behind another open tab; storage is closed until it finishes. */
+  let pendingDeletion = false;
   /** Decoded thumbnails, so re-rendering does not re-read storage (bounded by dataset size). */
   const thumbs = new Map<string, Promise<ImageBitmap | null>>();
   const thumbFor = (s: DatasetService, id: string) => {
@@ -185,10 +188,15 @@ export function mountDatasetLab(root: HTMLElement) {
                 render();
               });
               progressText = "";
-              lastSummary = result;
-              return result
-                ? "Example dataset ready: 60 generated shapes, plus one deliberate near-copy and one exact duplicate to show the checks."
-                : "Opened the existing example dataset.";
+              if (result.status === "reopened") {
+                lastSummary = null;
+                return "Opened the existing example dataset.";
+              }
+              lastSummary = result.summary;
+              if (result.status === "complete")
+                return "Example dataset ready: 60 generated shapes, plus one deliberate near-copy and one exact duplicate to show the checks.";
+              const sum = result.summary;
+              return `Example dataset is incomplete: ${sum.added} of 61 images were saved and ${sum.errors.length} problem${sum.errors.length === 1 ? "" : "s"} occurred${sum.stoppedReason ? ` (${sum.stoppedReason})` : ""}. Tap “Load example dataset” again to retry; the incomplete example will be replaced.`;
             }),
           { disabled: busy, dataset: { testid: "ds-example" } },
         ),
@@ -642,9 +650,36 @@ export function mountDatasetLab(root: HTMLElement) {
             )
           )
             run(async () => {
-              service = await service!.deleteAll();
+              const old = service!;
               lastSummary = null;
-              return "All dataset data was deleted from this device.";
+              try {
+                service = await old.deleteAll();
+                return "All dataset data was deleted from this device.";
+              } catch (error) {
+                if (!(error instanceof DeletionPendingError)) {
+                  // Deletion failed outright; reopen to show what still exists.
+                  service = await DatasetService.open().catch(() => null);
+                  throw error;
+                }
+                service = null;
+                pendingDeletion = true;
+                error.completion.then(
+                  (fresh) => {
+                    pendingDeletion = false;
+                    service = fresh;
+                    say("All dataset data was deleted from this device.");
+                    render();
+                  },
+                  () => {
+                    pendingDeletion = false;
+                    say(
+                      "Deletion failed. Dataset data may still exist on this device. Reload the page to see it.",
+                    );
+                    render();
+                  },
+                );
+                return error.message;
+              }
             });
         },
         {
@@ -662,7 +697,17 @@ export function mountDatasetLab(root: HTMLElement) {
 
   function render() {
     const s = service;
-    if (!s) return;
+    if (!s) {
+      if (pendingDeletion)
+        body.replaceChildren(
+          el(
+            "p",
+            { className: "ds-notice", id: "ds-pending" },
+            "Dataset storage is closed while deletion waits for other Visual Labs tabs to close. This page updates by itself when deletion finishes.",
+          ),
+        );
+      return;
+    }
     const live = new Set(s.current?.images.map((i) => i.id) ?? []);
     for (const [id, t] of thumbs)
       if (!live.has(id)) {

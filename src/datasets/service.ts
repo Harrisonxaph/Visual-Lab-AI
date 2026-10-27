@@ -40,6 +40,23 @@ export interface ImportSummary {
 
 export class UserError extends Error {}
 
+/**
+ * "Delete all" could not finish in time because another connection (usually another tab) is
+ * still open. The browser keeps the deletion queued: `completion` settles when it finally
+ * finishes (resolving with fresh, empty storage) or fails.
+ */
+export class DeletionPendingError extends Error {
+  constructor(readonly completion: Promise<DatasetService>) {
+    super(
+      "Deletion is waiting because another tab is using Visual Labs datasets. Close other Visual Labs tabs; deletion finishes then. Until then the data still exists on this device.",
+    );
+  }
+}
+
+export type ExampleResult =
+  | { status: "reopened" }
+  | { status: "complete" | "incomplete"; summary: ImportSummary };
+
 const newId = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 const randomSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
@@ -127,6 +144,7 @@ export class DatasetService {
       seed: randomSeed(),
       version: 1,
       isExample,
+      ...(isExample ? { exampleComplete: false } : {}),
       nextOrder: 1,
       duplicatesSkipped: 0,
       notRelated: [],
@@ -291,16 +309,24 @@ export class DatasetService {
       await this.select(this.datasets[0].id);
   }
 
-  /** Deletes every dataset, label and image this app stored on this device. */
-  async deleteAll(): Promise<DatasetService> {
+  /**
+   * Deletes every dataset, label and image this app stored on this device. This service is
+   * unusable afterwards; use the returned (or eventually resolved) replacement.
+   */
+  async deleteAll(timeoutMs = 10000): Promise<DatasetService> {
     this.db.close();
+    const completion = DatasetDb.destroy().then(() => DatasetService.open());
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timedOut = new Promise<"timeout">((resolve) => {
+      timer = setTimeout(() => resolve("timeout"), timeoutMs);
+    });
     try {
-      await DatasetDb.destroy();
-    } catch (error) {
-      this.db = await DatasetDb.open();
-      throw error;
+      const outcome = await Promise.race([completion, timedOut]);
+      if (outcome === "timeout") throw new DeletionPendingError(completion);
+      return outcome;
+    } finally {
+      clearTimeout(timer);
     }
-    return DatasetService.open();
   }
 
   getBlob(id: string): Promise<BlobRecord | undefined> {
@@ -461,21 +487,26 @@ export class DatasetService {
     return summary;
   }
 
-  /** Creates (or reopens) the generated shapes dataset. */
+  /**
+   * Creates the generated shapes dataset, or reopens it if a complete one exists. An incomplete
+   * example (for example after a storage error) is deleted and regenerated, so a retry never
+   * mistakes a partial example for a finished one.
+   */
   async loadExample(
     onProgress?: (done: number, total: number) => void,
-  ): Promise<ImportSummary | null> {
+  ): Promise<ExampleResult> {
     const existing = this.datasets.find((d) => d.isExample);
-    if (existing) {
+    if (existing && existing.exampleComplete !== false) {
       await this.select(existing.id);
-      return null;
+      return { status: "reopened" };
     }
+    if (existing) await this.deleteDataset(existing.id);
     const items = await generateExampleItems();
     await this.createDataset("Example: shapes", true);
     const labelIds = new Map<string, string>();
     for (const name of EXAMPLE_LABELS)
       labelIds.set(name, (await this.addLabel(name)).id);
-    const total: ImportSummary = {
+    const summary: ImportSummary = {
       added: 0,
       duplicates: [],
       errors: [],
@@ -490,12 +521,26 @@ export class DatasetService {
         onProgress: (d) => onProgress?.(done + d, items.length),
       });
       done += batch.length;
-      total.added += s.added;
-      total.duplicates.push(...s.duplicates);
-      total.errors.push(...s.errors);
-      total.moves.push(...s.moves);
-      total.newlyRelated += s.newlyRelated;
+      summary.added += s.added;
+      summary.duplicates.push(...s.duplicates);
+      summary.errors.push(...s.errors);
+      summary.moves.push(...s.moves);
+      summary.newlyRelated += s.newlyRelated;
+      if (s.stoppedReason) summary.stoppedReason = s.stoppedReason;
     }
-    return total;
+    const expectedDuplicates = items.filter(
+      (i) => i.kind === "exact-duplicate",
+    ).length;
+    const complete =
+      !summary.errors.length &&
+      summary.duplicates.length === expectedDuplicates &&
+      summary.added === items.length - expectedDuplicates;
+    if (complete) {
+      const state = this.requireCurrent();
+      const dataset = this.bumped(state.dataset, { exampleComplete: true });
+      await this.db.commit({ put: { datasets: [dataset] } });
+      this.apply({ ...state, dataset });
+    }
+    return { status: complete ? "complete" : "incomplete", summary };
   }
 }

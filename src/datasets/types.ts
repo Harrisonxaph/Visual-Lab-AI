@@ -11,6 +11,8 @@ export interface DatasetRecord {
   /** Increments on every change so later experiments can record which data they used. */
   version: number;
   isExample: boolean;
+  /** For the generated example: true only once every expected image was saved. */
+  exampleComplete?: boolean;
   /** Next import order number; orders define "earliest added" deterministically. */
   nextOrder: number;
   /** Exact duplicates refused on import (cumulative). */

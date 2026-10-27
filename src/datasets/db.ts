@@ -138,9 +138,15 @@ export class DatasetDb {
       throw describe(error);
     }
     await new Promise<void>((resolve, reject) => {
+      // A failed request (including asynchronous ones such as quota errors) aborts the whole
+      // transaction by default, rolling back every write in this batch. Keep the first error so
+      // the message explains the real cause.
+      let firstError: unknown = null;
       tx.oncomplete = () => resolve();
-      tx.onabort = () => reject(describe(tx.error));
-      tx.onerror = (e) => e.preventDefault();
+      tx.onerror = (e) => {
+        firstError ??= (e.target as IDBRequest | null)?.error ?? tx.error;
+      };
+      tx.onabort = () => reject(describe(firstError ?? tx.error));
       try {
         for (const s of names) {
           const store = tx.objectStore(s);
@@ -162,35 +168,22 @@ export class DatasetDb {
     this.db.close();
   }
 
-  /** Removes the whole dataset database from this device. */
-  static async destroy(name = DB_NAME, timeoutMs = 10000): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
+  /**
+   * Starts removing the whole dataset database from this device. The promise settles when the
+   * browser finishes. If another connection (for example another tab) stays open, deletion waits
+   * for it to close, which can take indefinitely long; callers decide how long to wait.
+   */
+  static destroy(name = DB_NAME): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
       const r = indexedDB.deleteDatabase(name);
-      // "blocked" only means another connection is still open; deletion completes once it
-      // closes. Give up with an honest message if that does not happen in time.
-      const timer = setTimeout(
-        () =>
-          reject(
-            new StorageError(
-              "Deletion is waiting because another tab is using Visual Labs datasets. Close other tabs; the data may still exist until then.",
-              "failed",
-            ),
-          ),
-        timeoutMs,
-      );
-      r.onsuccess = () => {
-        clearTimeout(timer);
-        resolve();
-      };
-      r.onerror = () => {
-        clearTimeout(timer);
+      r.onsuccess = () => resolve();
+      r.onerror = () =>
         reject(
           new StorageError(
             "Deletion failed. Dataset data may still exist on this device.",
             "failed",
           ),
         );
-      };
     });
   }
 }
