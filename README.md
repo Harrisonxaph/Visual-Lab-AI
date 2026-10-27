@@ -11,7 +11,7 @@ classifier, measuring it honestly, and improving it with human feedback. See
 | Phase | What you can do | Status |
 | --- | --- | --- |
 | 1 | Live detection, tracking, inspector, confidence and privacy safeguards | Implemented |
-| 2 | Build labelled image datasets from your photos | Next |
+| 2 | Build labelled image datasets from your photos | Implemented (Dataset lab tab) |
 | 3 | Train a real classifier and watch it learn | Planned |
 | 4 | Evaluate: precision, recall, overfitting, experiments | Planned |
 | 5 | Active learning: improve the model with your feedback | Planned |

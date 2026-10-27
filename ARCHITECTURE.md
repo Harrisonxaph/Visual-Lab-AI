@@ -15,6 +15,23 @@ A static Vite + TypeScript app with a framework-free DOM UI, no backend and no p
 | Privacy | `vercel.json` CSP, `public/camera-diagnostics.js` | CSP already allows same-origin workers, WASM and blob media; datasets stay local |
 | Tests | `tests/`, `tests/browser/` | Fake camera, worker stubs, real-runtime smoke tests, CI |
 
+## Dataset lab (Phase 2, implemented)
+
+| Module | Role |
+| --- | --- |
+| `datasets/types.ts`, `limits.ts` | Records, limits (500 images, 10 labels, 5 datasets, 25 MB/file, 50 files/import), name validation |
+| `datasets/hash.ts` | SHA-256 of original bytes (exact duplicates), 64-bit difference hash (likely near-duplicates) |
+| `datasets/splits.ts` | Pure, deterministic related-group and split rules (tested in Node, including a randomised group-integrity test) |
+| `datasets/stats.ts` | Counts per label/split, warnings |
+| `datasets/importer.ts` | Decode with orientation, downscale to 512 px JPEG (drops file metadata), thumbnail, hashes |
+| `datasets/db.ts` | IndexedDB stores `datasets`, `labels`, `images`, `blobs`; every change is one transaction |
+| `datasets/service.ts` | Computes each change in memory, commits it, then updates state; import is one image per transaction |
+| `datasets/example.ts` | Seeded generated shapes plus a deliberate near-copy and exact duplicate |
+| `ui/dataset-lab.ts`, `ui/acceptance-checklist.ts` | Dataset lab tab and in-app Pass / Fail / Skip checklist |
+
+The Dataset lab is mounted only when its tab is opened, so the detector path is unchanged;
+opening it pauses running detection. Thumbnails are drawn on canvases, so the CSP is unchanged.
+
 ## Planned learning-lab architecture (Phases 2–5)
 
 Proposed; each phase's plan is approved before implementation.

@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
-  testIgnore: "privacy.spec.ts",
+  testIgnore: ["privacy.spec.ts", "datasets-production.spec.ts"],
   testDir: "./tests/browser",
   timeout: 90000,
   workers: 1,

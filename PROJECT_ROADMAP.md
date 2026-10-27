@@ -28,7 +28,7 @@ described as retraining or fine-tuning EfficientDet (type 5).
 | Phase | Name | Status | Difficulty |
 | --- | --- | --- | --- |
 | 1 | Computer vision foundation | Implemented (with documented limitations) | Done |
-| 2 | Dataset laboratory | Next | Medium (3/5) |
+| 2 | Dataset laboratory | Implemented, in review (device acceptance pending) | Medium (3/5) |
 | 3 | First genuine AI training system | Planned (**highest educational priority**) | Medium–high (3.5/5) |
 | 4 | Learning and evaluation laboratory | Planned | Medium (3/5) |
 | 5 | Active learning | Planned | Medium (3/5) |
@@ -58,6 +58,10 @@ Known issues and gaps are listed below and stay open; none is silently waived.
 ## Phase 2 — Dataset laboratory
 
 Build and manage labelled image datasets. The camera becomes optional.
+
+Status: implemented in the Dataset lab tab (`src/datasets/`, `src/ui/dataset-lab.ts`). The only
+remaining check needs a real iPhone/iPad (photo-library import including HEIC, Take Photo,
+reload); it is listed in the in-app acceptance checklist and is not yet done.
 
 Scope:
 
