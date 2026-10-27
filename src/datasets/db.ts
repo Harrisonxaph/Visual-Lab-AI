@@ -1,3 +1,4 @@
+import type { EmbeddingRecord, ModelRecord } from "../learning/types";
 import type {
   BlobRecord,
   DatasetRecord,
@@ -6,16 +7,26 @@ import type {
 } from "./types";
 
 export const DB_NAME = "visual-labs-datasets";
-const DB_VERSION = 1;
+/** v1: datasets, labels, images, blobs. v2 adds cached embeddings and saved models. */
+export const DB_VERSION = 2;
 
 interface StoreMap {
   datasets: DatasetRecord;
   labels: LabelRecord;
   images: ImageRecord;
   blobs: BlobRecord;
+  embeddings: EmbeddingRecord;
+  models: ModelRecord;
 }
 type StoreName = keyof StoreMap;
-const STORES: StoreName[] = ["datasets", "labels", "images", "blobs"];
+const STORES: StoreName[] = [
+  "datasets",
+  "labels",
+  "images",
+  "blobs",
+  "embeddings",
+  "models",
+];
 
 /** A batch of writes applied together: all succeed or none do. */
 export interface Commit {
@@ -69,18 +80,30 @@ export class DatasetDb {
       );
     try {
       const open = factory.open(name, DB_VERSION);
-      open.onupgradeneeded = () => {
+      // Each step only adds stores, so upgrading keeps every existing dataset.
+      open.onupgradeneeded = ({ oldVersion }) => {
         const db = open.result;
-        db.createObjectStore("datasets", { keyPath: "id" });
-        db.createObjectStore("labels", { keyPath: "id" }).createIndex(
-          "datasetId",
-          "datasetId",
-        );
-        db.createObjectStore("images", { keyPath: "id" }).createIndex(
-          "datasetId",
-          "datasetId",
-        );
-        db.createObjectStore("blobs", { keyPath: "id" });
+        if (oldVersion < 1) {
+          db.createObjectStore("datasets", { keyPath: "id" });
+          db.createObjectStore("labels", { keyPath: "id" }).createIndex(
+            "datasetId",
+            "datasetId",
+          );
+          db.createObjectStore("images", { keyPath: "id" }).createIndex(
+            "datasetId",
+            "datasetId",
+          );
+          db.createObjectStore("blobs", { keyPath: "id" });
+        }
+        if (oldVersion < 2) {
+          db.createObjectStore("embeddings", {
+            keyPath: "imageId",
+          }).createIndex("datasetId", "datasetId");
+          db.createObjectStore("models", { keyPath: "id" }).createIndex(
+            "datasetId",
+            "datasetId",
+          );
+        }
       };
       const db = await request(open);
       // Let "Delete all" (here or in another tab) proceed instead of being blocked.
@@ -123,6 +146,39 @@ export class DatasetDb {
     return (await request(tx.objectStore("blobs").get(id))) as
       | BlobRecord
       | undefined;
+  }
+
+  async getEmbeddings(imageIds: readonly string[]) {
+    const tx = this.db.transaction("embeddings", "readonly");
+    const store = tx.objectStore("embeddings");
+    const found = await Promise.all(
+      imageIds.map((id) => request(store.get(id))),
+    );
+    return found.filter((e): e is EmbeddingRecord => !!e);
+  }
+
+  /** Ids of every cached embedding and saved model belonging to a dataset. */
+  async learningKeys(datasetId: string) {
+    const tx = this.db.transaction(["embeddings", "models"], "readonly");
+    const [embeddings, models] = await Promise.all([
+      request(
+        tx.objectStore("embeddings").index("datasetId").getAllKeys(datasetId),
+      ),
+      request(
+        tx.objectStore("models").index("datasetId").getAllKeys(datasetId),
+      ),
+    ]);
+    return { embeddings: embeddings as string[], models: models as string[] };
+  }
+
+  async listModels(datasetId: string): Promise<ModelRecord[]> {
+    const tx = this.db.transaction("models", "readonly");
+    const all = await request(
+      tx.objectStore("models").index("datasetId").getAll(datasetId),
+    );
+    return (all as ModelRecord[]).sort((a, b) =>
+      a.createdAt.localeCompare(b.createdAt),
+    );
   }
 
   /** Applies every put and delete in one transaction. */

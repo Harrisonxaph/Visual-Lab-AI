@@ -1636,3 +1636,59 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   font-weight: 600;
 }
+.tr-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.tr-charts canvas {
+  width: 100%;
+  height: 170px;
+  background: #fbfcfa;
+  border: 1px solid #edf0e9;
+  border-radius: 6px;
+}
+#tr-progress[hidden] {
+  display: none;
+}
+.tr-compare canvas {
+  width: 48px;
+  height: 48px;
+  background: #f4f6f1;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+.tr-compare td.tr-right {
+  color: #2f5a1a;
+}
+.tr-compare td.tr-wrong {
+  color: #9a3412;
+}
+#tr-evidence h3,
+#tr-result h3,
+#tr-loaded h3 {
+  font-size: 14px;
+  margin: 16px 0 6px;
+}
+#tr-evidence ul {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+#tr-about summary {
+  min-height: 44px;
+  font-weight: 600;
+}
+.ds-panel input[type="number"] {
+  min-height: 44px;
+  width: 7em;
+  border: 1px solid #dce3d5;
+  border-radius: 6px;
+  padding: 0 10px;
+  background: #fff;
+}
+.ds-panel input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}

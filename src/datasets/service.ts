@@ -14,6 +14,7 @@ import {
   relatedGroups,
 } from "./splits";
 import { datasetStats } from "./stats";
+import type { EmbeddingRecord, ModelRecord } from "../learning/types";
 import type {
   BlobRecord,
   DatasetRecord,
@@ -215,7 +216,12 @@ export class DatasetService {
     });
     await this.db.commit({
       put: { datasets: [dataset], images: differing(state.images, images) },
-      delete: { labels: [id], images: removed, blobs: removed },
+      delete: {
+        labels: [id],
+        images: removed,
+        blobs: removed,
+        embeddings: removed,
+      },
     });
     this.apply({
       dataset,
@@ -273,7 +279,7 @@ export class DatasetService {
     );
     await this.db.commit({
       put: { datasets: [dataset], images: r.changed },
-      delete: { images: [imageId], blobs: [imageId] },
+      delete: { images: [imageId], blobs: [imageId], embeddings: [imageId] },
     });
     this.apply({ ...state, dataset, images: r.images });
   }
@@ -294,6 +300,7 @@ export class DatasetService {
     const target = this.datasets.find((d) => d.id === id);
     if (!target) return;
     const { labels, images } = await this.db.loadDataset(id);
+    const learning = await this.db.learningKeys(id);
     const imageIds = images.map((i) => i.id);
     await this.db.commit({
       delete: {
@@ -301,6 +308,8 @@ export class DatasetService {
         labels: labels.map((l) => l.id),
         images: imageIds,
         blobs: imageIds,
+        embeddings: learning.embeddings,
+        models: learning.models,
       },
     });
     this.datasets = this.datasets.filter((d) => d.id !== id);
@@ -331,6 +340,39 @@ export class DatasetService {
 
   getBlob(id: string): Promise<BlobRecord | undefined> {
     return this.db.getBlob(id);
+  }
+
+  /** Re-reads the dataset list and the current dataset (another lab may have changed them). */
+  async reload() {
+    await this.refreshList();
+    const id = this.current?.dataset.id;
+    this.current = null;
+    const next = this.datasets.find((d) => d.id === id) ?? this.datasets[0];
+    if (next) await this.select(next.id);
+  }
+
+  close() {
+    this.db.close();
+  }
+
+  getEmbeddings(imageIds: readonly string[]) {
+    return this.db.getEmbeddings(imageIds);
+  }
+
+  saveEmbeddings(records: EmbeddingRecord[]) {
+    return this.db.commit({ put: { embeddings: records } });
+  }
+
+  listModels(datasetId: string) {
+    return this.db.listModels(datasetId);
+  }
+
+  saveModel(model: ModelRecord) {
+    return this.db.commit({ put: { models: [model] } });
+  }
+
+  deleteModel(id: string) {
+    return this.db.commit({ delete: { models: [id] } });
   }
 
   groups(): string[][] {

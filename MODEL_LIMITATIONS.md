@@ -4,11 +4,31 @@
 
 - The EfficientDet-Lite0 detector is **pretrained and fixed**. It never learns from camera input,
   failure notes or user corrections. Its 80 COCO categories cannot be extended in this app.
-- Planned Phase 3 training updates only a **small new classifier** on top of a **frozen** image
-  embedder. That is transfer learning (training on pretrained features), not detector retraining
-  and not fine-tuning of the embedder.
+- Phase 3 training (Training lab) updates only a **small new classifier** (one weight per
+  embedding number per label, plus one bias per label) on top of a **frozen** image embedder. That
+  is transfer learning (training on pretrained features), not detector retraining and not
+  fine-tuning of the embedder.
 - Classifier accuracy on small personal datasets can be misleading. Phase 4 adds held-out test
   evaluation, precision/recall and overfitting checks; confidence is never treated as accuracy.
+
+## Training lab limitations (Phase 3)
+
+- Learning is demonstrated on the generated example dataset (automated test, two runs: validation
+  accuracy from near chance, 44% and 56%, to 100% on 9 validation photos; training loss 1.10 → 0.27
+  in 50 epochs). Each run uses a new random seed, so the starting point varies. Generated shapes are
+  easy; on personal photos the app reports whatever happens, including no improvement.
+- Validation sets are small (15% of each label), so one photo can move accuracy by many points.
+  Accuracy is never shown as a reliable measure; precision, recall and test evaluation are Phase 4.
+- The model's "sure" percentage is its own confidence, not its accuracy, and is not calibrated.
+- The encoder stretches every photo to 224 × 224 (no crop), which distorts very wide or tall
+  photos. Everything about a photo that the frozen encoder does not capture cannot be learned.
+- No regularisation, early stopping or learning-rate schedule yet (Phase 4). With length-1
+  embeddings the allowed learning rates (0.01–2) cannot make the numbers overflow; the
+  non-finite guard is tested directly with out-of-range values.
+- Training runs on the main thread between frames; very large selections on slow phones may make
+  the page briefly less responsive. The encoder file (about 4 MB) downloads on first training.
+- Saved models refer to labels by id: renaming a label keeps the model usable; deleting one makes
+  it unloadable.
 
 ## Dataset lab limitations (Phase 2)
 

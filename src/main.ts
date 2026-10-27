@@ -9,6 +9,7 @@ import { TrackingController } from "./inspection/controller";
 import { mountTrackList } from "./ui/track-list";
 import "./style.css";
 import { mountDatasetLab } from "./ui/dataset-lab";
+import { mountTrainingLab } from "./ui/training-lab";
 import { Camera } from "./camera";
 import { captureFrame } from "./capture";
 import { visibleDetections, formatScore } from "./detections";
@@ -39,13 +40,13 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     <a class="brand" href="./" aria-label="Visual Labs AI home"><span class="brand-mark">${icon("scan", 25)}</span><span>visual labs<span class="brand-ai">AI</span></span></a>
     <div class="nav-label">YOUR WORKSPACE</div>
     <div class="nav-current" aria-current="page">${icon("scan")}<span>Detection lab</span><span class="nav-dot"></span></div>
-    <div class="sidebar-roadmap"><div class="nav-label">ON THE ROADMAP</div><p><span>02</span> Datasets</p><p><span>03</span> Training</p><p><span>04</span> Evaluation</p><p><span>05</span> Active learning</p></div>
-    <div class="sidebar-bottom"><span class="local-dot"></span> Built to run locally<p>Your camera. Your data.<br>Your laboratory.</p><span class="sidebar-version">PHASE 01 / v0.1.0</span></div>
+    <div class="sidebar-roadmap"><div class="nav-label">ON THE ROADMAP</div><p><span>04</span> Evaluation</p><p><span>05</span> Active learning</p></div>
+    <div class="sidebar-bottom"><span class="local-dot"></span> Built to run locally<p>Your camera. Your data.<br>Your laboratory.</p><span class="sidebar-version">PHASE 03 / v0.1.0</span></div>
   </aside>
   <div class="workspace">
     <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb-current">Detection lab</strong></div><div class="private-badge">${icon("shield", 15)} On-device inference</div></header>
     <main>
-      <nav class="lab-tabs" role="tablist" aria-label="Labs"><button type="button" role="tab" id="tab-detection" aria-controls="detection-view" aria-selected="true">Detection lab</button><button type="button" role="tab" id="tab-datasets" aria-controls="dataset-view" aria-selected="false">Dataset lab</button></nav>
+      <nav class="lab-tabs" role="tablist" aria-label="Labs"><button type="button" role="tab" id="tab-detection" aria-controls="detection-view" aria-selected="true">Detection lab</button><button type="button" role="tab" id="tab-datasets" aria-controls="dataset-view" aria-selected="false">Dataset lab</button><button type="button" role="tab" id="tab-training" aria-controls="training-view" aria-selected="false">Training lab</button></nav>
       <div id="detection-view" role="tabpanel" aria-labelledby="tab-detection">
       <div class="page-heading"><div><div class="eyebrow">OBSERVE. QUESTION. UNDERSTAND.</div><h1>See what AI sees<span>.</span></h1><p>A live laboratory for exploring object detection.</p></div><span class="phase-badge">LAB 01 <span>LIVE DETECTION</span></span></div>
       <div class="lab-grid">
@@ -82,6 +83,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       </div>
       </div>
       <section id="dataset-view" class="dataset-view" role="tabpanel" aria-labelledby="tab-datasets" hidden></section>
+      <section id="training-view" class="dataset-view" role="tabpanel" aria-labelledby="tab-training" hidden></section>
       <footer class="page-footer"><span>VISUAL LABS AI <span class="footer-divider">/</span> Make it a lab.</span><span>Local processing. Curious minds.</span></footer>
     </main>
   </div>`;
@@ -479,31 +481,56 @@ window.addEventListener("pageshow", () => {
 render(lab.snapshot);
 
 let datasetLabMounted = false;
+let trainingLab: { refresh(): Promise<void> } | null = null;
+const LABS = {
+  detection: {
+    tab: "#tab-detection",
+    view: "#detection-view",
+    title: "Detection lab",
+    hash: "",
+  },
+  datasets: {
+    tab: "#tab-datasets",
+    view: "#dataset-view",
+    title: "Dataset lab",
+    hash: "#datasets",
+  },
+  training: {
+    tab: "#tab-training",
+    view: "#training-view",
+    title: "Training lab",
+    hash: "#training",
+  },
+} as const;
+type LabName = keyof typeof LABS;
 /** Switches between labs. Leaving the Detection lab pauses inference (camera preview stays on). */
-function showLab(name: "detection" | "datasets") {
-  const datasets = name === "datasets";
-  if (datasets && lab.snapshot.state === "running") lab.pause();
-  if (datasets && !datasetLabMounted) {
+function showLab(name: LabName) {
+  if (name !== "detection" && lab.snapshot.state === "running") lab.pause();
+  if (name === "datasets" && !datasetLabMounted) {
     mountDatasetLab(element("#dataset-view"));
     datasetLabMounted = true;
   }
-  element("#detection-view").hidden = datasets;
-  element("#dataset-view").hidden = !datasets;
-  element("#tab-detection").setAttribute("aria-selected", String(!datasets));
-  element("#tab-datasets").setAttribute("aria-selected", String(datasets));
-  element("#breadcrumb-current").textContent = datasets
-    ? "Dataset lab"
-    : "Detection lab";
+  if (name === "training") {
+    trainingLab ??= mountTrainingLab(element("#training-view"));
+    // The Dataset lab may have changed datasets since this lab last looked.
+    void trainingLab.refresh();
+  }
+  for (const [key, info] of Object.entries(LABS)) {
+    element(info.view).hidden = key !== name;
+    element(info.tab).setAttribute("aria-selected", String(key === name));
+  }
+  element("#breadcrumb-current").textContent = LABS[name].title;
   try {
     history.replaceState(
       null,
       "",
-      datasets ? "#datasets" : location.pathname + location.search,
+      LABS[name].hash || location.pathname + location.search,
     );
   } catch {
     /* URL update is optional */
   }
 }
-element("#tab-detection").addEventListener("click", () => showLab("detection"));
-element("#tab-datasets").addEventListener("click", () => showLab("datasets"));
+for (const name of Object.keys(LABS) as LabName[])
+  element(LABS[name].tab).addEventListener("click", () => showLab(name));
 if (location.hash === "#datasets") showLab("datasets");
+if (location.hash === "#training") showLab("training");

@@ -29,7 +29,7 @@ described as retraining or fine-tuning EfficientDet (type 5).
 | --- | --- | --- | --- |
 | 1 | Computer vision foundation | Implemented (with documented limitations) | Done |
 | 2 | Dataset laboratory | Implemented, in review (device acceptance pending) | Medium (3/5) |
-| 3 | First genuine AI training system | Planned (**highest educational priority**) | Medium–high (3.5/5) |
+| 3 | First genuine AI training system | Implemented, in review (**highest educational priority**) | Medium–high (3.5/5) |
 | 4 | Learning and evaluation laboratory | Planned | Medium (3/5) |
 | 5 | Active learning | Planned | Medium (3/5) |
 
@@ -90,10 +90,11 @@ Done when, in plain terms:
 
 Train a real model in the browser and show exactly what changed.
 
-Approach (proposed, see Architecture): a **frozen** pretrained image embedder turns each image into
-1,024 numbers; a **small trainable classifier** (softmax regression, optionally one hidden layer)
-learns to map those numbers to your labels. The classifier is written in plain TypeScript so every
-weight, gradient and update can be shown and tested. This is type 2 above, honestly labelled.
+Approach (implemented, see Architecture "Training lab"): a **frozen** pretrained image embedder
+turns each image into 1,024 numbers; a **small trainable classifier** (softmax regression; the
+optional hidden layer is deferred to Phase 4) learns to map those numbers to your labels. The
+classifier is written in plain TypeScript so every weight, gradient and update can be shown and
+tested. This is type 2 above, honestly labelled.
 
 Scope:
 

@@ -12,11 +12,12 @@ classifier, measuring it honestly, and improving it with human feedback. See
 | --- | --- | --- |
 | 1 | Live detection, tracking, inspector, confidence and privacy safeguards | Implemented |
 | 2 | Build labelled image datasets from your photos | Implemented (Dataset lab tab) |
-| 3 | Train a real classifier and watch it learn | Planned |
+| 3 | Train a real classifier and watch it learn | Implemented, in review (Training lab tab) |
 | 4 | Evaluate: precision, recall, overfitting, experiments | Planned |
 | 5 | Active learning: improve the model with your feedback | Planned |
 
-The detector does not learn from the camera. Training happens in Phase 3 onwards, and the app
+The detector does not learn from the camera. Training happens in the Training lab (Phase 3), which
+trains a small classifier on top of a frozen image encoder, and the app
 always says which kind of learning is happening (see the table at the top of the roadmap).
 
 ## Run locally

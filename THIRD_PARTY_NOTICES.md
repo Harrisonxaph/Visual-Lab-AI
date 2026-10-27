@@ -26,6 +26,17 @@ Upstream EfficientDet implementation: https://github.com/google/automl/tree/mast
 The downloaded model metadata has no standalone license notice; its provenance is recorded here
 separately from the runtime's package license. Do not represent model weights as this project's MIT work.
 
+## MobileNetV3-Small image embedder
+
+Publisher: Google MediaPipe. Artifact: float32, version 1, 4,117,670 bytes. Used frozen (never
+changed) by the Training lab to turn each photo into 1,024 numbers.
+Source: https://storage.googleapis.com/mediapipe-models/image_embedder/mobilenet_v3_small/float32/1/mobilenet_v3_small.tflite
+SHA-256: `bbbb4c51a55a53905af1daec995ca1aae355046f8839bb8c9f5ce9271394bc40`.
+Model documentation: https://ai.google.dev/edge/mediapipe/solutions/vision/image_embedder
+The downloaded model's embedded metadata states the Apache-2.0 license (text: licenses/Apache-2.0.txt).
+Classifiers trained in the app on top of these embeddings are user data, stored only on the device.
+Do not represent the embedder weights as this project's MIT work.
+
 ## Test image
 
 Google MediaPipe Object Detector example, used only as a fixed automated-test input:
