@@ -13,7 +13,11 @@ import {
   SealedTestError,
   selectExamples,
 } from "../src/learning/examples";
-import { checkCompatibility } from "../src/learning/models";
+import {
+  checkCompatibility,
+  independentValidation,
+} from "../src/learning/models";
+import { assignSplits, relatedGroups } from "../src/datasets/splits";
 import {
   evaluate,
   initModel,
@@ -485,5 +489,85 @@ describe("embedding cache", () => {
       }),
     ).rejects.toThrow(CancelledError);
     expect(saved).toHaveLength(1);
+  });
+});
+
+describe("independent validation for saved models", () => {
+  const hex = (n: number) => n.toString(16).padStart(16, "0");
+  const photo = (i: number, dhash = hex(i)) => ({
+    id: `p${i}`,
+    sha256: `sha${i}`,
+    dhash,
+  });
+
+  it("leaves out photos the model learned from, re-imported copies and near-copies", () => {
+    const trained = [
+      photo(1, "ffff0000ffff0000"),
+      photo(2, "00ff00ff00ff00ff"),
+    ];
+    const validation = [
+      photo(1, "ffff0000ffff0000"), // same photo, now in validation
+      { id: "p9", sha256: "sha2", dhash: "1234123412341234" }, // same file, new id
+      photo(3, "ffff0000ffff0001"), // near-copy of p1 (1 bit apart)
+      photo(4, "0f0f0f0f0f0f0f0f"), // unrelated
+    ];
+    const c = independentValidation({ trainImages: trained }, validation);
+    expect(c.known).toBe(true);
+    expect(c.kept.map((p) => p.id)).toEqual(["p4"]);
+    expect(c.keptIndices).toEqual([3]);
+    expect(c.excluded).toBe(3);
+  });
+
+  it("without a training record, keeps every photo but reports independence as unknown", () => {
+    const c = independentValidation({}, [photo(1), photo(2)]);
+    expect(c).toMatchObject({ known: false, excluded: 0 });
+    expect(c.kept).toHaveLength(2);
+  });
+
+  it("regression: after a re-split with the real split rules, no learned photo is checked", () => {
+    // 3 labels × 30 photos with far-apart hashes, split with one seed, then re-split.
+    const r = seededRandom(5);
+    const images = Array.from({ length: 90 }, (_, i) => ({
+      ...image(i, ["A", "B", "C"][i % 3], null),
+      sha256: `sha-${i}`,
+      dhash: Array.from({ length: 16 }, () =>
+        Math.floor(r() * 16).toString(16),
+      ).join(""),
+    }));
+    const split = (seed: number) => {
+      const fresh = images.map((i) => ({ ...i, split: null }));
+      const { splits } = assignSplits(fresh, relatedGroups(fresh), seed);
+      return fresh.map((i) => ({ ...i, split: splits.get(i.id) ?? null }));
+    };
+    const before = split(1);
+    const trained = selectExamples(
+      before,
+      labels,
+      ["A", "B", "C"],
+      null,
+      1,
+    ).train;
+    const after = split(2);
+    const validation = selectExamples(
+      after,
+      labels,
+      ["A", "B", "C"],
+      null,
+      2,
+    ).validation;
+    const learnedIds = new Set(trained.map((t) => t.id));
+    expect(validation.some((v) => learnedIds.has(v.id))).toBe(true); // the leak exists
+    const c = independentValidation(
+      {
+        trainImages: trained.map(({ id, sha256, dhash }) => ({
+          id,
+          sha256,
+          dhash,
+        })),
+      },
+      validation,
+    );
+    expect(c.excluded).toBeGreaterThan(0);
+    expect(c.kept.some((v) => learnedIds.has(v.id))).toBe(false);
   });
 });

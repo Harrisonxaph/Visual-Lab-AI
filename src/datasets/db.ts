@@ -32,12 +32,18 @@ const STORES: StoreName[] = [
 export interface Commit {
   put?: { [K in StoreName]?: StoreMap[K][] };
   delete?: { [K in StoreName]?: string[] };
+  /**
+   * Records that must still exist when the batch is written, checked inside the same
+   * transaction. If any is missing, nothing is written. Prevents saving data that belongs to a
+   * dataset or photo deleted while slower work (embedding, training) was running.
+   */
+  require?: { datasets?: string[]; images?: string[] };
 }
 
 export class StorageError extends Error {
   constructor(
     message: string,
-    readonly kind: "quota" | "unavailable" | "failed",
+    readonly kind: "quota" | "unavailable" | "failed" | "missing",
   ) {
     super(message);
   }
@@ -183,8 +189,16 @@ export class DatasetDb {
 
   /** Applies every put and delete in one transaction. */
   async commit(change: Commit): Promise<void> {
+    const required = {
+      datasets: change.require?.datasets ?? [],
+      images: change.require?.images ?? [],
+    };
     const names = STORES.filter(
-      (s) => change.put?.[s]?.length || change.delete?.[s]?.length,
+      (s) =>
+        change.put?.[s]?.length ||
+        change.delete?.[s]?.length ||
+        (s === "datasets" && required.datasets.length) ||
+        (s === "images" && required.images.length),
     );
     if (!names.length) return;
     let tx: IDBTransaction;
@@ -202,8 +216,32 @@ export class DatasetDb {
       tx.onerror = (e) => {
         firstError ??= (e.target as IDBRequest | null)?.error ?? tx.error;
       };
-      tx.onabort = () => reject(describe(firstError ?? tx.error));
+      tx.onabort = () =>
+        reject(
+          firstError instanceof StorageError
+            ? firstError
+            : describe(firstError ?? tx.error),
+        );
       try {
+        // Existence checks run before the writes; a missing record aborts (rolls back) them all.
+        for (const s of ["datasets", "images"] as const)
+          for (const key of required[s]) {
+            const r = tx.objectStore(s).getKey(key);
+            r.onsuccess = () => {
+              if (r.result !== undefined) return;
+              firstError ??= new StorageError(
+                s === "datasets"
+                  ? "The dataset this belongs to was deleted, so nothing was saved."
+                  : "A photo this belongs to was deleted, so nothing was saved.",
+                "missing",
+              );
+              try {
+                tx.abort();
+              } catch {
+                /* already finished */
+              }
+            };
+          }
         for (const s of names) {
           const store = tx.objectStore(s);
           for (const item of change.put?.[s] ?? []) store.put(item);
@@ -218,6 +256,11 @@ export class DatasetDb {
         reject(describe(error));
       }
     });
+  }
+
+  async datasetExists(id: string): Promise<boolean> {
+    const tx = this.db.transaction("datasets", "readonly");
+    return (await request(tx.objectStore("datasets").getKey(id))) !== undefined;
   }
 
   close() {

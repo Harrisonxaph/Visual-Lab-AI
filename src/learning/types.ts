@@ -49,4 +49,18 @@ export interface ModelRecord {
   stoppedEarly: boolean;
   trainCount: number;
   validationCount: number;
+  /**
+   * The photos this model learned from, so a later check can leave them (and copies of them)
+   * out after the dataset is re-split or changed. Missing on a record means independence of a
+   * later check cannot be established.
+   */
+  trainImages?: TrainImageRef[];
+}
+
+export interface TrainImageRef {
+  id: string;
+  /** SHA-256 of the original file: finds the same photo imported again under a new id. */
+  sha256: string;
+  /** Difference hash: finds likely near-copies, as the Dataset lab does. */
+  dhash: string;
 }

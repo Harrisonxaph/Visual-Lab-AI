@@ -52,6 +52,13 @@ opening it pauses running detection. Thumbnails are drawn on canvases, so the CS
   embeddings, and deleting a dataset deletes its saved models, in the same transaction.
 - **Where code runs:** embeddings in a worker; training on the main thread one epoch at a time,
   yielding between epochs (a 500-photo, 10-label epoch is about 10 M multiply-adds).
+- **Saved-model independence:** a saved model records its training photos (id, SHA-256,
+  difference hash). On load, `independentValidation` (`learning/models.ts`) leaves out current
+  validation photos it learned from, re-imported copies and likely near-copies, so a re-split
+  cannot turn training photos into its "validation" check.
+- **Stale work:** `DatasetDb.commit` accepts `require` (dataset or photo ids checked inside the
+  write transaction); model and embedding saves use it. The Training lab cancels a job whose
+  dataset is deleted and re-checks before showing results.
 - **Test split sealed:** test photos are never embedded or evaluated in Phase 3 (code guard plus
   unit and browser tests). Phase 4 will open them once for a final check.
 - The Training lab reopens its own storage connection whenever its tab is shown, so it sees the

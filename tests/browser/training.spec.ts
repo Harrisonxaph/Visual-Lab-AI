@@ -284,3 +284,149 @@ test("upgrading storage from version 1 keeps existing datasets", async ({
     ["blobs", "datasets", "embeddings", "images", "labels", "models"].sort(),
   );
 });
+
+test("regression: after a re-split, a loaded model is never checked on photos it learned from", async ({
+  page,
+}) => {
+  test.setTimeout(180000);
+  await loadExample(page);
+  await train(page, "20");
+  await page.getByTestId("tr-save").click();
+  await expect(page.getByTestId("tr-model")).toHaveCount(1);
+  const [model] = await readStore<{ trainImages: { id: string }[] }>(
+    page,
+    "models",
+  );
+  const learned = new Set(model.trainImages.map((t) => t.id));
+  expect(learned.size).toBeGreaterThan(0);
+
+  await page.locator("#tab-datasets").click();
+  await page.getByTestId("ds-resplit").click();
+  await expect(page.locator("#ds-status")).not.toContainText("went wrong");
+  // The leak exists: some photos the model learned from are now validation photos.
+  await expect
+    .poll(async () =>
+      (await readStore<{ id: string; split: string }>(page, "images")).some(
+        (i) => i.split === "validation" && learned.has(i.id),
+      ),
+    )
+    .toBe(true);
+
+  await page.locator("#tab-training").click();
+  await page.getByTestId("tr-load").click();
+  const accuracy = page.getByTestId("tr-loaded-accuracy");
+  await expect(accuracy).toBeVisible({ timeout: 60000 });
+  expect(Number(await accuracy.getAttribute("data-excluded"))).toBeGreaterThan(
+    0,
+  );
+  await expect(page.getByTestId("tr-loaded-excluded")).toContainText(
+    "left out because this model learned from",
+  );
+  const checked = await page
+    .locator("#tr-loaded-compare tr[data-image-id]")
+    .evaluateAll((rows) =>
+      rows.map((r) => (r as HTMLElement).dataset.imageId!),
+    );
+  expect(checked.length).toBe(
+    Number(await accuracy.getAttribute("data-checked")),
+  );
+  expect(checked.filter((id) => learned.has(id))).toEqual([]);
+});
+
+test("regression: deleting the dataset in the Dataset lab during training discards the run and saves nothing", async ({
+  page,
+}) => {
+  test.setTimeout(180000);
+  await loadExample(page);
+  await train(page, "1"); // fills the embedding cache, as in the reported reproduction
+  // Hold training between epochs with a paused fake clock.
+  await page.clock.install();
+  await page.clock.pauseAt(new Date("2026-10-27T12:00:00Z"));
+  await page.locator("#tr-epochs").fill("300");
+  await page.getByTestId("tr-train").click();
+  await expect(page.locator("#tr-progress-text")).toContainText(
+    "Epoch 0 of 300",
+    { timeout: 60000 },
+  );
+
+  await page.locator("#tab-datasets").click();
+  await page.getByRole("button", { name: "Delete this dataset" }).click();
+  await expect
+    .poll(async () => (await readStore(page, "datasets")).length)
+    .toBe(0);
+  await page.locator("#tab-training").click();
+  await page.clock.runFor(1);
+
+  await expect(page.locator("#tr-status")).toContainText(
+    "The dataset was deleted while training was running",
+  );
+  await expect(page.getByTestId("tr-summary")).toHaveCount(0);
+  await expect(page.getByTestId("tr-save")).toHaveCount(0);
+  expect(await readStore(page, "models")).toEqual([]);
+  expect(await readStore(page, "embeddings")).toEqual([]);
+  expect(await readStore(page, "datasets")).toEqual([]);
+});
+
+test("storage refuses a model or embedding whose dataset or photo was deleted meanwhile", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const outcome = await page.evaluate(async () => {
+    const { DatasetService } = await import("/src/datasets/service.ts");
+    const training = await DatasetService.open();
+    const datasets = await DatasetService.open();
+    const d = await training.createDataset("Deleted meanwhile");
+    await datasets.reload();
+    await datasets.deleteDataset(d.id);
+    const kinds: string[] = [];
+    try {
+      await training.saveModel({
+        id: "m",
+        datasetId: d.id,
+        name: "late",
+        createdAt: "",
+        encoderKey: "k",
+        datasetVersion: 1,
+        labelIds: ["a", "b"],
+        labelNames: ["a", "b"],
+        dims: 1,
+        weights: new Float64Array(2),
+        bias: new Float64Array(2),
+        settings: {
+          learningRate: 0.5,
+          epochs: 1,
+          batchSize: 16,
+          perLabelCap: null,
+          seed: 1,
+        },
+        history: [],
+        stoppedEarly: false,
+        trainCount: 0,
+        validationCount: 0,
+        trainImages: [],
+      });
+      kinds.push("saved");
+    } catch (e) {
+      kinds.push((e as { kind: string }).kind);
+    }
+    try {
+      await training.saveEmbeddings([
+        {
+          imageId: "deleted-photo",
+          datasetId: d.id,
+          encoderKey: "k",
+          vector: new Float32Array(4),
+        },
+      ]);
+      kinds.push("saved");
+    } catch (e) {
+      kinds.push((e as { kind: string }).kind);
+    }
+    training.close();
+    datasets.close();
+    return kinds;
+  });
+  expect(outcome).toEqual(["missing", "missing"]);
+  expect(await readStore(page, "models")).toEqual([]);
+  expect(await readStore(page, "embeddings")).toEqual([]);
+});

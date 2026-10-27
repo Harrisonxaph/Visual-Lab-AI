@@ -11,6 +11,7 @@ import {
 } from "../learning/examples";
 import {
   checkCompatibility,
+  independentValidation,
   MAX_MODELS_PER_DATASET,
   toSoftmax,
 } from "../learning/models";
@@ -29,6 +30,8 @@ import {
 } from "../learning/trainer";
 import type { EpochRecord, ModelRecord } from "../learning/types";
 import { drawEpochChart } from "./training-chart";
+
+class DatasetGoneError extends Error {}
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -81,6 +84,10 @@ interface Loaded {
   validation: ImageRecord[];
   labels: number[];
   evaluation: Evaluation | null;
+  /** False if the model has no record of its training photos (independence unknown). */
+  known: boolean;
+  /** Validation photos left out because the model learned from them or a copy. */
+  excluded: number;
 }
 
 /**
@@ -103,6 +110,9 @@ export function mountTrainingLab(root: HTMLElement) {
   let loaded: Loaded | null = null;
   let live: EpochRecord[] = [];
   let plannedEpochs = 0;
+  /** Dataset the running job uses, and whether it was deleted while the job ran. */
+  let jobDatasetId: string | null = null;
+  let jobDatasetGone = false;
   const thumbs = new Map<string, Promise<ImageBitmap | null>>();
 
   root.replaceChildren(
@@ -481,6 +491,8 @@ export function mountTrainingLab(root: HTMLElement) {
       return;
     }
     phase = "embedding";
+    jobDatasetId = state.dataset.id;
+    jobDatasetGone = false;
     abort = new AbortController();
     const signal = abort.signal;
     draft = null;
@@ -529,6 +541,7 @@ export function mountTrainingLab(root: HTMLElement) {
           },
         },
       );
+      if (await jobDatasetDeleted()) throw new DatasetGoneError();
       draft = {
         record: {
           id: crypto.randomUUID(),
@@ -547,6 +560,11 @@ export function mountTrainingLab(root: HTMLElement) {
           stoppedEarly: run.stoppedEarly,
           trainCount: selection.train.length,
           validationCount: selection.validation.length,
+          trainImages: selection.train.map(({ id, sha256, dhash }) => ({
+            id,
+            sha256,
+            dhash,
+          })),
         },
         run,
         selection,
@@ -559,7 +577,17 @@ export function mountTrainingLab(root: HTMLElement) {
         : "Training finished.";
       say(describeOutcome(run));
     } catch (error) {
-      if (error instanceof CancelledError) {
+      if (
+        error instanceof DatasetGoneError ||
+        jobDatasetGone ||
+        (error instanceof StorageError && error.kind === "missing")
+      ) {
+        draft = null;
+        progressText.textContent = "Training stopped.";
+        say(
+          "The dataset was deleted while training was running, so the results were discarded and nothing was saved.",
+        );
+      } else if (error instanceof CancelledError) {
         progressText.textContent = "Cancelled while preparing embeddings.";
         say(
           "Cancelled before training started. Embeddings already computed are saved on this device and will be reused next time.",
@@ -572,7 +600,11 @@ export function mountTrainingLab(root: HTMLElement) {
       phase = "idle";
       abort = null;
       releaseEncoder();
-      renderAll();
+      const gone = jobDatasetGone;
+      jobDatasetId = null;
+      // Refreshing was skipped while the job ran; catch up now (the dataset may be gone).
+      if (gone) await refresh();
+      else renderAll();
     }
   }
 
@@ -609,7 +641,7 @@ export function mountTrainingLab(root: HTMLElement) {
       table.append(
         el(
           "tr",
-          {},
+          { dataset: { imageId: img.id } },
           el("td", {}, thumbCanvas(img.id)),
           el("th", { scope: "row" }, names[truth[i]]),
           ...cells,
@@ -760,7 +792,13 @@ export function mountTrainingLab(root: HTMLElement) {
             d.saved ? "Saved" : "Save this model",
             () =>
               act(async () => {
-                await service!.saveModel(d.record);
+                try {
+                  await service!.saveModel(d.record);
+                } catch (error) {
+                  if (error instanceof StorageError && error.kind === "missing")
+                    draft = null;
+                  throw error;
+                }
                 d.saved = true;
                 await loadModels();
                 return "Model saved on this device.";
@@ -846,12 +884,39 @@ export function mountTrainingLab(root: HTMLElement) {
           { id: "tr-loaded" },
           el("h3", {}, `Loaded: ${l.record.name}`),
           l.warning ? el("p", { className: "ds-notice" }, l.warning) : "",
+          !l.known
+            ? el(
+                "p",
+                {
+                  className: "ds-notice",
+                  dataset: { testid: "tr-loaded-unknown" },
+                },
+                "This saved model has no record of which photos it learned from, so the check below may include photos it was trained on. It is not an independent check.",
+              )
+            : l.excluded
+              ? el(
+                  "p",
+                  {
+                    className: "ds-notice",
+                    dataset: { testid: "tr-loaded-excluded" },
+                  },
+                  `${l.excluded} current validation ${l.excluded === 1 ? "photo was" : "photos were"} left out because this model learned from ${l.excluded === 1 ? "it" : "them"} (or a copy) before the dataset changed. Checking a model on photos it learned from would overstate how well it works.`,
+                )
+              : "",
           el(
             "p",
-            { dataset: { testid: "tr-loaded-accuracy" } },
+            {
+              dataset: {
+                testid: "tr-loaded-accuracy",
+                checked: String(l.validation.length),
+                excluded: String(l.excluded),
+              },
+            },
             l.evaluation
-              ? `On the current ${l.validation.length} validation photos it is right ${pct(l.evaluation.accuracy)} of the time (when trained: ${pct(last?.validationAccuracy ?? null)}).`
-              : "There are no validation photos for its labels now, so it cannot be checked.",
+              ? `On the current ${l.validation.length} validation photos${l.known ? " it did not learn from" : ""}, it is right ${pct(l.evaluation.accuracy)} of the time (when trained: ${pct(last?.validationAccuracy ?? null)}).`
+              : l.excluded
+                ? "No validation photos remain that this model did not learn from, so it cannot be checked independently."
+                : "There are no validation photos for its labels now, so it cannot be checked.",
           ),
           l.evaluation
             ? comparisonTable(
@@ -885,27 +950,31 @@ export function mountTrainingLab(root: HTMLElement) {
       null,
       state.dataset.seed,
     );
+    const check = independentValidation(m, selection.validation);
+    const truth = check.keptIndices.map((i) => selection.validationLabels[i]);
     embedder ??= new Embedder();
     const e = embedder;
     let embedded;
     try {
-      embedded = await embedImages(s, (b) => e.embed(b), selection.validation);
+      embedded = await embedImages(s, (b) => e.embed(b), check.kept);
     } finally {
       releaseEncoder();
     }
-    const evaluation = selection.validation.length
+    const evaluation = check.kept.length
       ? evaluate(
           toSoftmax(m),
-          selection.validation.map((i) => embedded.vectors.get(i.id)!),
-          selection.validationLabels,
+          check.kept.map((i) => embedded.vectors.get(i.id)!),
+          truth,
         )
       : null;
     loaded = {
       record: m,
       warning: c.warning,
-      validation: selection.validation,
-      labels: selection.validationLabels,
+      validation: check.kept,
+      labels: truth,
       evaluation,
+      known: check.known,
+      excluded: check.excluded,
     };
     return `Loaded “${m.name}”.`;
   }
@@ -969,8 +1038,24 @@ export function mountTrainingLab(root: HTMLElement) {
   }
 
   /** Reloads datasets (the Dataset lab may have changed them). Skipped while training. */
+  /** True if the running job's dataset no longer exists (closed storage counts as deleted). */
+  async function jobDatasetDeleted() {
+    if (jobDatasetGone) return true;
+    if (!service || !jobDatasetId) return false;
+    try {
+      jobDatasetGone = !(await service.datasetExists(jobDatasetId));
+    } catch {
+      jobDatasetGone = true; // "Delete all" closed this connection
+    }
+    return jobDatasetGone;
+  }
+
   async function refresh() {
-    if (busy()) return;
+    if (busy()) {
+      // Datasets cannot be reloaded mid-job, but a deleted dataset cancels the job.
+      if (await jobDatasetDeleted()) abort?.abort();
+      return;
+    }
     try {
       if (service) {
         try {

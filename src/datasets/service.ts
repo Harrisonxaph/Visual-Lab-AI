@@ -359,16 +359,29 @@ export class DatasetService {
     return this.db.getEmbeddings(imageIds);
   }
 
+  /** Refused (nothing saved) if any of the photos was deleted meanwhile. */
   saveEmbeddings(records: EmbeddingRecord[]) {
-    return this.db.commit({ put: { embeddings: records } });
+    return this.db.commit({
+      put: { embeddings: records },
+      require: { images: records.map((r) => r.imageId) },
+    });
   }
 
   listModels(datasetId: string) {
     return this.db.listModels(datasetId);
   }
 
+  /** Refused (nothing saved) if the model's dataset was deleted meanwhile. */
   saveModel(model: ModelRecord) {
-    return this.db.commit({ put: { models: [model] } });
+    return this.db.commit({
+      put: { models: [model] },
+      require: { datasets: [model.datasetId] },
+    });
+  }
+
+  /** Whether a dataset still exists in storage (another lab may have deleted it). */
+  datasetExists(id: string) {
+    return this.db.datasetExists(id);
   }
 
   deleteModel(id: string) {

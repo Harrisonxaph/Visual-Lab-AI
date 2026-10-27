@@ -1,4 +1,10 @@
-import type { DatasetRecord, LabelRecord } from "../datasets/types";
+import { hammingDistance } from "../datasets/hash";
+import { NEAR_DUPLICATE_MAX_DISTANCE } from "../datasets/limits";
+import type {
+  DatasetRecord,
+  ImageRecord,
+  LabelRecord,
+} from "../datasets/types";
 import type { SoftmaxModel } from "./softmax";
 import type { ModelRecord } from "./types";
 
@@ -56,7 +62,7 @@ export function checkCompatibility(
     ok: true,
     warning:
       model.datasetVersion !== dataset.version
-        ? "The dataset has changed since this model was trained. Its saved results describe the earlier data; the check below uses the current validation photos."
+        ? "The dataset has changed since this model was trained. Its saved results describe the earlier data; the check below uses current validation photos the model did not learn from."
         : null,
   };
 }
@@ -67,5 +73,62 @@ export function toSoftmax(model: ModelRecord): SoftmaxModel {
     dims: model.dims,
     weights: model.weights.slice(),
     bias: model.bias.slice(),
+  };
+}
+
+export interface IndependentCheck<T> {
+  /** Whether the model recorded which photos it learned from. */
+  known: boolean;
+  /** Validation photos that are independent of the model's training photos (all of them when unknown). */
+  kept: T[];
+  /** Positions in the input of the photos that were kept. */
+  keptIndices: number[];
+  /** How many validation photos were left out because the model learned from them or a copy. */
+  excluded: number;
+}
+
+/**
+ * A validation check is only independent if the model never learned from the photos it is
+ * checked on. After a re-split (or edits), photos a saved model trained on can be in the
+ * validation split. This leaves out every current validation photo that is one of the model's
+ * training photos, the same file imported again, or a likely near-copy (same rule as the
+ * Dataset lab, ignoring "not related" marks, so it errs towards leaving photos out).
+ */
+export function independentValidation<
+  T extends Pick<ImageRecord, "id" | "sha256" | "dhash">,
+>(
+  model: Pick<ModelRecord, "trainImages">,
+  validation: readonly T[],
+): IndependentCheck<T> {
+  const trained = model.trainImages;
+  if (!trained)
+    return {
+      known: false,
+      kept: [...validation],
+      keptIndices: validation.map((_, i) => i),
+      excluded: 0,
+    };
+  const ids = new Set(trained.map((t) => t.id));
+  const hashes = new Set(trained.map((t) => t.sha256));
+  const kept: T[] = [];
+  const keptIndices: number[] = [];
+  validation.forEach((img, i) => {
+    const learned =
+      ids.has(img.id) ||
+      hashes.has(img.sha256) ||
+      trained.some(
+        (t) =>
+          hammingDistance(t.dhash, img.dhash) <= NEAR_DUPLICATE_MAX_DISTANCE,
+      );
+    if (!learned) {
+      kept.push(img);
+      keptIndices.push(i);
+    }
+  });
+  return {
+    known: true,
+    kept,
+    keptIndices,
+    excluded: validation.length - kept.length,
   };
 }
