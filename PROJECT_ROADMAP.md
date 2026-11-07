@@ -209,6 +209,9 @@ These remain open. They do not block the new phases, which do not depend on live
 
 ## Delivery rules
 
-See [docs/WORKFLOW.md](docs/WORKFLOW.md). In short: Claude develops on a branch and runs automated
-checks; Codex reviews the PR; the project owner approves merges and deployments. One focused
-manual acceptance session per new feature at most, guided inside the app.
+See [docs/WORKFLOW.md](docs/WORKFLOW.md). Since the owner's 2026-11-07 update, Codex owns
+development and a distinct, explicitly labelled self-review using three stages: scope, build/test,
+review/fix/verify. Continue autonomously within approved milestone scope; defer optional work and
+preserve the roadmap's learning objectives and completion criteria. The owner approves new scope,
+merges and deployments. Ask for at most one focused manual session per milestone where practical,
+only for a justified gap. This workflow change does not authorize Phase 4 implementation.

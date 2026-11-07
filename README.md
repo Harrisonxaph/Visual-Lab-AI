@@ -12,7 +12,7 @@ classifier, measuring it honestly, and improving it with human feedback. See
 | --- | --- | --- |
 | 1 | Live detection, tracking, inspector, confidence and privacy safeguards | Implemented |
 | 2 | Build labelled image datasets from your photos | Implemented (Dataset lab tab) |
-| 3 | Train a real classifier and watch it learn | Implemented, in review (Training lab tab) |
+| 3 | Train a real classifier and watch it learn | Implemented and merged (Training lab tab) |
 | 4 | Evaluate: precision, recall, overfitting, experiments | Planned |
 | 5 | Active learning: improve the model with your feedback | Planned |
 
@@ -79,8 +79,10 @@ Confidence is a model score, **not measured accuracy**.
 
 ## Roles
 
-Claude develops; Codex reviews; the project owner approves merges and deployments. Each milestone
-uses its own branch and pull request.
+Codex develops, tests and performs a distinct self-review through a three-stage cycle:
+scope, build/test, review/fix/verify. Claude is optional; routine handoffs through the owner are
+not required. Self-review is not independent review. The owner approves milestone scope, merges
+and deployments. See [workflow](docs/WORKFLOW.md). Each milestone uses a scoped branch and PR.
 
 Application source: MIT. Third-party assets keep their own terms.
 

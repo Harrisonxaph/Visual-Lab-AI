@@ -1,89 +1,94 @@
 # Development workflow and testing approach
 
-This is a personal learning project, not a commercial product. Process exists to protect
-correctness, privacy and data integrity, not to generate paperwork.
+Updated by the project owner on 2026-11-07 UTC. This is a personal learning project.
+Codex develops and reviews its own work using three distinct stages. Claude is optional, not
+a required relay or reviewer. Historical Claude/Codex reviews retain their original attribution.
+Self-review does not establish independent assurance.
 
-## Roles
+## Stage 1 — Scope
 
-| Role | Owns |
-| --- | --- |
-| **Claude — lead developer** | Architecture, plans, implementation, automated tests, training/evaluation code, documentation, branches and PRs, responses to valid review findings. Runs all available automated checks before handing a PR to Codex. |
-| **Codex — independent reviewer** | Reviews Claude's PRs for functional bugs, architecture, training/evaluation correctness, data leakage, privacy/security and missing critical tests. Separates critical defects from optional improvements. Does not implement changes unless explicitly instructed. Does not demand testing disproportionate to the feature's risk. |
-| **Project owner** | Decides features, reviews summaries, performs occasional focused manual acceptance, approves merges and deployments. |
+Inspect current main, instructions, relevant code and available CI. Select the smallest useful
+task within the owner-approved roadmap milestone. State its outcome, boundaries and completion
+criteria briefly in chat or the PR; no separate planning PR unless the owner requests one.
+Reuse prior decisions and evidence. Choose routine reversible implementation details autonomously.
+A new milestone or scope expansion still requires owner approval; this policy does not itself
+authorize Phase 4 implementation.
 
-Claude and Codex do not talk to each other automatically. The owner passes handoffs between them,
-so every handoff must be self-contained (template below).
+Keep the critical path visible. Use deadlines supplied by the owner, without inventing dates.
+Leave stretch targets, unrelated refactors, additional algorithms and optional polish deferred.
+If scope threatens a supplied deadline, report one concrete trade-off instead of silently
+expanding the work or weakening essential correctness.
 
-## Sequence per milestone
+## Stage 2 — Build and test
 
-1. Claude inspects the repository and writes a short scoped plan (in the PR or a chat message, not
-   a separate documentation PR unless asked).
-2. The owner approves the plan.
-3. Claude implements on a branch, adds tests, runs checks, opens a draft PR.
-4. Claude posts the Codex handoff.
-5. Codex reviews; Claude fixes material findings on the same PR.
-6. Codex verifies the fixes.
-7. The owner approves merge and any deployment.
+Work on a scoped branch and draft PR. Preserve functioning camera, datasets, training and tests.
+Implement the approved task and meaningful regression/numerical tests. Reproduce material bugs
+before fixing them. Run available checks appropriate to the changed paths, inspect failures and
+correct their causes. Do not add dependencies or infrastructure merely to simplify the process.
 
-Avoid documentation-only PRs that only record merges or CI runs; record such facts in the next
-substantive PR or not at all. The Git history is the record.
+Existing commands remain: `npm run check`, `npm run format:check`, `npm test`,
+`npm run test:browser`, `npm run build`, `npm run test:production`.
+Runtime changes must preserve the existing suite; documentation-only work needs documentation
+checks and observation of existing CI, not a new hardware session. Do not repeat unchanged tests
+without a change, failure or unresolved concern. If the environment cannot run a check, state
+that limit and use available CI evidence without claiming a local pass.
 
-## Testing philosophy: automate by default
+ML checks follow the feature's risk: finite-difference gradients, deterministic learning fixtures,
+metric results against hand-worked examples, split/provenance isolation, real-encoder integration,
+model round-trips, cancellation and atomic storage. Confidence is not accuracy. Preserve final-test
+sealing and test-reuse rules until the approved evaluation path deliberately handles them.
 
-Claude runs, before handoff:
+## Stage 3 — Review, fix and verify
 
-- `npm run check`, `npm run format:check`, `npm test`, `npm run test:browser`, `npm run build`,
-  `npm run test:production` (Chromium).
-- Machine-learning checks where relevant: numerical gradient checks, seeded deterministic training,
-  loss-decreases tests, split-integrity and leakage tests, metric correctness against hand-worked
-  examples.
-- Investigation of any failure with logs and reproducible tests before asking for manual work.
+Before declaring ready, inspect the diff as a reviewer against the approved requirements.
+Check edge cases, lifecycle/cancellation, storage/deletion, privacy, leakage, numerical correctness
+and missing critical tests. Separate material defects from optional improvements.
 
-Manual testing is requested only when a real device is genuinely needed (for example, picking
-photos from the iOS photo library). Then:
+Fix material findings on the same branch. Rerun affected checks and broaden only when the change
+or a remaining concern justifies it. Verify CI on the exact final commit. Repeat the fix/verify
+part only while a material issue remains. Once completion criteria pass, stop; do not manufacture
+extra review rounds, process artifacts or optional scope. If a blocker remains, report its evidence
+and one bounded next action or decision.
 
-- At most one focused acceptance session per new feature.
-- Instructions live **inside the app** (an acceptance checklist panel with short steps and
-  Pass / Fail / Skip), so you do not switch between apps. The panel produces one summary to copy.
-- No routine battery, warmth, five-minute sessions, permission walkthroughs or cross-browser
-  rechecks of unchanged functionality.
-- Re-test only behaviour a change could affect, and say why.
+Label the result **Codex self-review**. Do not claim a separate agent or person reviewed it unless
+that actually happened. Automated tests and self-review provide different evidence; neither proves
+every platform works. No separate reviewer agent or new review infrastructure is required.
 
-Never mark an incomplete or skipped check as passed. Do not add testing infrastructure more complex
-than the feature it tests.
+## Minimal owner involvement
 
-## Milestone report format
+Proceed autonomously within approved scope. Keep the owner informed at meaningful checkpoints,
+not through a stream of routine choices or agent-to-agent handoff prompts. Ask only when:
+- a genuinely missing decision blocks progress or the approved scope needs to expand;
+- a material privacy, security or ML-integrity trade-off needs the owner's decision;
+- paid services or external actions lack authorization;
+- merge or deployment approval is needed after the concrete result is ready.
 
-Every milestone report (in the PR description) has four short sections:
+Manual tests require a specific device-only reason. At most one focused session per milestone
+where practical; prefer short in-app Pass / Fail / Skip guidance when useful. Reuse completed
+observations. No routine battery, warmth, five-minute camera runs, unchanged permission flows
+or extensive unchanged-browser checks. Investigate logs and reproducible tests before asking
+for more manual work. Untested and skipped checks never become passes.
 
-1. **Automated checks completed:** commands and counts, ML evaluation results.
-2. **Essential manual checks:** none, or the in-app checklist items and why a device is needed.
-3. **Known limitations and deferred non-critical checks.**
-4. **Material blockers requiring action.**
+## Delivery report
 
-## Codex review handoff template
+One concise report and draft PR should contain:
+- approved scope and completed outcome;
+- exact commit, PR link, automated commands/results and exact-head CI status;
+- Codex self-review findings, fixes and any remaining material blockers;
+- known/deferred limitations and essential manual checks, if any;
+- the single owner decision needed next, usually merge approval.
 
-```text
-Codex: please review PR #<n> in Harrisonxaph/Visual-Lab-AI.
-Link: https://github.com/Harrisonxaph/Visual-Lab-AI/pull/<n>
-Head commit: <sha>   Base: main at <sha>
-
-Scope: <one or two sentences>
-Out of scope: <what this PR deliberately does not do>
-
-Automated evidence (run by Claude): <commands and counts>
-Highest-risk areas to check: <e.g. split leakage, gradient maths, storage deletion>
-
-Please report:
-- Critical defects (would give wrong results, leak data, break privacy, or break existing features)
-- Important issues (should fix in this PR)
-- Optional improvements (may be deferred)
-Do not implement changes; review only.
-```
+Do not create documentation-only PRs solely to record merges, CI or routine review history.
+Fold necessary records into the substantive change. This owner-requested role-policy update is
+a documentation change, not authorization for new application features.
 
 ## Boundaries
 
-- Free and open-source tools only; no paid APIs, compute or infrastructure without owner approval.
-- No merge, deployment, production or settings change without explicit owner approval.
-- Preserve privacy: images and datasets stay on the device unless the owner explicitly chooses
-  otherwise.
+The training-first roadmap and its completion criteria are unchanged. Existing evidence, accepted
+Phase 1 limits, unexplained D12–D14/S1/S2 and encoder/Safari device gaps remain as documented.
+The owner approves merges and deployments separately; never push directly to main.
+No production, protection, project-settings, automatic-deployment or public sharing/bypass-link
+changes without explicit approval. Keep automatic Git deployments disabled and the consumed
+preview authorization unchanged. No paid APIs, compute or services without approval.
+Images, labels and models remain local by default; do not upload private data without explicit
+authorization. Preserve essential security, privacy and ML correctness regardless of deadline.
