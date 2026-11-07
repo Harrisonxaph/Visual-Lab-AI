@@ -11,24 +11,38 @@ in-browser experiments. Read [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md),
 [MODEL_LIMITATIONS.md](MODEL_LIMITATIONS.md) before changes. Explain technical concepts in
 beginner-friendly language in code-facing docs, UI text and summaries.
 
-## Roles
+## Roles and three-stage engineering cycle
 
-- **Claude — lead developer:** architecture, plans, implementation, automated tests, training and
-  evaluation code, documentation, branches and draft PRs. Runs every available automated check
-  before handing a PR to Codex, using the handoff template in `docs/WORKFLOW.md`.
-- **Codex — independent reviewer:** reviews Claude's PRs; distinguishes critical defects from
-  optional improvements; does not implement changes unless explicitly instructed; does not demand
-  testing out of proportion to the feature's risk.
-- **Project owner:** chooses features, approves plans, performs occasional focused manual
-  acceptance, approves every merge and deployment.
+Updated by the owner on 2026-11-07 UTC. Codex now owns architecture, scoped planning,
+implementation, automated tests, documentation, branches/PRs and a distinct review pass.
+Claude is optional; no Claude handoff or owner message-relaying is required for routine work.
+A review of Codex's own work is self-review, not independent assurance.
 
-Claude and Codex do not communicate automatically; handoffs go through the owner.
+Use the three-stage cycle in [docs/WORKFLOW.md](docs/WORKFLOW.md):
+1. **Scope:** select the smallest task within the approved milestone and its completion criteria.
+2. **Build:** implement and run proportionate automated checks; reproduce defects before fixing.
+3. **Review and verify:** inspect the full diff against requirements and ML/privacy/data-integrity
+   risks, fix material findings, rerun affected checks and verify CI on the exact head.
+
+Continue these stages without asking for approval of each routine decision already covered by
+the approved scope. Stop when the acceptance criteria and relevant checks pass; do not chase
+optional refinements or create review-only documentation loops. The owner chooses milestone
+scope and still approves every merge and deployment. Escalate only a genuine blocker, a material
+risk decision, scope expansion or an action requiring explicit authorization.
 
 ## Current scope
 
-Phase 1 (computer vision foundation, including the earlier tracking work) is implemented.
-The next milestone is **Phase 2 — Dataset laboratory**, which requires the owner's approval of
-its plan before implementation. Do not start Phase 3 or later without approval.
+The foundation, Dataset lab and first genuine Training lab are implemented and merged through
+PR #22, main at `98686c12f48a8f9604cf99b0de949f59bdf14872` when this policy was written.
+Implementation is not comprehensive physical-device validation. Accepted limits and unresolved
+reports remain unchanged. The next planned milestone is Phase 4 evaluation; its implementation
+scope still needs owner approval. This workflow update authorizes documentation only and does
+not restart Phase 3, implement Phase 4, merge or deploy.
+
+Stay strictly within PROJECT_ROADMAP.md and the approved milestone. Preserve existing code and
+tests; defer unrelated cleanup, stretch features, new frameworks and speculative optimisations.
+Use explicit owner deadlines when supplied; do not invent dates, promise unsupported timelines
+or weaken privacy/ML correctness to meet them.
 
 ## Rules
 
@@ -63,4 +77,4 @@ its plan before implementation. Do not start Phase 3 or later without approval.
 - Tests live in `tests/` (Vitest) and `tests/browser/` (Playwright). Machine-learning code needs
   numerical gradient checks, seeded deterministic tests and leakage tests where relevant.
 - Prioritise iPhone/iPad and desktop: responsive layout, 44 px touch targets, accessibility.
-- Milestone reports use the four-section format in `docs/WORKFLOW.md`.
+- Milestone reports use the concise evidence and decision format in `docs/WORKFLOW.md`.
