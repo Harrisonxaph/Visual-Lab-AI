@@ -20,12 +20,12 @@ test("metric tables explain zero denominators and render labels safely", async (
   });
   const panel = page.locator("#fixture-metrics");
   await expect(panel.getByTestId("metric-total")).toHaveText("2");
-  await expect(panel.locator("tbody").first().locator("tr").nth(1)).toContainText(
-    "Not measured (0 denominator)",
-  );
-  await expect(panel.locator("tbody").first().locator("tr").nth(1)).toContainText(
-    "0 / 1 (0.0%)",
-  );
+  await expect(
+    panel.locator("tbody").first().locator("tr").nth(1),
+  ).toContainText("Not measured (0 denominator)");
+  await expect(
+    panel.locator("tbody").first().locator("tr").nth(1),
+  ).toContainText("0 / 1 (0.0%)");
   await expect(panel.locator("img")).toHaveCount(0);
   await expect(panel).toContainText("<img src=x onerror=alert(1)>");
   const cells = await panel
