@@ -36,7 +36,10 @@ export function classificationMetricsPanel(
   const total = node("span", String(m.total));
   total.dataset.testid = "metric-total";
   const summary = node("p", "Labelled photos checked: ");
-  summary.append(total, `. Accuracy: ${ratio(m.accuracy, m.correct, m.total)}.`);
+  summary.append(
+    total,
+    `. Accuracy: ${ratio(m.accuracy, m.correct, m.total)}.`,
+  );
 
   const scores = node("table");
   scores.className = "ds-table";
@@ -63,7 +66,9 @@ export function classificationMetricsPanel(
   const matrix = node("table");
   matrix.className = "ds-table";
   matrix.dataset.testid = "confusion-matrix";
-  matrix.append(node("caption", "Confusion matrix: actual rows, predicted columns"));
+  matrix.append(
+    node("caption", "Confusion matrix: actual rows, predicted columns"),
+  );
   const matrixHead = node("thead");
   const matrixHeaders = node("tr");
   matrixHeaders.append(heading("Actual / predicted", "col"));
