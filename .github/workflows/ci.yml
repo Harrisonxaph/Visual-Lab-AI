@@ -20,11 +20,7 @@ jobs:
       - run: npm run assets
       - run: npx playwright install --with-deps chromium
       - run: npm run check
-      - run: |
-          npm run format:check || {
-            npx prettier tests/browser/classification-metrics.spec.ts
-            exit 1
-          }
+      - run: npm run format:check
       - run: npm test
       - run: npm run test:browser
       - run: npm run build
