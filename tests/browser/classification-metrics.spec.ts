@@ -55,3 +55,35 @@ test("an empty check is not reported as zero or perfect accuracy", async ({
   await expect(panel).not.toContainText("NaN");
   await expect(panel).not.toContainText("Infinity");
 });
+
+test("ten long class names scroll inside their tables on a phone viewport", async ({
+  page,
+}) => {
+  await page.goto("/#training");
+  await page.evaluate(async () => {
+    const { classificationMetricsPanel } =
+      await import("/src/ui/classification-metrics.ts");
+    const labels = Array.from({ length: 10 }, (_, i) => `label-${i}-${"x".repeat(30)}`);
+    const host = document.createElement("section");
+    host.className = "panel ds-panel";
+    host.append(
+      classificationMetricsPanel(labels, [0, 1], [0, 1], {
+        id: "wide-metrics",
+        title: "Wide validation",
+      }),
+    );
+    document.querySelector("#tr-results")!.append(host);
+  });
+  const region = page.locator("#wide-metrics").getByRole("region", {
+    name: "Confusion matrix",
+  });
+  await expect(region).toHaveAttribute("tabindex", "0");
+  expect(
+    await region.evaluate((e) => e.scrollWidth > e.clientWidth),
+  ).toBe(true);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
