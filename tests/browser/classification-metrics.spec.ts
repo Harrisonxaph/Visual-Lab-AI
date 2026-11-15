@@ -20,12 +20,9 @@ test("metric tables explain zero denominators and render labels safely", async (
   });
   const panel = page.locator("#fixture-metrics");
   await expect(panel.getByTestId("metric-total")).toHaveText("2");
-  await expect(
-    panel.locator("tbody").first().locator("tr").nth(1),
-  ).toContainText("Not measured (0 denominator)");
-  await expect(
-    panel.locator("tbody").first().locator("tr").nth(1),
-  ).toContainText("0 / 1 (0.0%)");
+  const plant = panel.locator("tbody").first().locator("tr").nth(1);
+  await expect(plant).toContainText("Not measured (0 denominator)");
+  await expect(plant).toContainText("0 / 1 (0.0%)");
   await expect(panel.locator("img")).toHaveCount(0);
   await expect(panel).toContainText("<img src=x onerror=alert(1)>");
   const cells = await panel
@@ -63,7 +60,10 @@ test("ten long class names scroll inside their tables on a phone viewport", asyn
   await page.evaluate(async () => {
     const { classificationMetricsPanel } =
       await import("/src/ui/classification-metrics.ts");
-    const labels = Array.from({ length: 10 }, (_, i) => `label-${i}-${"x".repeat(30)}`);
+    const labels = Array.from(
+      { length: 10 },
+      (_, i) => `label-${i}-${"x".repeat(30)}`,
+    );
     const host = document.createElement("section");
     host.className = "panel ds-panel";
     host.append(
@@ -78,9 +78,7 @@ test("ten long class names scroll inside their tables on a phone viewport", asyn
     name: "Confusion matrix",
   });
   await expect(region).toHaveAttribute("tabindex", "0");
-  expect(
-    await region.evaluate((e) => e.scrollWidth > e.clientWidth),
-  ).toBe(true);
+  expect(await region.evaluate((e) => e.scrollWidth > e.clientWidth)).toBe(true);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
