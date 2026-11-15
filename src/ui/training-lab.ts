@@ -30,6 +30,7 @@ import {
 } from "../learning/trainer";
 import type { EpochRecord, ModelRecord } from "../learning/types";
 import { drawEpochChart } from "./training-chart";
+import { classificationMetricsPanel } from "./classification-metrics";
 
 class DatasetGoneError extends Error {}
 
@@ -772,6 +773,17 @@ export function mountTrainingLab(root: HTMLElement) {
         el("h2", {}, "Results"),
         summary,
         metrics,
+        run.after
+          ? classificationMetricsPanel(
+              record.labelNames,
+              selection.validationLabels,
+              run.after.predicted,
+              {
+                id: "tr-validation-metrics",
+                title: "Validation details — final classifier",
+              },
+            )
+          : "",
         el(
           "p",
           { className: "ds-help" },
@@ -918,6 +930,19 @@ export function mountTrainingLab(root: HTMLElement) {
                 ? "No validation photos remain that this model did not learn from, so it cannot be checked independently."
                 : "There are no validation photos for its labels now, so it cannot be checked.",
           ),
+          l.evaluation
+            ? classificationMetricsPanel(
+                l.record.labelNames,
+                l.labels,
+                l.evaluation.predicted,
+                {
+                  id: "tr-loaded-metrics",
+                  title: l.known
+                    ? "Current validation details"
+                    : "Current photo check — not independent",
+                },
+              )
+            : "",
           l.evaluation
             ? comparisonTable(
                 l.validation,
