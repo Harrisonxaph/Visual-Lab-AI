@@ -97,9 +97,7 @@ describe("classification metrics", () => {
     expect(m.correct).toBe(truth.filter((v, i) => v === predicted[i]).length);
     m.perClass.forEach((c, k) => {
       expect(c.support).toBe(m.confusion[k].reduce((a, b) => a + b, 0));
-      expect(c.predicted).toBe(
-        m.confusion.reduce((n, row) => n + row[k], 0),
-      );
+      expect(c.predicted).toBe(m.confusion.reduce((n, row) => n + row[k], 0));
     });
   });
 });
