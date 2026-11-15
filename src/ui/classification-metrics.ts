@@ -15,6 +15,16 @@ function heading(text: string, scope: "col" | "row") {
   return th;
 }
 
+function scrollTable(table: HTMLTableElement, label: string) {
+  const region = node("div");
+  region.className = "metric-table-scroll";
+  region.tabIndex = 0;
+  region.setAttribute("role", "region");
+  region.setAttribute("aria-label", label);
+  region.append(table);
+  return region;
+}
+
 const ratio = (value: number | null, numerator: number, denominator: number) =>
   value === null
     ? "Not measured (0 denominator)"
@@ -30,6 +40,7 @@ export function classificationMetricsPanel(
   const m = classificationMetrics(truth, predicted, labels.length);
   const section = node("section");
   section.id = options.id;
+  section.className = "classification-metrics";
   const title = node("h3", options.title);
   title.id = `${options.id}-title`;
   section.setAttribute("aria-labelledby", title.id);
@@ -89,12 +100,12 @@ export function classificationMetricsPanel(
       "p",
       "Precision asks: of photos predicted as this label, how many were right? Recall asks: of photos actually carrying this label, how many were found?",
     ),
-    scores,
+    scrollTable(scores, "Per-label metrics"),
     node(
       "p",
       "Not measured means the denominator is zero. The matrix diagonal counts correct answers; other cells show which labels were confused. Small samples can move percentages a lot. These are results on these photos, not guaranteed future accuracy.",
     ),
-    matrix,
+    scrollTable(matrix, "Confusion matrix"),
   );
   return section;
 }
