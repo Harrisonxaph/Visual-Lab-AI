@@ -128,6 +128,12 @@ Done when, in plain terms:
 
 Explore what "good" means for a model.
 
+First implementation slice: validation confusion matrices and per-label precision/recall in the
+existing Training lab, including saved-model checks after their independence filter. Counts and
+zero-denominator "Not measured" values are explicit. This is partial Phase 4 delivery, not
+completion: experiment comparisons, overfitting demonstrations and final test evaluation remain
+planned. Test photos stay sealed; no new model, storage schema or deployment is introduced.
+
 Scope:
 
 - Accuracy, precision, recall per label; confusion matrix.

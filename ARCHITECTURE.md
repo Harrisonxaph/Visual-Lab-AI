@@ -311,3 +311,14 @@ stopped-camera states and prevents late publication. App and developer tests use
 Timing stamps isolate update/returned-copy, extra snapshot and combined costs; optional long-task
 records use interval overlap. Notes read current tracker configuration through a defensive getter.
 See [scope, measurement definitions and pending device procedure](docs/phases/PHASE_2_STRESS_PROFILE.md).
+
+
+## Phase 4 first slice — read-only validation metrics
+
+`learning/metrics.ts` builds counts, an actual-row/predicted-column confusion matrix and per-class
+precision/recall from an existing evaluation. It returns null when a denominator is zero and rejects
+invalid indices or mismatched arrays. It does not choose photos or claim independence.
+`ui/classification-metrics.ts` renders counts, ratios and explanations with DOM text, without reading
+storage. The Training lab supplies its existing validation results; loaded-model results pass through
+the existing training-provenance filter first. The unknown-provenance warning remains visible.
+No extra inference, image persistence, schema change or test-split access is added.

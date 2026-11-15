@@ -204,3 +204,15 @@ timings measurable from the app, independently of model inference. It uses no ca
 establish real-scene accuracy, battery/thermal safety or absence of uploads. Physical results and
 the inconsistent 8 ms investigation budget remain unresolved. Unsupported long-task observation
 is explicitly unavailable; whole overlapping task durations may include unrelated main-thread work.
+
+
+## Phase 4 validation metrics — first slice
+
+Per-label precision/recall and confusion matrices describe only the labelled photos in the displayed
+check. Precision has no measurement when no photos were predicted as a class; recall has no
+measurement when no actual photos of that class were checked. These appear as Not measured, never
+as fabricated zero/perfect scores. Counts and denominators accompany percentages. Small samples,
+wrong labels, imbalance and undetected similarity can make these results misleading.
+Loaded-model metrics reuse the existing independence exclusions and unknown-provenance warnings;
+they do not independently establish absence of leakage. Final held-out evaluation, experiment
+comparisons and Phase 4 completion remain deferred. The test split is still sealed.

@@ -1692,3 +1692,16 @@ input[type="range"]::-moz-range-thumb {
   height: 20px;
   vertical-align: middle;
 }
+
+/* Keep wide class tables inside the lab on phones, with touch/keyboard scrolling. */
+.classification-metrics {
+  min-width: 0;
+  max-width: 100%;
+}
+.metric-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.ds-panel:has(.classification-metrics) {
+  min-width: 0;
+}

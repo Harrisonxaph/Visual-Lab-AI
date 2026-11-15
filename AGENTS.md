@@ -35,9 +35,11 @@ risk decision, scope expansion or an action requiring explicit authorization.
 The foundation, Dataset lab and first genuine Training lab are implemented and merged through
 PR #22, main at `98686c12f48a8f9604cf99b0de949f59bdf14872` when this policy was written.
 Implementation is not comprehensive physical-device validation. Accepted limits and unresolved
-reports remain unchanged. The next planned milestone is Phase 4 evaluation; its implementation
-scope still needs owner approval. This workflow update authorizes documentation only and does
-not restart Phase 3, implement Phase 4, merge or deploy.
+reports remain unchanged. On 2026-11-15 the owner asked Codex to resume development and
+self-review with minimal input. The first bounded Phase 4 slice adds validation confusion matrices
+and per-label precision/recall using existing Training lab results. Test photos stay sealed.
+Broader experiments, final held-out evaluation and Phase 5 are outside this slice. Merge and
+deployment still require owner approval.
 
 Stay strictly within PROJECT_ROADMAP.md and the approved milestone. Preserve existing code and
 tests; defer unrelated cleanup, stretch features, new frameworks and speculative optimisations.

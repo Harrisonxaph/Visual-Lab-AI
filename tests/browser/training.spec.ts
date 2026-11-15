@@ -110,6 +110,20 @@ test("trains on the example dataset: loss falls, validation accuracy ≥ 90%, te
     `Embeddings: ${usable.length} computed now, 0 reused`,
   );
 
+  // Evaluation details use these same validation predictions, not new image reads.
+  const details = page.locator("#tr-validation-metrics");
+  await expect(details.getByTestId("metric-total")).toHaveText(
+    String(validationCount),
+  );
+  const counts = await details
+    .getByTestId("confusion-matrix")
+    .locator("tbody td")
+    .allTextContents();
+  expect(counts.reduce((n, c) => n + Number(c), 0)).toBe(validationCount);
+  await expect(
+    details.getByTestId("class-metrics").locator("tbody tr"),
+  ).toHaveCount(3);
+
   // Second run: every embedding comes from the on-device cache.
   await train(page, "5");
   await expect(page.locator("#tr-result")).toContainText(
@@ -189,6 +203,9 @@ test("a saved model survives a reload, loads with the same results, and is remov
     { timeout: 60000 },
   );
   await expect(page.locator("#tr-loaded .ds-notice")).toHaveCount(0);
+  await expect(
+    page.locator("#tr-loaded-metrics").getByTestId("metric-total"),
+  ).toHaveText(String(trainedAnswers.length));
   // Same photos, same answers and the same confidence after the reload.
   expect(await lastColumn("#tr-loaded-compare")).toEqual(trainedAnswers);
 
