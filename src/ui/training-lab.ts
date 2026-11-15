@@ -32,6 +32,7 @@ import type { EpochRecord, ModelRecord } from "../learning/types";
 import { drawEpochChart } from "./training-chart";
 import { classificationMetricsPanel } from "./classification-metrics";
 import { runComparisonPanel } from "./run-comparison";
+import { mountLearningLessons } from "./learning-lessons";
 import {
   createRunManifest,
   DEFAULT_TRAINING_SEED,
@@ -110,6 +111,7 @@ export function mountTrainingLab(root: HTMLElement) {
   let phase: "idle" | "embedding" | "training" = "idle";
   let abort: AbortController | null = null;
   let actionPending = false;
+  let lessonRunning = false;
   let chosen: Set<string> | null = null;
   let chosenFor: string | null = null;
   let learningRate = String(DEFAULT_SETTINGS.learningRate);
@@ -179,10 +181,30 @@ export function mountTrainingLab(root: HTMLElement) {
   );
   const results = el("div", { className: "ds-body", id: "tr-results" });
   const saved = el("div", { className: "ds-body", id: "tr-saved" });
-  root.append(status, setup, progress, results, saved, aboutPanel());
+  const lessonRoot = el("section", {
+    className: "panel ds-panel",
+    id: "tr-lessons",
+  });
+  root.append(
+    status,
+    setup,
+    progress,
+    results,
+    saved,
+    lessonRoot,
+    aboutPanel(),
+  );
 
   const say = (text: string) => (status.textContent = text);
-  const busy = () => phase !== "idle" || actionPending;
+  const coreBusy = () => phase !== "idle" || actionPending;
+  const busy = () => coreBusy() || lessonRunning;
+  const lessons = mountLearningLessons(lessonRoot, {
+    onRunning: (value) => {
+      lessonRunning = value;
+      if (value) renderAll();
+      else void refresh();
+    },
+  });
 
   function describeError(error: unknown) {
     if (
@@ -1116,6 +1138,7 @@ export function mountTrainingLab(root: HTMLElement) {
   }
 
   function renderAll() {
+    lessons.setBlocked(coreBusy());
     renderSetup();
     updateProgress();
     renderResults();
@@ -1205,5 +1228,5 @@ export function mountTrainingLab(root: HTMLElement) {
   }
 
   say("Opening local dataset storage…");
-  return { refresh };
+  return { refresh, leave: () => lessons.cancel(true) };
 }

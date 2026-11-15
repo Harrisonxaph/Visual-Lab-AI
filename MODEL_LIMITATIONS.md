@@ -214,8 +214,8 @@ measurement when no actual photos of that class were checked. These appear as No
 as fabricated zero/perfect scores. Counts and denominators accompany percentages. Small samples,
 wrong labels, imbalance and undetected similarity can make these results misleading.
 Loaded-model metrics reuse the existing independence exclusions and unknown-provenance warnings;
-they do not independently establish absence of leakage. Final held-out evaluation, experiment
-comparisons and Phase 4 completion remain deferred. The test split is still sealed.
+they do not independently establish absence of leakage. Recorded comparisons are described below;
+final held-out evaluation and Phase 4 completion remain deferred. The test split is still sealed.
 
 
 ## Reproducible runs and recorded comparisons
@@ -234,3 +234,18 @@ dataset-size comparisons are therefore deferred. Multiple changed settings do no
 small samples can exaggerate differences, and repeated validation tuning can overfit validation.
 The existing near-duplicate and label-quality limits remain. Export, final-test evaluation and
 additional algorithms are not implemented by this slice. No extra device validation is claimed.
+
+## Controlled numeric learning lessons
+
+These lessons run real optimisation on seeded synthetic features, not photos or pretrained
+embeddings. The easy task, random-label memorisation task and nonlinear task deliberately use
+different data; their scores must not rank algorithms or predict personal-image accuracy. The
+random-label task can fit its small training set without learning a useful relationship for unseen
+examples. The nonlinear task cannot be solved by this linear head. Both are teaching examples,
+not automatic diagnoses of a user's dataset. Check labels, leakage, sample size and variability
+when interpreting real-photo curves.
+
+Lessons are bounded and cancel between epochs. Cancellation reports only completed epochs;
+leaving or hiding the page suppresses pending results. No lesson model is saved. Physical Safari
+execution of these new lessons has not been checked; existing accepted device/privacy limitations
+remain unchanged. Automated numeric and Chromium tests are evidence only for their tested paths.

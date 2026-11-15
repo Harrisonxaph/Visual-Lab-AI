@@ -344,3 +344,17 @@ training/validation references with finite measured results. It shows both setti
 completed epochs, including early stopping and any changed settings. It does not run inference,
 choose a winner, write data or open the sealed test set. Historical comparisons remain explicitly
 labelled with their recorded version even if the current dataset has changed.
+
+## Phase 4 controlled learning lessons — third slice
+
+`learning/lessons.ts` creates seeded, separate numeric training/validation arrays for three
+bounded tasks and calls the existing `runTraining`/softmax optimiser. The tasks illustrate useful
+learning, memorisation of unrelated labels and a linear model unable to fit a nonlinear boundary.
+They use at most 150 epochs, 48 features and 150 examples total. No encoder, image data, database
+or model persistence is used by a lesson.
+
+`ui/learning-lessons.ts` reuses the epoch charts and reports measured accuracy and parameter
+change. It yields between epochs. The Training lab serialises lessons with photo-training/storage
+actions; each has its own cancel control. Manual cancellation retains completed epochs, labelled
+partial. Leaving the lab, backgrounding or pagehide cancels and discards the pending lesson result.
+This does not change the existing photo-training lifecycle or expose final-test photos.

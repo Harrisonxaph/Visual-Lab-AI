@@ -13,7 +13,7 @@ classifier, measuring it honestly, and improving it with human feedback. See
 | 1 | Live detection, tracking, inspector, confidence and privacy safeguards | Implemented |
 | 2 | Build labelled image datasets from your photos | Implemented (Dataset lab tab) |
 | 3 | Train a real classifier and watch it learn | Implemented and merged (Training lab tab) |
-| 4 | Validation metrics, reproducible runs and recorded comparisons; further evaluation planned | In progress |
+| 4 | Validation metrics, reproducible runs, comparisons and controlled learning lessons; final evaluation planned | In progress |
 | 5 | Active learning: improve the model with your feedback | Planned |
 
 The detector does not learn from the camera. Training happens in the Training lab (Phase 3), which
