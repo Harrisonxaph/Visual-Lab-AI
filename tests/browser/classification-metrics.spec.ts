@@ -6,17 +6,21 @@ test("metric tables explain zero denominators and render labels safely", async (
   page,
 }) => {
   await page.goto("/#training");
+  await expect(page.locator("#tr-data")).toBeVisible();
   await page.evaluate(async () => {
-    const { classificationMetricsPanel } =
-      await import("/src/ui/classification-metrics.ts");
-    document.querySelector("#training-view")!.append(
-      classificationMetricsPanel(
-        ["<img src=x onerror=alert(1)>", "plant", "absent"],
-        [0, 1],
-        [0, 0],
-        { id: "fixture-metrics", title: "Validation fixture" },
-      ),
+    const { classificationMetricsPanel } = await import(
+      "/src/ui/classification-metrics.ts"
     );
+    document
+      .querySelector("#training-view")!
+      .append(
+        classificationMetricsPanel(
+          ["<img src=x onerror=alert(1)>", "plant", "absent"],
+          [0, 1],
+          [0, 0],
+          { id: "fixture-metrics", title: "Validation fixture" },
+        ),
+      );
   });
   const panel = page.locator("#fixture-metrics");
   await expect(panel.getByTestId("metric-total")).toHaveText("2");
@@ -36,9 +40,11 @@ test("an empty check is not reported as zero or perfect accuracy", async ({
   page,
 }) => {
   await page.goto("/#training");
+  await expect(page.locator("#tr-data")).toBeVisible();
   await page.evaluate(async () => {
-    const { classificationMetricsPanel } =
-      await import("/src/ui/classification-metrics.ts");
+    const { classificationMetricsPanel } = await import(
+      "/src/ui/classification-metrics.ts"
+    );
     document.querySelector("#training-view")!.append(
       classificationMetricsPanel(["a", "b"], [], [], {
         id: "empty-metrics",
@@ -57,9 +63,11 @@ test("ten long class names scroll inside their tables on a phone viewport", asyn
   page,
 }) => {
   await page.goto("/#training");
+  await expect(page.locator("#tr-data")).toBeVisible();
   await page.evaluate(async () => {
-    const { classificationMetricsPanel } =
-      await import("/src/ui/classification-metrics.ts");
+    const { classificationMetricsPanel } = await import(
+      "/src/ui/classification-metrics.ts"
+    );
     const labels = Array.from(
       { length: 10 },
       (_, i) => `label-${i}-${"x".repeat(30)}`,
@@ -78,7 +86,9 @@ test("ten long class names scroll inside their tables on a phone viewport", asyn
     name: "Confusion matrix",
   });
   await expect(region).toHaveAttribute("tabindex", "0");
-  expect(await region.evaluate((e) => e.scrollWidth > e.clientWidth)).toBe(true);
+  expect(await region.evaluate((e) => e.scrollWidth > e.clientWidth)).toBe(
+    true,
+  );
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
