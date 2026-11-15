@@ -38,8 +38,9 @@ Implementation is not comprehensive physical-device validation. Accepted limits 
 reports remain unchanged. On 2026-11-15 the owner asked Codex to resume development and
 self-review with minimal input. The first bounded Phase 4 slice adds validation confusion matrices
 and per-label precision/recall using existing Training lab results. Test photos stay sealed.
-Broader experiments, final held-out evaluation and Phase 5 are outside this slice. Merge and
-deployment still require owner approval.
+The owner subsequently requested continued development. The next bounded slice adds seed-controlled
+repeats and same-snapshot saved-run validation comparisons. Final held-out evaluation, additional
+algorithms and Phase 5 remain outside this slice. Merge and deployment still require owner approval.
 
 Stay strictly within PROJECT_ROADMAP.md and the approved milestone. Preserve existing code and
 tests; defer unrelated cleanup, stretch features, new frameworks and speculative optimisations.

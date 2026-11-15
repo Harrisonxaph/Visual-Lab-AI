@@ -154,6 +154,14 @@ test("cancelling keeps the epochs completed so far", async ({ page }) => {
   await expect(page.locator("#tr-metrics")).toContainText(
     `After (epoch ${done})`,
   );
+  await page.getByTestId("tr-save").click();
+  await expect(page.locator("#tr-status")).toContainText("Model saved");
+  await page.getByTestId("tr-restore").click();
+  await expect(page.locator("#tr-status")).toContainText(
+    "Run settings restored",
+  );
+  await expect(page.locator("#tr-epochs")).toHaveValue(String(done));
+
   await expect(page.getByTestId("tr-train")).toBeEnabled();
 });
 

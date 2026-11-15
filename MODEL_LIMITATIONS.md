@@ -15,7 +15,7 @@
 
 - Learning is demonstrated on the generated example dataset (automated test, four runs: validation
   accuracy from near chance, between 33% and 67%, to 100% on 9 validation photos; training loss 1.10 → 0.27
-  in 50 epochs). Each run uses a new random seed, so the starting point varies. Generated shapes are
+  in 50 epochs). Those earlier runs used a new random seed; current runs expose a seed control. Generated shapes are
   easy; on personal photos the app reports whatever happens, including no improvement.
 - Validation sets are small (15% of each label), so one photo can move accuracy by many points.
   Accuracy is never shown as a reliable measure; precision, recall and test evaluation are Phase 4.
@@ -216,3 +216,21 @@ wrong labels, imbalance and undetected similarity can make these results mislead
 Loaded-model metrics reuse the existing independence exclusions and unknown-provenance warnings;
 they do not independently establish absence of leakage. Final held-out evaluation, experiment
 comparisons and Phase 4 completion remain deferred. The test split is still sealed.
+
+
+## Reproducible runs and recorded comparisons
+
+New runs default to seed 42; earlier runs used a new random seed. Holding the seed, selected data,
+algorithm and cached embeddings constant reproduces the classifier's weights in the tested runtime.
+Identical bits across other browsers, hardware or re-computed embeddings are not guaranteed.
+Run metadata cannot recreate deleted photos: restore refuses changed dataset versions or selections.
+Renaming a label also changes the version, so this refusal can be conservative. Old saved models
+still load as before, but records without a run manifest cannot be restored or compared as controlled
+experiments. No destructive migration is performed.
+
+Comparisons show saved validation results on exactly the same recorded examples, not fresh results
+on the current dataset or a final held-out score. Training and validation selections must both match;
+dataset-size comparisons are therefore deferred. Multiple changed settings do not isolate a cause,
+small samples can exaggerate differences, and repeated validation tuning can overfit validation.
+The existing near-duplicate and label-quality limits remain. Export, final-test evaluation and
+additional algorithms are not implemented by this slice. No extra device validation is claimed.
