@@ -322,3 +322,25 @@ invalid indices or mismatched arrays. It does not choose photos or claim indepen
 storage. The Training lab supplies its existing validation results; loaded-model results pass through
 the existing training-provenance filter first. The unknown-provenance warning remains visible.
 No extra inference, image persistence, schema change or test-split access is added.
+
+
+## Phase 4 reproducible saved runs — second slice
+
+`learning/experiments.ts` records the algorithm version, split seed, class order and ordered
+training/validation references (image id, original-file SHA-256 and label id). Bump the algorithm
+identifier when numerical training semantics change. A run's existing
+model record already carries its encoder/preprocessing key, dataset/version and settings.
+The optional manifest is saved in the existing models store: no new schema or store is needed.
+It excludes test photos and raw images. Model/dataset deletion uses the existing cascade rules.
+
+The Training lab exposes an unsigned 32-bit seed (default 42). Restore checks the current dataset
+version and exact selected references before copying settings; it never starts a job automatically.
+Stopped runs restore completed epochs; a run with zero completed epochs cannot be repeated as a
+trained model. An action guard serializes asynchronous controls and refreshes state afterwards.
+
+`ui/run-comparison.ts` reads two saved histories, not the current validation images. Comparison
+requires matching dataset/version, encoder/dimensions, algorithm, classes, split seed, and ordered
+training/validation references with finite measured results. It shows both settings and actual
+completed epochs, including early stopping and any changed settings. It does not run inference,
+choose a winner, write data or open the sealed test set. Historical comparisons remain explicitly
+labelled with their recorded version even if the current dataset has changed.

@@ -55,6 +55,8 @@ export interface ModelRecord {
    * later check cannot be established.
    */
   trainImages?: TrainImageRef[];
+  /** Versioned input selection for restoring settings and fair recorded comparisons. */
+  experiment?: RunManifest;
 }
 
 export interface TrainImageRef {
@@ -63,4 +65,20 @@ export interface TrainImageRef {
   sha256: string;
   /** Difference hash: finds likely near-copies, as the Dataset lab does. */
   dhash: string;
+}
+
+export interface RunExampleRef {
+  id: string;
+  sha256: string;
+  labelId: string;
+}
+
+export interface RunManifest {
+  version: 1;
+  algorithm: "softmax-sgd-f64/v1";
+  splitSeed: number;
+  labelIds: string[];
+  /** Actual training order, including the chosen per-label subset. */
+  train: RunExampleRef[];
+  validation: RunExampleRef[];
 }

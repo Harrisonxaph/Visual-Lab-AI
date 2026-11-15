@@ -31,6 +31,14 @@ import {
 import type { EpochRecord, ModelRecord } from "../learning/types";
 import { drawEpochChart } from "./training-chart";
 import { classificationMetricsPanel } from "./classification-metrics";
+import { runComparisonPanel } from "./run-comparison";
+import {
+  createRunManifest,
+  DEFAULT_TRAINING_SEED,
+  replayProblem,
+  repeatSettings,
+  validateSeed,
+} from "../learning/experiments";
 
 class DatasetGoneError extends Error {}
 
@@ -101,11 +109,15 @@ export function mountTrainingLab(root: HTMLElement) {
   let embedder: Embedder | null = null;
   let phase: "idle" | "embedding" | "training" = "idle";
   let abort: AbortController | null = null;
+  let actionPending = false;
   let chosen: Set<string> | null = null;
   let chosenFor: string | null = null;
   let learningRate = String(DEFAULT_SETTINGS.learningRate);
   let epochs = String(DEFAULT_SETTINGS.epochs);
   let cap = "";
+  let trainingSeed = String(DEFAULT_TRAINING_SEED);
+  let comparisonLeft = "";
+  let comparisonRight = "";
   let models: ModelRecord[] = [];
   let draft: Draft | null = null;
   let loaded: Loaded | null = null;
@@ -170,7 +182,7 @@ export function mountTrainingLab(root: HTMLElement) {
   root.append(status, setup, progress, results, saved, aboutPanel());
 
   const say = (text: string) => (status.textContent = text);
-  const busy = () => phase !== "idle";
+  const busy = () => phase !== "idle" || actionPending;
 
   function describeError(error: unknown) {
     if (
@@ -241,6 +253,7 @@ export function mountTrainingLab(root: HTMLElement) {
   function parsedSettings() {
     return {
       learningRate: Number(learningRate),
+      seed: trainingSeed.trim() === "" ? NaN : Number(trainingSeed),
       epochs: Number(epochs),
       perLabelCap: cap.trim() === "" ? null : Number(cap),
     };
@@ -357,6 +370,17 @@ export function mountTrainingLab(root: HTMLElement) {
     });
     epochInput.addEventListener("input", () => (epochs = epochInput.value));
 
+    const seedInput = el("input", {
+      id: "tr-seed",
+      type: "number",
+      min: "0",
+      max: "4294967295",
+      step: "1",
+      value: trainingSeed,
+      disabled: busy(),
+    });
+    seedInput.addEventListener("input", () => (trainingSeed = seedInput.value));
+
     const selection = selectExamples(
       state.images,
       state.labels,
@@ -415,9 +439,15 @@ export function mountTrainingLab(root: HTMLElement) {
           epochInput,
         ),
         el(
+          "label",
+          { className: "ds-row" },
+          "Seed (starting weights and shuffle) ",
+          seedInput,
+        ),
+        el(
           "p",
           { className: "ds-help" },
-          `Photos per step: ${DEFAULT_SETTINGS.batchSize}. Starting weights are small random numbers from a seed recorded with the results, so a run can be repeated exactly.`,
+          `Photos per step: ${DEFAULT_SETTINGS.batchSize}. Reuse the seed, data and settings to repeat a run with the same cached embeddings/runtime. Different devices can produce small numerical differences. The photo cap is selected using the dataset split seed.`,
         ),
         button("Train", () => void train(), {
           className: "button primary",
@@ -432,7 +462,7 @@ export function mountTrainingLab(root: HTMLElement) {
     const last = live.at(-1);
     if (phase === "training" && last)
       progressText.textContent = `Epoch ${last.epoch} of ${plannedEpochs}. Training loss ${num(last.trainLoss)}, validation accuracy ${pct(last.validationAccuracy)}.`;
-    cancel.disabled = !busy();
+    cancel.disabled = phase === "idle";
     drawCharts(live);
   }
 
@@ -479,6 +509,8 @@ export function mountTrainingLab(root: HTMLElement) {
     const state = s.current;
     const settingsInput = parsedSettings();
     const problems = validateSettings(settingsInput);
+    const seedProblem = validateSeed(settingsInput.seed);
+    if (seedProblem) problems.push(seedProblem);
     const selection = selectExamples(
       state.images,
       state.labels,
@@ -517,11 +549,9 @@ export function mountTrainingLab(root: HTMLElement) {
       });
       phase = "training";
       renderSetup();
-      const seed = crypto.getRandomValues(new Uint32Array(1))[0];
       const settings = {
         ...settingsInput,
         batchSize: DEFAULT_SETTINGS.batchSize,
-        seed,
       };
       const vec = (i: ImageRecord) => embedded.vectors.get(i.id)!;
       const run = await runTraining(
@@ -551,6 +581,7 @@ export function mountTrainingLab(root: HTMLElement) {
           createdAt: new Date().toISOString(),
           encoderKey: ENCODER_KEY,
           datasetVersion: state.dataset.version,
+          experiment: createRunManifest(state.dataset.seed, selection),
           labelIds: selection.classes.map((c) => c.id),
           labelNames: selection.classes.map((c) => c.name),
           dims: ENCODER.dimensions,
@@ -852,6 +883,10 @@ export function mountTrainingLab(root: HTMLElement) {
             { className: "ds-help" },
             ` ${m.labelNames.join(", ")}; ${last?.epoch ?? 0} epochs${m.stoppedEarly ? " (stopped early)" : ""}; learning rate ${m.settings.learningRate}; validation accuracy when trained ${pct(last?.validationAccuracy ?? null)}.`,
           ),
+          button("Restore run settings", () => act(() => restoreRun(m)), {
+            disabled: busy(),
+            dataset: { testid: "tr-restore" },
+          }),
           button("Load", () => act(() => loadModel(m)), {
             disabled: busy(),
             dataset: { testid: "tr-load" },
@@ -887,6 +922,18 @@ export function mountTrainingLab(root: HTMLElement) {
             "No saved models for this dataset yet.",
           ),
     ];
+    sections.push(
+      runComparisonPanel(models, {
+        leftId: comparisonLeft,
+        rightId: comparisonRight,
+        disabled: busy(),
+        onChange: (left, right) => {
+          comparisonLeft = left;
+          comparisonRight = right;
+          renderSaved();
+        },
+      }),
+    );
     if (loaded) {
       const l = loaded;
       const last = l.record.history.at(-1);
@@ -960,6 +1007,50 @@ export function mountTrainingLab(root: HTMLElement) {
     );
   }
 
+  async function restoreRun(m: ModelRecord) {
+    const s = service!;
+    await s.reload();
+    const state = s.current;
+    if (!state) return "The dataset no longer exists.";
+    const compatibility = checkCompatibility(
+      m,
+      ENCODER_KEY,
+      state.dataset,
+      state.labels,
+    );
+    if (!compatibility.ok)
+      return `Cannot restore this run: ${compatibility.reason}`;
+    const settings = repeatSettings(m);
+    if (!settings)
+      return "No completed training epochs are available to repeat.";
+    if (settings.batchSize !== DEFAULT_SETTINGS.batchSize)
+      return "This run uses an unsupported batch size.";
+    const settingsProblem = validateSettings(settings);
+    if (settingsProblem.length) return settingsProblem.join(" ");
+    const selection = selectExamples(
+      state.images,
+      state.labels,
+      m.labelIds,
+      m.settings.perLabelCap,
+      state.dataset.seed,
+    );
+    const problem = replayProblem(m, {
+      datasetId: state.dataset.id,
+      datasetVersion: state.dataset.version,
+      encoderKey: ENCODER_KEY,
+      splitSeed: state.dataset.seed,
+      selection,
+    });
+    if (problem) return `Cannot restore this run: ${problem}`;
+    chosen = new Set(m.labelIds);
+    chosenFor = state.dataset.id;
+    learningRate = String(m.settings.learningRate);
+    epochs = String(settings.epochs);
+    trainingSeed = String(m.settings.seed);
+    cap = m.settings.perLabelCap === null ? "" : String(m.settings.perLabelCap);
+    return "Run settings restored for the same recorded examples. Choose Train to repeat; nothing runs automatically.";
+  }
+
   async function loadModel(m: ModelRecord) {
     const s = service!;
     const state = s.current!;
@@ -1011,13 +1102,16 @@ export function mountTrainingLab(root: HTMLElement) {
 
   async function act(action: () => Promise<void | string>) {
     if (busy()) return;
+    actionPending = true;
+    renderAll();
     try {
       const message = await action();
       say(typeof message === "string" ? message : "");
     } catch (error) {
       say(describeError(error));
     } finally {
-      renderAll();
+      actionPending = false;
+      await refresh();
     }
   }
 
