@@ -382,7 +382,7 @@ export function mountTrainingLab(root: HTMLElement) {
           el(
             "td",
             {},
-            `${count("test")} ${finalRecord?.status === "complete" ? "held out (final check used)" : "sealed"}`,
+            `${count("test")} ${finalRecord?.status === "complete" && finalRecord.labelIds.includes(l.id) ? (finalRecord.datasetVersion === state.dataset.version ? "held out (final check used)" : "held out (historical check)") : "sealed"}`,
           ),
         ),
       );

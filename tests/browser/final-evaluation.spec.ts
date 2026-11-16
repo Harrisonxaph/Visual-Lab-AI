@@ -2,7 +2,10 @@ import { test, expect } from "@playwright/test";
 
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
-async function trained(page: import("@playwright/test").Page) {
+async function trained(
+  page: import("@playwright/test").Page,
+  twoLabels = false,
+) {
   await page.goto("/#datasets");
   await page.getByTestId("ds-example").click();
   await expect(page.locator("#ds-status")).toContainText(
@@ -11,6 +14,8 @@ async function trained(page: import("@playwright/test").Page) {
   );
   await page.locator("#tab-training").click();
   await expect(page.getByTestId("tr-train")).toBeEnabled();
+  if (twoLabels)
+    await page.locator("#tr-labels input[type=checkbox]").last().uncheck();
   await page.locator("#tr-epochs").fill("2");
   await page.getByTestId("tr-train").click();
   await expect(page.getByTestId("tr-summary")).toBeVisible({ timeout: 90000 });
@@ -42,7 +47,13 @@ async function stored(page: import("@playwright/test").Page) {
             );
             resolve({
               checks: checks.result,
-              tests: tests.size,
+              tests: checks.result[0]
+                ? images.result.filter(
+                    (i) =>
+                      i.split === "test" &&
+                      checks.result[0].labelIds.includes(i.labelId),
+                  ).length
+                : tests.size,
               cachedTests: embeddings.result.filter((id) => tests.has(id))
                 .length,
             });
@@ -57,7 +68,7 @@ test("final evaluation requires consent, saves one complete result, never caches
   page,
 }) => {
   test.setTimeout(180000);
-  await trained(page);
+  await trained(page, true);
   page.once("dialog", (dialog) => dialog.dismiss());
   await page.getByTestId("tr-final-run").click();
   expect((await stored(page)).checks).toHaveLength(0);
@@ -74,6 +85,7 @@ test("final evaluation requires consent, saves one complete result, never caches
   expect(state.checks[0].result.predicted).toHaveLength(state.tests);
   expect(Number.isFinite(state.checks[0].result.loss)).toBe(true);
   expect(state.cachedTests).toBe(0);
+  await expect(page.locator("#tr-labels tr").last()).toContainText("sealed");
   await expect(
     page.locator("#tr-final-metrics").getByTestId("metric-total"),
   ).toHaveText(String(state.tests));
@@ -82,6 +94,16 @@ test("final evaluation requires consent, saves one complete result, never caches
   await expect(page.locator("#tr-final-status")).toContainText(
     "Final check recorded",
   );
+  expect((await stored(page)).checks[0]).toEqual(state.checks[0]);
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.locator("#tab-datasets").click();
+  await page.getByTestId("ds-delete-image").first().click();
+  await expect(page.locator("#ds-status")).toContainText("Photo deleted");
+  await page.locator("#tab-training").click();
+  await expect(page.locator("#tr-labels tr").nth(1)).toContainText(
+    "historical check",
+  );
+  await expect(page.locator("#tr-labels tr").last()).toContainText("sealed");
   expect((await stored(page)).checks[0]).toEqual(state.checks[0]);
   expect(
     await page.evaluate(
