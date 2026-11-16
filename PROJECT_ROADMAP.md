@@ -186,8 +186,21 @@ or cross-entropy output. Metrics, not distances/confidence, measure correctness.
 Missing train/validation embeddings may be computed/cached locally; tests never enter this path.
 Comparison results are page-memory only and cleared on reload or the next refresh after relevant
 data/model edits. Current shared embeddings are used for validation; historical training embeddings
-regenerated on another runtime need not match bitwise. Neural-network method comparison and
-regularisation remain deferred. No final-test result is reused, and no Phase 5 work is included.
+regenerated on another runtime need not match bitwise. Neural-network method comparison remains deferred; the next slice adds regularisation. No final-test result is reused, and no Phase 5 work is included.
+
+Eighth slice: optional L2 regularisation (strength 0–1, default 0) adds `lambda / 2 × sum(W²)`
+to the classifier's mean training cross-entropy; biases are not penalised. This changes what the
+classifier optimiser prefers, not the frozen image encoder or its embedding normalisation. The
+curves and validation/final losses remain prediction cross-entropy; the penalised training objective
+is separately reported and stored. Different penalties define different objectives, so use shared
+validation prediction loss/accuracy to choose settings rather than ranking objective values.
+
+Missing strength means legacy zero; default runs keep their original algorithm tag and numerical
+trajectory. Positive L2 uses `softmax-sgd-f64-l2/v1`. Saved configurations, exact replay, comparisons,
+reports, nearest-neighbour comparison and the final-check path support it. Dataset-size comparisons
+hold strength fixed. No schema migration or new dependency is needed. Improvement is not promised:
+strong penalties can underfit and poorly chosen steps can oscillate. Neural-network method
+comparison remains deferred, and this does not authorize Phase 5 or close the project.
 
 Scope:
 

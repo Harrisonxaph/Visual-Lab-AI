@@ -145,6 +145,7 @@ export function mountTrainingLab(root: HTMLElement) {
   let epochs = String(DEFAULT_SETTINGS.epochs);
   let cap = "";
   let trainingSeed = String(DEFAULT_TRAINING_SEED);
+  let regularization = String(DEFAULT_SETTINGS.l2);
   let comparisonLeft = "";
   let comparisonRight = "";
   let comparisonMode: ComparisonMode = "same-data";
@@ -314,11 +315,13 @@ export function mountTrainingLab(root: HTMLElement) {
   };
 
   function parsedSettings() {
+    const l2 = regularization.trim() === "" ? NaN : Number(regularization);
     return {
       learningRate: Number(learningRate),
       seed: trainingSeed.trim() === "" ? NaN : Number(trainingSeed),
       epochs: Number(epochs),
       perLabelCap: cap.trim() === "" ? null : Number(cap),
+      ...(l2 === 0 ? {} : { l2 }),
     };
   }
 
@@ -426,6 +429,16 @@ export function mountTrainingLab(root: HTMLElement) {
       disabled: busy(),
     });
     lrInput.addEventListener("input", () => (learningRate = lrInput.value));
+    const l2Input = el("input", {
+      id: "tr-l2",
+      type: "number",
+      min: "0",
+      max: "1",
+      step: "0.001",
+      value: regularization,
+      disabled: busy(),
+    });
+    l2Input.addEventListener("input", () => (regularization = l2Input.value));
     const epochInput = el("input", {
       id: "tr-epochs",
       type: "number",
@@ -502,6 +515,17 @@ export function mountTrainingLab(root: HTMLElement) {
         el(
           "label",
           { className: "ds-row" },
+          "L2 strength (0 disables the weight penalty) ",
+          l2Input,
+        ),
+        el(
+          "p",
+          { className: "ds-help" },
+          "L2 discourages large classifier weights: the optimiser minimises mean cross-entropy plus L2 / 2 × sum(weights²). Biases are not penalised. It can reduce overfitting or cause underfitting; improvement is not guaranteed. This is separate from the frozen encoder’s embedding normalisation. The loss curves show prediction cross-entropy only; the penalised training objective is reported separately. Choose settings on validation, not the final test.",
+        ),
+        el(
+          "label",
+          { className: "ds-row" },
           "Epochs (passes over the training photos) ",
           epochInput,
         ),
@@ -528,7 +552,7 @@ export function mountTrainingLab(root: HTMLElement) {
   function updateProgress() {
     const last = live.at(-1);
     if (phase === "training" && last)
-      progressText.textContent = `Epoch ${last.epoch} of ${plannedEpochs}. Training loss ${num(last.trainLoss)}, validation accuracy ${pct(last.validationAccuracy)}.`;
+      progressText.textContent = `Epoch ${last.epoch} of ${plannedEpochs}. Training loss ${num(last.trainLoss)}, validation accuracy ${pct(last.validationAccuracy)}.${last.trainObjective === undefined ? "" : ` Penalised training objective ${num(last.trainObjective)}.`}`;
     cancel.disabled = phase === "idle";
     drawCharts(live);
   }
@@ -549,7 +573,7 @@ export function mountTrainingLab(root: HTMLElement) {
           values: history.map((h) => h.validationLoss),
         },
       ],
-      { title: "Loss" },
+      { title: "Prediction loss (cross-entropy)" },
     );
     drawEpochChart(
       accuracyChart,
@@ -648,7 +672,11 @@ export function mountTrainingLab(root: HTMLElement) {
           createdAt: new Date().toISOString(),
           encoderKey: ENCODER_KEY,
           datasetVersion: state.dataset.version,
-          experiment: createRunManifest(state.dataset.seed, selection),
+          experiment: createRunManifest(
+            state.dataset.seed,
+            selection,
+            settings,
+          ),
           labelIds: selection.classes.map((c) => c.id),
           labelNames: selection.classes.map((c) => c.name),
           dims: ENCODER.dimensions,
@@ -831,7 +859,7 @@ export function mountTrainingLab(root: HTMLElement) {
         el(
           "li",
           {},
-          `Overall size of the weights (L2 norm): ${num(ev.normBefore)} before, ${num(ev.normAfter)} after.`,
+          `Overall size of weights and biases (L2 norm): ${num(ev.normBefore)} before, ${num(ev.normAfter)} after.`,
         ),
         el(
           "li",
@@ -885,7 +913,7 @@ export function mountTrainingLab(root: HTMLElement) {
         el(
           "p",
           { className: "ds-help" },
-          `${record.trainCount} training and ${record.validationCount} validation photos. Embeddings: ${d.computed} computed now, ${d.reused} reused from this device. Learning rate ${record.settings.learningRate}, seed ${record.settings.seed}.`,
+          `${record.trainCount} training and ${record.validationCount} validation photos. Embeddings: ${d.computed} computed now, ${d.reused} reused from this device. Learning rate ${record.settings.learningRate}, seed ${record.settings.seed}, L2 strength ${record.settings.l2 ?? 0}. Prediction loss excludes the penalty.${last.trainObjective === undefined ? "" : ` Final training objective (prediction loss + L2 penalty): ${num(last.trainObjective)}.`}`,
         ),
         evidence,
         el("h3", {}, "Validation photos before and after"),
@@ -1103,6 +1131,11 @@ export function mountTrainingLab(root: HTMLElement) {
       message.textContent = `Final check recorded at ${record.result.completedAt}, dataset version ${record.datasetVersion}. This is a historical result, not a fresh check of current photos. Loss ${num(record.result.loss)}.`;
       finalSection.append(
         message,
+        el(
+          "p",
+          { className: "ds-help" },
+          `Locked configuration: learning rate ${record.settings.learningRate}, seed ${record.settings.seed}, ${record.settings.epochs} epochs, L2 strength ${record.settings.l2 ?? 0}. Final prediction loss is cross-entropy without the training penalty.`,
+        ),
         classificationMetricsPanel(
           record.labelNames,
           record.result.truth,
@@ -1282,7 +1315,7 @@ export function mountTrainingLab(root: HTMLElement) {
           el(
             "span",
             { className: "ds-help" },
-            ` ${m.labelNames.join(", ")}; ${last?.epoch ?? 0} epochs${m.stoppedEarly ? " (stopped early)" : ""}; learning rate ${m.settings.learningRate}; validation accuracy when trained ${pct(last?.validationAccuracy ?? null)}.`,
+            ` ${m.labelNames.join(", ")}; ${last?.epoch ?? 0} epochs${m.stoppedEarly ? " (stopped early)" : ""}; learning rate ${m.settings.learningRate}; L2 ${m.settings.l2 ?? 0}; validation accuracy when trained ${pct(last?.validationAccuracy ?? null)}.`,
           ),
           button("Restore run settings", () => act(() => restoreRun(m)), {
             disabled: busy(),
@@ -1489,6 +1522,7 @@ export function mountTrainingLab(root: HTMLElement) {
     learningRate = String(m.settings.learningRate);
     epochs = String(settings.epochs);
     trainingSeed = String(m.settings.seed);
+    regularization = String(m.settings.l2 ?? 0);
     cap = m.settings.perLabelCap === null ? "" : String(m.settings.perLabelCap);
     return "Run settings restored for the same recorded examples. Choose Train to repeat; nothing runs automatically.";
   }

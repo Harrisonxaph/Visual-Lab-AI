@@ -163,3 +163,28 @@ describe("local recorded run reports", () => {
     }
   });
 });
+
+describe("L2 report fields", () => {
+  it("records strength, algorithm and objective while retaining prediction losses", () => {
+    const m = model();
+    m.settings.l2 = 0.2;
+    m.experiment!.algorithm = "softmax-sgd-f64-l2/v1";
+    for (const row of m.history) row.trainObjective = row.trainLoss + 3;
+    const report = JSON.parse(serializeRunReport(m));
+    expect(report.settings.l2).toBe(0.2);
+    expect(report.manifest.algorithm).toBe("softmax-sgd-f64-l2/v1");
+    expect(report.history[2].trainLoss).toBe(m.history[2].trainLoss);
+    expect(report.history[2].trainObjective).toBe(m.history[2].trainObjective);
+    expect(report.history[2].validationLoss).toBe(m.history[2].validationLoss);
+  });
+  it("refuses misleading regularised metadata rather than omitting its objective", () => {
+    const m = model();
+    m.settings.l2 = 0.2;
+    expect(() => serializeRunReport(m)).toThrow(/cannot export/i);
+    m.experiment!.algorithm = "softmax-sgd-f64-l2/v1";
+    expect(() => serializeRunReport(m)).toThrow(/cannot export/i);
+    for (const row of m.history) row.trainObjective = row.trainLoss + 3;
+    m.history[1].trainObjective = NaN;
+    expect(() => serializeRunReport(m)).toThrow(/cannot export/i);
+  });
+});

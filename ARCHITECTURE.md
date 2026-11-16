@@ -444,3 +444,27 @@ Reload or a refresh detecting relevant data/model changes clears them. The exist
 and test guards are unchanged; an already-opened final test gets an explicit reuse warning. Cached
 features may be regenerated with small runtime-dependent differences; exact historical feature
 bits are not guaranteed. No new stores, schema changes, dependencies or model resources are needed.
+
+## Phase 4 optional L2 classifier regularisation — eighth slice
+
+`TrainingSettings.l2` is optional: missing means zero and old records are never backfilled. The
+UI accepts 0–1, initially 0; zero is omitted when storing new settings. `lossAndGradients` adds
+lambda W once to each mean minibatch gradient and lambda/2 sum(W²) to its loss. Bias gradients
+are unchanged. `trainEpoch` uses that gradient with the existing SGD, seed, batches and ordering.
+Zero skips penalty arithmetic. Minibatch CE now uses the same stable log-sum-exp as evaluation,
+fixing clipping at ~744 when a correct-class probability underflows; valid zero-strength training
+updates/history remain unchanged, verified against a pre-change numerical fixture.
+
+`EpochRecord.trainLoss` and validation/final losses remain mean prediction cross-entropy. Positive
+runs also record `trainObjective` (training CE + penalty) at epoch 0 and completed epochs. The loss
+curves keep the same CE definition; progress/results report the objective separately. No penalty
+is added when predicting, checking validation or computing final-test metrics.
+
+Zero/missing settings retain `softmax-sgd-f64/v1`; positive strength uses
+`softmax-sgd-f64-l2/v1`. Manifest creation, restore and reports validate the settings/tag pairing.
+Comparisons accept the two supported SGD objectives on matching data and list the strength change;
+size experiments additionally require equal strength. Missing and explicit zero compare equally.
+The existing report schema gains optional `settings.l2` and `history[].trainObjective`; regularised
+reports refuse missing/non-finite objectives instead of substituting CE. No store/schema changes,
+weight-shape changes, encoder changes or new resources/dependencies are introduced. Existing final
+locks are not rewritten; fingerprints include each stored settings/manifest representation.

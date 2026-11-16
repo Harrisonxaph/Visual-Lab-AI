@@ -89,14 +89,15 @@ export interface Gradients {
 }
 
 /**
- * Mean cross-entropy loss over the given examples and its exact gradient:
- * for each example, (probabilities − one-hot label) times the embedding, averaged.
+ * Mean cross-entropy plus optional lambda/2 sum(W squared), and its exact gradient.
+ * Data gradients are averaged over examples; lambda W is added once, with no bias penalty.
  */
 export function lossAndGradients(
   m: SoftmaxModel,
   xs: readonly Vector[],
   ys: readonly number[],
   indices: readonly number[] = xs.map((_, i) => i),
+  l2 = 0,
 ): Gradients {
   const gw = new Float64Array(m.weights.length);
   const gb = new Float64Array(m.classes);
@@ -105,7 +106,7 @@ export function lossAndGradients(
   for (const i of indices) {
     const x = xs[i];
     const p = predict(m, x);
-    loss -= Math.log(Math.max(p[ys[i]], Number.MIN_VALUE));
+    loss += exampleLoss(m, x, ys[i]);
     for (let k = 0; k < m.classes; k++) {
       const d = (p[k] - (k === ys[i] ? 1 : 0)) / n;
       gb[k] += d;
@@ -113,7 +114,18 @@ export function lossAndGradients(
       for (let j = 0; j < m.dims; j++) gw[row + j] += d * x[j];
     }
   }
-  return { loss: loss / n, weights: gw, bias: gb };
+  const penalty = weightPenalty(m, l2);
+  if (l2 > 0) for (let i = 0; i < gw.length; i++) gw[i] += l2 * m.weights[i];
+  return { loss: loss / n + penalty, weights: gw, bias: gb };
+}
+
+/** lambda/2 sum(W squared); biases are deliberately excluded. */
+export function weightPenalty(m: SoftmaxModel, l2: number): number {
+  if (!Number.isFinite(l2) || l2 < 0) throw new Error("Invalid L2 strength.");
+  if (l2 === 0) return 0;
+  let sum = 0;
+  for (const weight of m.weights) sum += weight * weight;
+  return l2 * 0.5 * sum;
 }
 
 export interface Evaluation {
@@ -176,6 +188,7 @@ export function trainEpoch(
   learningRate: number,
   batchSize: number,
   random: () => number,
+  l2 = 0,
 ) {
   const order = shuffledIndices(xs.length, random);
   for (let start = 0; start < order.length; start += batchSize) {
@@ -184,6 +197,7 @@ export function trainEpoch(
       xs,
       ys,
       order.slice(start, start + batchSize),
+      l2,
     );
     for (let i = 0; i < m.weights.length; i++)
       m.weights[i] -= learningRate * g.weights[i];

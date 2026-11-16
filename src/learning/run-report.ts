@@ -1,5 +1,5 @@
 import { LIMITS } from "../datasets/limits";
-import { RUN_ALGORITHM, validateSeed } from "./experiments";
+import { runAlgorithm, validateSeed } from "./experiments";
 import { validateSettings } from "./trainer";
 import type { ModelRecord, RunExampleRef } from "./types";
 
@@ -60,6 +60,10 @@ function report(m: ModelRecord, includeClassNames: boolean) {
         r.epoch === i &&
         loss(r.trainLoss) &&
         accuracy(r.trainAccuracy) &&
+        (r.trainObjective === undefined
+          ? (m.settings.l2 ?? 0) === 0
+          : Number.isFinite(r.trainObjective) &&
+            r.trainObjective >= r.trainLoss) &&
         (m.validationCount
           ? loss(r.validationLoss) && accuracy(r.validationAccuracy)
           : r.validationLoss === null && r.validationAccuracy === null),
@@ -71,7 +75,7 @@ function report(m: ModelRecord, includeClassNames: boolean) {
   if (manifest) {
     requireValid(
       manifest.version === 1 &&
-        manifest.algorithm === RUN_ALGORITHM &&
+        manifest.algorithm === runAlgorithm(m.settings) &&
         validateSeed(manifest.splitSeed) === null,
     );
     requireValid(
@@ -113,6 +117,7 @@ function report(m: ModelRecord, includeClassNames: boolean) {
       batchSize: m.settings.batchSize,
       perLabelCap: m.settings.perLabelCap,
       seed: m.settings.seed,
+      ...(m.settings.l2 === undefined ? {} : { l2: m.settings.l2 }),
     },
     trainCount: m.trainCount,
     validationCount: m.validationCount,
@@ -125,12 +130,14 @@ function report(m: ModelRecord, includeClassNames: boolean) {
         trainAccuracy,
         validationLoss,
         validationAccuracy,
+        trainObjective,
       }) => ({
         epoch,
         trainLoss,
         trainAccuracy,
         validationLoss,
         validationAccuracy,
+        ...(trainObjective === undefined ? {} : { trainObjective }),
       }),
     ),
     replayMetadata: manifest ? "recorded" : "unavailable",

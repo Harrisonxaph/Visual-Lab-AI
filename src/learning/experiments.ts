@@ -1,5 +1,5 @@
 import { LIMITS } from "../datasets/limits";
-import { validateSettings } from "./trainer";
+import { validateSettings, validateL2 } from "./trainer";
 import { stableHash } from "../datasets/hash";
 import type { ExampleSelection } from "./examples";
 import { assertNoTestImages } from "./examples";
@@ -11,6 +11,16 @@ import type {
 } from "./types";
 
 export const RUN_ALGORITHM = "softmax-sgd-f64/v1";
+export const REGULARIZED_RUN_ALGORITHM = "softmax-sgd-f64-l2/v1";
+/** Keep the legacy zero path/tag; positive L2 has a distinct objective identifier. */
+export function runAlgorithm(
+  settings: Pick<TrainingSettings, "l2"> = {},
+): RunManifest["algorithm"] {
+  const problem = validateL2(settings.l2);
+  if (problem) throw new Error(problem);
+  return (settings.l2 ?? 0) > 0 ? REGULARIZED_RUN_ALGORITHM : RUN_ALGORITHM;
+}
+
 export const DEFAULT_TRAINING_SEED = 42;
 
 export function validateSeed(seed: number): string | null {
@@ -23,6 +33,7 @@ export function validateSeed(seed: number): string | null {
 export function createRunManifest(
   splitSeed: number,
   selection: ExampleSelection,
+  settings: Pick<TrainingSettings, "l2"> = {},
 ): RunManifest {
   assertNoTestImages([...selection.train, ...selection.validation]);
   const refs = (images: ExampleSelection["train"]): RunExampleRef[] =>
@@ -32,7 +43,7 @@ export function createRunManifest(
     });
   return {
     version: 1,
-    algorithm: RUN_ALGORITHM,
+    algorithm: runAlgorithm(settings),
     splitSeed,
     labelIds: selection.classes.map((c) => c.id),
     train: refs(selection.train),
@@ -59,8 +70,8 @@ function manifestProblem(
   if (
     a.version !== 1 ||
     b.version !== 1 ||
-    a.algorithm !== RUN_ALGORITHM ||
-    b.algorithm !== RUN_ALGORITHM
+    ![RUN_ALGORITHM, REGULARIZED_RUN_ALGORITHM].includes(a.algorithm) ||
+    ![RUN_ALGORITHM, REGULARIZED_RUN_ALGORITHM].includes(b.algorithm)
   )
     return "These runs use an unknown or different training algorithm.";
   if (a.splitSeed !== b.splitSeed) return "The dataset split seeds differ.";
@@ -94,6 +105,8 @@ function datasetSizeProblem(a: ModelRecord, b: ModelRecord): string | null {
   for (const key of ["learningRate", "epochs", "seed", "batchSize"] as const)
     if (a.settings[key] !== b.settings[key])
       return "Only change the photo cap; keep learning rate, epochs, seed and batch size identical.";
+  if ((a.settings.l2 ?? 0) !== (b.settings.l2 ?? 0))
+    return "Only change the photo cap; keep L2 strength fixed as well.";
   if (
     [a, b].some(
       (m) => m.stoppedEarly || m.history.at(-1)!.epoch !== m.settings.epochs,
@@ -169,6 +182,16 @@ export function compareRecordedRuns(
     return fail("The encoders or preprocessing differ.");
   if (!sameLabels(a.labelIds, b.labelIds))
     return fail("The class order differs.");
+  if (
+    [a, b].some(
+      (m) =>
+        validateSettings(m.settings).length > 0 ||
+        m.experiment!.algorithm !== runAlgorithm(m.settings),
+    )
+  )
+    return fail(
+      "A run's algorithm or regularisation configuration is invalid.",
+    );
   const problem = manifestProblem(
     a.experiment,
     b.experiment,
@@ -197,7 +220,10 @@ export function compareRecordedRuns(
       last!.trainLoss >= 0 &&
       Number.isInteger(last?.epoch) &&
       last!.epoch >= 0 &&
-      last!.epoch <= m.settings.epochs
+      last!.epoch <= m.settings.epochs &&
+      ((m.settings.l2 ?? 0) === 0 ||
+        (Number.isFinite(last?.trainObjective) &&
+          last!.trainObjective! >= last!.trainLoss))
     );
   };
   if (!measured(a) || !measured(b))
@@ -209,6 +235,8 @@ export function compareRecordedRuns(
     if (problem) return fail(problem);
   }
   const changes: string[] = [];
+  if ((a.settings.l2 ?? 0) !== (b.settings.l2 ?? 0))
+    changes.push("L2 strength");
   if (a.trainCount !== b.trainCount) changes.push("training photos");
   for (const [key, name] of [
     ["learningRate", "learning rate"],
@@ -246,11 +274,15 @@ export function replayProblem(
     return "The encoder or preprocessing changed.";
   if (context.selection.problems.length)
     return context.selection.problems.join(" ");
+  const settingsProblems = validateSettings(model.settings);
+  if (settingsProblems.length) return settingsProblems.join(" ");
+  if (model.experiment.algorithm !== runAlgorithm(model.settings))
+    return "The recorded algorithm does not match its L2 configuration.";
   return (
     validateSeed(model.settings.seed) ??
     manifestProblem(
       model.experiment,
-      createRunManifest(context.splitSeed, context.selection),
+      createRunManifest(context.splitSeed, context.selection, model.settings),
     )
   );
 }

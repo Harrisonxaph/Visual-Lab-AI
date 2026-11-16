@@ -10,6 +10,7 @@ export default defineConfig({
     "run-report.spec.ts",
     "final-evaluation.spec.ts",
     "nearest-neighbour.spec.ts",
+    "regularisation.spec.ts",
   ],
   timeout: 90000,
   workers: 1,

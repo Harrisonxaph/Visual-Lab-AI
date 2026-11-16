@@ -12,6 +12,8 @@ export interface EpochRecord {
   epoch: number;
   trainLoss: number;
   trainAccuracy: number;
+  /** Mean training CE plus L2 weight penalty, present only for regularised runs. */
+  trainObjective?: number;
   /** Null when the selection had no validation photos. */
   validationLoss: number | null;
   validationAccuracy: number | null;
@@ -25,6 +27,8 @@ export interface TrainingSettings {
   perLabelCap: number | null;
   /** Seed for the starting weights and the shuffle order. */
   seed: number;
+  /** Missing means zero: preserve older unregularised runs without rewriting them. */
+  l2?: number;
 }
 
 /** A trained classifier saved on this device, with what it needs to be checked before reuse. */
@@ -75,7 +79,7 @@ export interface RunExampleRef {
 
 export interface RunManifest {
   version: 1;
-  algorithm: "softmax-sgd-f64/v1";
+  algorithm: "softmax-sgd-f64/v1" | "softmax-sgd-f64-l2/v1";
   splitSeed: number;
   labelIds: string[];
   /** Actual training order, including the chosen per-label subset. */

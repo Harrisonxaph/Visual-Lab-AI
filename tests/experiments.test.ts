@@ -359,3 +359,57 @@ describe("controlled training-set size comparisons", () => {
     expect(compareRecordedRuns(a, b, "dataset-size").ok).toBe(false);
   });
 });
+
+describe("regularised run metadata", () => {
+  const regular = () => {
+    const m = model();
+    m.settings.l2 = 0.2;
+    m.experiment = createRunManifest(7, selection(), m.settings);
+    m.history[0].trainObjective = m.history[0].trainLoss;
+    return m;
+  };
+  it("tags the new objective while comparing against the unchanged legacy zero method", () => {
+    const m = regular();
+    expect(m.experiment!.algorithm).toBe("softmax-sgd-f64-l2/v1");
+    const comparison = compareRecordedRuns(model(), m);
+    expect(comparison.ok).toBe(true);
+    expect(comparison.changes).toContain("L2 strength");
+  });
+  it("treats missing and explicit zero equally and restores positive strength", () => {
+    const a = model(),
+      b = model();
+    b.settings.l2 = 0;
+    expect(compareRecordedRuns(a, b).changes).not.toContain("L2 strength");
+    const m = regular();
+    expect(repeatSettings(m)?.l2).toBe(0.2);
+    expect(
+      replayProblem(m, {
+        datasetId: "d",
+        datasetVersion: 4,
+        encoderKey: "encoder-v1",
+        splitSeed: 7,
+        selection: selection(),
+      }),
+    ).toBeNull();
+    m.settings.l2 = 0;
+    expect(compareRecordedRuns(a, m).ok).toBe(false);
+  });
+  it("keeps L2 fixed in dataset-size mode", () => {
+    const [a, b] = sizeRuns();
+    for (const m of [a, b]) {
+      m.settings.l2 = 0.2;
+      m.experiment!.algorithm = "softmax-sgd-f64-l2/v1";
+      m.history[0].trainObjective = m.history[0].trainLoss;
+    }
+    expect(compareRecordedRuns(a, b, "dataset-size").ok).toBe(true);
+    b.settings.l2 = 0.1;
+    expect(compareRecordedRuns(a, b, "dataset-size").ok).toBe(false);
+  });
+  it("refuses missing/non-finite objectives and algorithm/configuration mismatches", () => {
+    const m = regular();
+    delete m.history[0].trainObjective;
+    expect(compareRecordedRuns(model(), m).ok).toBe(false);
+    m.history[0].trainObjective = Infinity;
+    expect(compareRecordedRuns(model(), m).ok).toBe(false);
+  });
+});
