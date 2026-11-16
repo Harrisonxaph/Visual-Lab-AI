@@ -1,4 +1,9 @@
 import {
+  prepareLearningRound,
+  runLearningRound,
+} from "../learning/learning-round";
+import { learningRoundPanel, type RoundResult } from "./learning-round-panel";
+import {
   ReviewError,
   prepareReviewPool,
   scoreReviewPool,
@@ -166,7 +171,8 @@ export function mountTrainingLab(root: HTMLElement) {
     | "final-test"
     | "baseline"
     | "review"
-    | "promoting" = "idle";
+    | "promoting"
+    | "round" = "idle";
   let abort: AbortController | null = null;
   let actionPending = false;
   let lessonRunning = false;
@@ -176,6 +182,8 @@ export function mountTrainingLab(root: HTMLElement) {
   let loadedNetwork: LoadedNetwork | null = null;
   let networkExportNames = false;
   let baselineProgress = "";
+  let roundResult: RoundResult | null = null;
+  let roundProgress = "";
   let reviewSession: ReviewSession | null = null;
   let reviewProgress = "";
   let reviewMode: ReviewOrder = "uncertainty";
@@ -258,6 +266,7 @@ export function mountTrainingLab(root: HTMLElement) {
     className: "panel ds-panel",
     id: "tr-baseline",
   });
+  const roundSection = el("div");
   const reviewSection = el("div");
   const finalSection = el("section", {
     className: "panel ds-panel",
@@ -275,6 +284,7 @@ export function mountTrainingLab(root: HTMLElement) {
     saved,
     baselineSection,
     reviewSection,
+    roundSection,
     finalSection,
     lessonRoot,
     aboutPanel(),
@@ -1343,6 +1353,11 @@ export function mountTrainingLab(root: HTMLElement) {
   }
 
   function renderReview() {
+    roundSection.replaceChildren(
+      learningRoundPanel(roundResult, roundProgress, phase === "round", () =>
+        abort?.abort(),
+      ),
+    );
     reviewSection.replaceChildren(
       activeReviewPanel({
         session: reviewSession,
@@ -1404,6 +1419,162 @@ export function mountTrainingLab(root: HTMLElement) {
       say(reviewProgress);
     } finally {
       phase = "idle";
+      await refresh();
+    }
+  }
+
+  async function retrainReviewed(source: ModelRecord) {
+    const s = service;
+    if (!s?.current || busy()) return;
+    const candidate = structuredClone(source);
+    phase = "round";
+    draft = null;
+    roundResult = null;
+    roundProgress = "Preparing approved training batch…";
+    jobDatasetId = candidate.datasetId;
+    jobDatasetGone = false;
+    abort = new AbortController();
+    const signal = abort.signal;
+    let cancelEncoding: (() => void) | undefined;
+    renderAll();
+    const report = (message: string) => {
+      if (signal.aborted) return;
+      roundProgress = message;
+      const node = roundSection.querySelector("#tr-round-status");
+      if (node) node.textContent = message;
+    };
+    try {
+      await s.reload();
+      if (!s.current) throw new ReviewError("The dataset was deleted.");
+      const plan = prepareLearningRound(s.current, candidate);
+      if (
+        !(await s.listModels(candidate.datasetId)).some(
+          (m) => JSON.stringify(m) === JSON.stringify(candidate),
+        )
+      )
+        throw new ReviewError("The saved source changed or was deleted.");
+      if (signal.aborted) throw new CancelledError();
+      embedder ??= new Embedder();
+      const encoder = embedder;
+      // Temporary features avoid stale jobs writing new test-role cache entries.
+      const readOnlyStore = {
+        getEmbeddings: (ids: readonly string[]) => s.getEmbeddings(ids),
+        saveEmbeddings: async () => {},
+        getBlob: async (id: string) => {
+          await s.reload();
+          if (signal.aborted) throw new CancelledError();
+          if (
+            !s.current ||
+            s.current.dataset.id !== plan.datasetId ||
+            s.current.dataset.version !== plan.datasetVersion ||
+            s.current.images.find((i) => i.id === id)?.split === "test"
+          )
+            throw new ReviewError(
+              "The dataset changed before image access; round discarded.",
+            );
+          prepareLearningRound(s.current, candidate);
+          return s.getBlob(id);
+        },
+      };
+      const cancelled = new Promise<never>((_, reject) => {
+        cancelEncoding = () => reject(new CancelledError());
+        signal.addEventListener("abort", cancelEncoding, { once: true });
+      });
+      const embedded = await Promise.race([
+        embedImages(
+          readOnlyStore,
+          (image) => encoder.embed(image),
+          [...plan.train, ...plan.added, ...plan.validation],
+          {
+            signal,
+            onProgress: (done, total) =>
+              report(`Preparing round features: ${done} of ${total}.`),
+          },
+        ),
+        cancelled,
+      ]);
+      const run = await runLearningRound(plan, embedded.vectors, candidate, {
+        signal,
+        onEpoch: (arm, epoch) =>
+          report(
+            `Training ${arm === "control" ? "same-data control" : "expanded-data classifier"}: epoch ${epoch} of ${candidate.settings.epochs}. No partial comparison is published.`,
+          ),
+      });
+      await s.reload();
+      if (signal.aborted) throw new CancelledError();
+      if (
+        !s.current ||
+        s.current.dataset.id !== plan.datasetId ||
+        s.current.dataset.version !== plan.datasetVersion ||
+        !(await s.listModels(candidate.datasetId)).some(
+          (m) => JSON.stringify(m) === JSON.stringify(candidate),
+        )
+      )
+        throw new ReviewError(
+          "The source or dataset changed; round discarded.",
+        );
+      prepareLearningRound(s.current, candidate);
+      if (signal.aborted) throw new CancelledError();
+      const train = plan.expandedTrain;
+      const selection: ExampleSelection = {
+        classes: candidate.labelIds.map((id, k) => ({
+          id,
+          name: candidate.labelNames[k],
+        })),
+        train,
+        trainLabels: train.map((i) => candidate.labelIds.indexOf(i.labelId!)),
+        validation: plan.validation,
+        validationLabels: plan.truth,
+        problems: [],
+      };
+      draft = {
+        record: {
+          ...candidate,
+          id: crypto.randomUUID(),
+          name: `Feedback — ${candidate.name}`,
+          createdAt: new Date().toISOString(),
+          datasetVersion: plan.datasetVersion,
+          weights: run.expanded.model.weights,
+          bias: run.expanded.model.bias,
+          history: run.expanded.history,
+          stoppedEarly: false,
+          trainCount: train.length,
+          validationCount: plan.validation.length,
+          trainImages: train.map(({ id, sha256, dhash }) => ({
+            id,
+            sha256,
+            dhash,
+          })),
+          experiment: createRunManifest(
+            s.current.dataset.seed,
+            selection,
+            candidate.settings,
+          ),
+        },
+        run: run.expanded,
+        selection,
+        computed: embedded.computed,
+        reused: embedded.reused,
+        saved: false,
+      };
+      roundResult = { source: candidate, plan, run, modelId: draft.record.id };
+      roundProgress =
+        "Feedback round complete — validation measurements, not a promised improvement.";
+    } catch (error) {
+      roundResult = null;
+      roundProgress =
+        signal.aborted || error instanceof CancelledError
+          ? "Feedback round cancelled; no partial model or comparison was published."
+          : error instanceof Error
+            ? error.message
+            : "The feedback round failed.";
+      say(roundProgress);
+    } finally {
+      if (cancelEncoding) signal.removeEventListener("abort", cancelEncoding);
+      phase = "idle";
+      abort = null;
+      jobDatasetId = null;
+      releaseEncoder();
       await refresh();
     }
   }
@@ -1801,6 +1972,10 @@ export function mountTrainingLab(root: HTMLElement) {
             disabled: busy() || m.stoppedEarly,
             dataset: { testid: "tr-review-run" },
           }),
+          button("Retrain approved batch", () => void retrainReviewed(m), {
+            disabled: busy() || m.stoppedEarly,
+            dataset: { testid: "tr-round-run" },
+          }),
           button("Load", () => act(() => loadModel(m)), {
             disabled: busy(),
             dataset: { testid: "tr-load" },
@@ -2159,6 +2334,20 @@ export function mountTrainingLab(root: HTMLElement) {
         reviewProgress =
           "Review queue cleared because its source snapshot changed. No labels were committed.";
       }
+      if (
+        roundResult &&
+        (roundResult.plan.datasetId !== service.current?.dataset.id ||
+          roundResult.plan.datasetVersion !==
+            service.current?.dataset.version ||
+          !models.some(
+            (m) => JSON.stringify(m) === JSON.stringify(roundResult!.source),
+          ))
+      ) {
+        if (draft?.record.id === roundResult.modelId) draft = null;
+        roundResult = null;
+        roundProgress =
+          "Feedback comparison cleared because its source or dataset changed.";
+      }
       const comparisonSource = baseline?.record ?? methodComparison?.record;
       if (
         comparisonSource &&
@@ -2184,6 +2373,9 @@ export function mountTrainingLab(root: HTMLElement) {
       if (status.textContent === "Opening local dataset storage…") say("");
     } catch (error) {
       service = null;
+      roundResult = null;
+      roundProgress =
+        "Local storage is unavailable; feedback comparison cleared.";
       loadedNetwork = null;
       reviewSession = null;
       reviewProgress =
@@ -2198,7 +2390,12 @@ export function mountTrainingLab(root: HTMLElement) {
   }
 
   const stopEvaluation = () => {
-    if (phase === "final-test" || phase === "baseline" || phase === "review")
+    if (
+      phase === "final-test" ||
+      phase === "baseline" ||
+      phase === "review" ||
+      phase === "round"
+    )
       abort?.abort();
   };
   document.addEventListener("visibilitychange", () => {

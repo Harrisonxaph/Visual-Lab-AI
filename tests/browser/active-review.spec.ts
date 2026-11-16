@@ -287,7 +287,48 @@ test("explicit approval commit saves training-only provenance without changing p
   expect(after.models).toEqual(before.models);
   expect(after.finals).toEqual(before.finals);
   expect(after.datasets[0].version).toBe(before.datasets[0].version + 1);
+  await page.getByTestId("tr-round-run").click();
+  await expect(page.getByTestId("tr-round-result")).toBeVisible({
+    timeout: 90000,
+  });
+  const round = page.getByTestId("tr-round-result");
+  expect(
+    Number(await round.getAttribute("data-weight-change")),
+  ).toBeGreaterThan(0);
+  expect(
+    Number(await round.getAttribute("data-after-accuracy")),
+  ).toBeGreaterThanOrEqual(0);
+  expect(await state(page)).toEqual(after);
+  await page.getByTestId("tr-save").click();
+  await expect(page.locator("#tr-status")).toContainText("Model saved");
+  const savedRound = await state(page);
+  expect(savedRound.models).toHaveLength(2);
+  const expanded = savedRound.models.find((m) => m.id !== before.models[0].id);
+  expect(expanded.trainCount).toBe(before.models[0].trainCount + 1);
+  expect(expanded.experiment.validation).toEqual(
+    before.models[0].experiment.validation,
+  );
+  expect(savedRound.images).toEqual(after.images);
+  expect(savedRound.finals).toEqual(after.finals);
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByTestId("tr-model")
+    .filter({ has: page.getByText(before.models[0].name, { exact: true }) })
+    .getByTestId("tr-delete")
+    .click();
+  await expect(page.getByTestId("tr-round-result")).toHaveCount(0);
   await page.reload();
+  await expect(page.getByTestId("tr-round-result")).toHaveCount(0);
+  const savedRow = page
+    .getByTestId("tr-model")
+    .filter({ has: page.locator("strong", { hasText: "Feedback —" }) });
+  await savedRow.getByTestId("tr-restore").click();
+  await expect(page.locator("#tr-status")).not.toContainText("no longer");
+  await savedRow.getByTestId("tr-review-run").click();
+  await expect(page.locator("#tr-review-status")).toContainText(
+    "Review queue ready",
+    { timeout: 90000 },
+  );
   expect((await state(page)).images.filter((i) => i.review)).toHaveLength(1);
 });
 
@@ -360,4 +401,87 @@ test("approval writes roll back on asynchronous failure and reject a stale sourc
   await page.getByTestId("tr-review-commit").click();
   await expect(page.getByTestId("tr-review-item")).toHaveCount(0);
   expect(await state(page)).toEqual(stale);
+});
+
+test("feedback rounds cancel, background and discard stale snapshots without new cache writes", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  await trained(page);
+  await page.getByTestId("tr-review-run").click();
+  await expect(page.locator("#tr-review-status")).toContainText(
+    "Review queue ready",
+    { timeout: 90000 },
+  );
+  await page
+    .getByTestId("tr-review-item")
+    .first()
+    .getByRole("button", { name: "Accept suggestion" })
+    .click();
+  await page.getByTestId("tr-review-consent").check();
+  await page.getByTestId("tr-review-commit").click();
+  await expect(page.locator("#tr-review-status")).toContainText(
+    "committed to training",
+  );
+  const before = await state(page);
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/models/mobilenet_v3_small.tflite", async (route) => {
+    await gate;
+    await route.continue().catch(() => {});
+  });
+  await page.getByTestId("tr-round-run").click();
+  await page.getByTestId("tr-round-cancel").click();
+  await expect(page.locator("#tr-round-status")).toContainText("cancelled");
+  await expect(page.getByTestId("tr-round-result")).toHaveCount(0);
+  await page.getByTestId("tr-round-run").click();
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.locator("#tr-round-status")).toContainText("cancelled");
+  await page.evaluate(() =>
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: false,
+    }),
+  );
+  expect(await state(page)).toEqual(before);
+  await page.getByTestId("tr-round-run").click();
+  await expect(page.locator("#tr-round-status")).toContainText(
+    "Preparing round features",
+  );
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const r = indexedDB.open("visual-labs-datasets");
+        r.onsuccess = () => {
+          const db = r.result,
+            tx = db.transaction("datasets", "readwrite"),
+            s = tx.objectStore("datasets"),
+            q = s.getAll();
+          q.onsuccess = () =>
+            s.put({ ...q.result[0], version: q.result[0].version + 1 });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+        };
+      }),
+  );
+  release();
+  await page.unroute("**/models/mobilenet_v3_small.tflite");
+  await expect(page.getByTestId("tr-round-run")).toBeEnabled();
+  await expect(page.getByTestId("tr-round-result")).toHaveCount(0);
+  await expect(page.locator("#tr-round-status")).toContainText(
+    /changed|edits/i,
+  );
+  const after = await state(page);
+  expect(after.embeddings).toEqual(before.embeddings);
+  expect(after.images).toEqual(before.images);
+  expect(after.models).toEqual(before.models);
+  expect(after.finals).toEqual(before.finals);
 });

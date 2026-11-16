@@ -461,9 +461,28 @@ transaction saves approved labels to training only, with per-image review proven
 unlabelled. It revalidates the source and pool under the same transaction lock and refuses detected
 changes or any hash-connected protected group. Existing evaluation assignments stay unchanged.
 Committing is not optimisation and proves no improvement. Ordinary later Dataset-lab edits can
-still alter splits; a future controlled round must revalidate its frozen cohorts.
+still alter splits; the controlled round refuses such later edits.
 Source weights and final locks remain unchanged. Newly computed review features stay in page
 memory; existing permitted features may be reused. Protected validation/test images are not
 selected for this queue, and detected snapshot changes discard it. Further independent final claims after earlier
 final-test-guided choices still require fresh held-out data. Physical Safari and prior accepted
 limits/unresolved reports remain unchanged; no new device or deployed network-inspection claim.
+
+### Controlled-round limits
+
+The first measured round accepts only a completed source trained without a per-label cap and
+exactly one approval batch after that snapshot. Any subsequent dataset edit requires a new source
+and batch; general multi-edit/history reconstruction is not implemented. The whole recorded
+validation cohort must remain independent. Hash-based exclusions remain heuristic.
+
+A fresh same-data control and expanded-data classifier use the same current features, seed,
+settings and epoch budget. They are trained from scratch, not fine-tuned; the encoder and detector
+are frozen. The table also re-evaluates saved source weights on current validation features.
+Equal epochs are not equal compute, and validation differences from one seed/small cohort do not
+establish general improvement. Repeated validation tuning may overfit. Random review ordering is
+not a matched random-selection learning arm; that comparison is still pending.
+
+Comparison evidence is page memory, cleared by reload/detected source or dataset changes. The
+expanded classifier can be saved explicitly as a normal model; the comparison/control weights are
+not durable round records and no round-report export is implemented. Newly computed features stay
+temporary. Existing accepted Safari/network and final-test exposure limits remain unchanged.
