@@ -215,7 +215,8 @@ as fabricated zero/perfect scores. Counts and denominators accompany percentages
 wrong labels, imbalance and undetected similarity can make these results misleading.
 Loaded-model metrics reuse the existing independence exclusions and unknown-provenance warnings;
 they do not independently establish absence of leakage. Recorded comparisons are described below;
-final held-out evaluation and Phase 4 completion remain deferred. The test split is still sealed.
+ordinary validation keeps the test split sealed. The dedicated final path described below is the
+only exception; this first slice alone does not complete Phase 4.
 
 
 ## Reproducible runs and recorded comparisons
@@ -286,3 +287,32 @@ One seed and one small validation set cannot establish a general effect. Repeate
 still overfit validation. Hash checks reject exact train/validation overlap, but do not prove that
 all near-copies or correlated examples were found. Historical saved results are not a fresh
 check of the current dataset. No new physical-device evidence or final-test access is claimed.
+
+## Final held-out checks
+
+Only the explicit final-check action can compute test embeddings. You choose a saved completed
+model and confirm its one-time lock before pixels reach the encoder. A final record is per dataset,
+not per version or label subset. Failed/cancelled checks may retry only that locked model on the
+unchanged snapshot; completed results cannot be rerun/overwritten through the app. Even a rename
+or unrelated dataset edit can conservatively prevent a locked incomplete check from finishing.
+A deleted chosen model cannot retry because its weights are not duplicated in final storage.
+
+Exact/near-copy screening covers both training and validation and ignores manual Not related
+exceptions, conservatively refusing likely copies. It can reject genuinely different photos and
+cannot identify every correlated example. No heuristic or saved manifest proves ground-truth
+independence or correct labels. Small or generated test sets do not establish real-world accuracy;
+results measure the stated locked classifier/test selection, not an improvement over a baseline.
+The unchanged training/validation code never embeds tests. Test vectors remain in memory only,
+and no partial predictions/metrics are published if storage, encoding or cancellation fails.
+
+Further tuning after reading test scores makes those scores part of model selection. Use fresh
+held-out images for any new final claim. Local IndexedDB is not tamper-proof: clearing/evicting
+storage loses locks, and reimporting the same images does not restore independence. This personal
+lab does not retain an undeletable global image-history ledger. A final report stores labels,
+settings, file fingerprints and results locally; delete the dataset or Delete all to remove it.
+Deleting just a saved model leaves its disclosed historical report (and no duplicate weights).
+
+Automated evidence covers numerical/planning guards, cross-connection atomic choice, immutable
+completion, cancellation/retry, migrations and real-encoder integration in Chromium. New physical
+Safari behaviour remains untested; existing accepted device/privacy limits and unexplained reports
+remain. No additional manual camera, battery or cross-browser walkthrough is required by this slice.

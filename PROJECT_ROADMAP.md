@@ -163,6 +163,19 @@ inference or new storage. Fixed epochs can mean different batch sizes/update cou
 not an equal-compute benchmark. One seed or small validation set cannot prove general improvement.
 Final-test evaluation and additional learning methods remain deferred.
 
+Sixth slice: an explicit final held-out check locks one saved, completed classifier per dataset
+before computing test embeddings. Metadata must match the trained snapshot, and detected exact/
+near-copy overlap is refused. One durable choice/result is stored atomically across tabs in database
+v3. Cancel/failure retries may use only that same model and unchanged snapshot; completed results
+cannot be overwritten. Test embeddings are never cached. Ordinary training/validation never access
+test pixels through this path. Results are shown only after the complete result is saved.
+
+This is a local workflow guard, not an access-control or scientific-independence guarantee: clearing
+storage loses its history, and fresh identifiers do not make previously used test images untouched.
+Further tuning needs fresh held-out data for a new final claim. Final reports can be removed by
+deleting their dataset. Additional learning methods/regularisation remain deferred; this slice does
+not itself declare Phase 4 or the project closed, or authorize Phase 5.
+
 Scope:
 
 - Accuracy, precision, recall per label; confusion matrix.

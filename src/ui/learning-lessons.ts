@@ -75,7 +75,7 @@ export function mountLearningLessons(
     output,
     el(
       "p",
-      "Each lesson deliberately uses a different task. Do not rank learning methods by comparing these scores. On your own photos, curves are clues rather than a diagnosis: check labels, sample size, leakage and variability. Your final test photos remain sealed.",
+      "Each lesson deliberately uses a different task. Do not rank learning methods by comparing these scores. On your own photos, curves are clues rather than a diagnosis: check labels, sample size, leakage and variability. These lessons do not access your test photos.",
     ),
   );
   const sync = () => {

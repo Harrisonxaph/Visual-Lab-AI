@@ -1,3 +1,10 @@
+import {
+  FinalCheckError,
+  prepareFinalPlan,
+  fingerprintModel,
+  runFinalCheck,
+  type FinalCheckRecord,
+} from "../learning/final-evaluation";
 import { StorageError } from "../datasets/db";
 import { DatasetService, UserError } from "../datasets/service";
 import type { ImageRecord } from "../datasets/types";
@@ -111,11 +118,15 @@ interface Loaded {
 export function mountTrainingLab(root: HTMLElement) {
   let service: DatasetService | null = null;
   let embedder: Embedder | null = null;
-  let phase: "idle" | "embedding" | "training" = "idle";
+  let phase: "idle" | "embedding" | "training" | "final-test" = "idle";
   let abort: AbortController | null = null;
   let actionPending = false;
   let lessonRunning = false;
   let reportNames = false;
+  let finalRecord: FinalCheckRecord | null = null;
+  let finalReadError = "";
+  let finalModelId = "";
+  let finalProgress = "";
   let chosen: Set<string> | null = null;
   let chosenFor: string | null = null;
   let learningRate = String(DEFAULT_SETTINGS.learningRate);
@@ -186,6 +197,10 @@ export function mountTrainingLab(root: HTMLElement) {
   );
   const results = el("div", { className: "ds-body", id: "tr-results" });
   const saved = el("div", { className: "ds-body", id: "tr-saved" });
+  const finalSection = el("section", {
+    className: "panel ds-panel",
+    id: "tr-final",
+  });
   const lessonRoot = el("section", {
     className: "panel ds-panel",
     id: "tr-lessons",
@@ -196,6 +211,7 @@ export function mountTrainingLab(root: HTMLElement) {
     progress,
     results,
     saved,
+    finalSection,
     lessonRoot,
     aboutPanel(),
   );
@@ -213,6 +229,7 @@ export function mountTrainingLab(root: HTMLElement) {
 
   function describeError(error: unknown) {
     if (
+      error instanceof FinalCheckError ||
       error instanceof RunReportError ||
       error instanceof UserError ||
       error instanceof StorageError ||
@@ -362,7 +379,11 @@ export function mountTrainingLab(root: HTMLElement) {
           el("th", { scope: "row" }, el("label", {}, box, ` ${l.name}`)),
           el("td", {}, String(count("train"))),
           el("td", {}, String(count("validation"))),
-          el("td", {}, `${count("test")} sealed`),
+          el(
+            "td",
+            {},
+            `${count("test")} ${finalRecord?.status === "complete" && finalRecord.labelIds.includes(l.id) ? (finalRecord.datasetVersion === state.dataset.version ? "held out (final check used)" : "held out (historical check)") : "sealed"}`,
+          ),
         ),
       );
     }
@@ -426,7 +447,7 @@ export function mountTrainingLab(root: HTMLElement) {
         el(
           "p",
           { className: "ds-help" },
-          "Training photos teach the model. Validation photos check it on photos it never learns from. Test photos stay sealed for a final check in a later lab: they are never used here.",
+          "Training photos teach the model. Validation photos check it without updating weights. Test photos are excluded from training and progress checks; use the explicit final check only after choosing a saved model.",
         ),
         selection.problems.length
           ? el(
@@ -892,6 +913,195 @@ export function mountTrainingLab(root: HTMLElement) {
     );
   }
 
+  function renderFinal() {
+    const state = service?.current;
+    finalSection.replaceChildren(
+      el("h2", {}, "Final held-out test — choose once"),
+    );
+    if (!state) {
+      finalSection.append(el("p", {}, "Choose a dataset first."));
+      return;
+    }
+    finalSection.append(
+      el(
+        "p",
+        { className: "ds-help" },
+        "Choose settings using validation first. This final check locks one saved model for this dataset before any test photo is encoded. Cancelled/failed attempts may retry only that same model and unchanged snapshot. No partial predictions are shown. Do not tune using this score: a later independent claim needs fresh held-out images. Clearing storage cannot make seen test images unseen.",
+      ),
+    );
+    if (finalReadError) {
+      finalSection.append(el("p", { className: "ds-notice" }, finalReadError));
+      return;
+    }
+    const record = finalRecord;
+    const message = el("p", { id: "tr-final-status", className: "ds-notice" });
+    message.setAttribute("role", "status");
+    if (record?.status === "complete" && record.result) {
+      message.textContent = `Final check recorded at ${record.result.completedAt}, dataset version ${record.datasetVersion}. This is a historical result, not a fresh check of current photos. Loss ${num(record.result.loss)}.`;
+      finalSection.append(
+        message,
+        classificationMetricsPanel(
+          record.labelNames,
+          record.result.truth,
+          record.result.predicted,
+          {
+            id: "tr-final-metrics",
+            title: "Final test measurements — locked classifier",
+          },
+        ),
+      );
+    } else {
+      const select = el("select", {
+        id: "tr-final-model",
+        disabled: busy() || !!record,
+      });
+      select.setAttribute("aria-label", "Final saved model");
+      select.append(
+        el("option", { value: "" }, "Choose the final saved model"),
+      );
+      for (const m of models)
+        select.append(
+          el(
+            "option",
+            {
+              value: m.id,
+              selected: m.id === (record?.modelId ?? finalModelId),
+            },
+            m.name,
+          ),
+        );
+      select.addEventListener("change", () => {
+        finalModelId = select.value;
+        renderFinal();
+      });
+      message.textContent =
+        phase === "final-test"
+          ? finalProgress
+          : record
+            ? "The final choice is locked. No complete result yet; retry only this same model and unchanged dataset."
+            : "Test photos remain sealed until you confirm a final model.";
+      finalSection.append(
+        select,
+        message,
+        button(
+          record ? "Retry locked final check" : "Begin one final check",
+          () => void finalCheck(),
+          {
+            className: "button primary",
+            disabled:
+              busy() ||
+              !(record
+                ? models.some((m) => m.id === record.modelId)
+                : finalModelId),
+            dataset: { testid: "tr-final-run" },
+          },
+        ),
+      );
+      if (phase === "final-test")
+        finalSection.append(
+          button("Cancel final check", () => abort?.abort(), {
+            className: "button stop",
+            dataset: { testid: "tr-final-cancel" },
+          }),
+        );
+    }
+    finalSection.append(
+      el(
+        "p",
+        { className: "ds-help" },
+        "The frozen encoder and classifier do not learn during evaluation. Test embeddings are temporary and never cached. Detected exact/near-copy overlap blocks the check; heuristics cannot prove all leakage is absent. Labels, fingerprints and the final result stay locally until this dataset is deleted. Deleting a saved model removes its weights but keeps this historical report. Small or generated test sets do not prove real-world accuracy.",
+      ),
+    );
+  }
+
+  async function finalCheck() {
+    const s = service;
+    if (
+      !s?.current ||
+      busy() ||
+      finalRecord?.status === "complete" ||
+      finalReadError
+    )
+      return;
+    const source = models.find(
+      (m) => m.id === (finalRecord?.modelId ?? finalModelId),
+    );
+    if (!source) {
+      say("The chosen saved model no longer exists.");
+      return;
+    }
+    const candidate = structuredClone(source);
+    try {
+      prepareFinalPlan(
+        s.current.dataset,
+        s.current.labels,
+        s.current.images,
+        candidate,
+      );
+    } catch (error) {
+      say(describeError(error));
+      return;
+    }
+    if (
+      !finalRecord &&
+      !confirm(
+        "Lock this saved model as the one final choice for this dataset? Test photos will be evaluated only after the lock is saved. Cancellation or failure keeps the choice locked; only the same model and unchanged dataset can retry. Use fresh held-out images for any later independent claim. The local record keeps labels, fingerprints and results until you delete the dataset; test embeddings are not saved.",
+      )
+    )
+      return;
+    phase = "final-test";
+    jobDatasetId = candidate.datasetId;
+    jobDatasetGone = false;
+    abort = new AbortController();
+    const signal = abort.signal;
+    progress.hidden = true;
+    finalProgress = "Saving the final model choice…";
+    say("");
+    renderAll();
+    try {
+      const fingerprint = await fingerprintModel(candidate);
+      if (signal.aborted) throw new CancelledError();
+      const lock = await s.finalChecks().claim(candidate, fingerprint, signal);
+      finalRecord = lock;
+      renderFinal();
+      embedder ??= new Embedder();
+      const encoder = embedder;
+      const result = await runFinalCheck(
+        lock,
+        candidate,
+        async (id) => (await s.getBlob(id))?.image,
+        (image) => encoder.embed(image),
+        {
+          signal,
+          onProgress: (done, total) => {
+            finalProgress = `Encoding locked test photos: ${done} of ${total}. No partial measurements are published.`;
+            const status = finalSection.querySelector("#tr-final-status");
+            if (status) status.textContent = finalProgress;
+          },
+        },
+      );
+      if (signal.aborted) throw new CancelledError();
+      finalRecord = await s
+        .finalChecks()
+        .complete(lock, candidate, result, signal);
+      say(
+        "Final test recorded. Further tuning cannot treat these test photos as untouched.",
+      );
+    } catch (error) {
+      say(
+        signal.aborted || error instanceof CancelledError
+          ? "Final check stopped. No partial results were saved. Any committed model choice stays locked for a retry of that same choice."
+          : describeError(error),
+      );
+    } finally {
+      phase = "idle";
+      abort = null;
+      jobDatasetId = null;
+      releaseEncoder();
+      await refresh();
+    }
+  }
+
   function renderSaved() {
     const s = service;
     if (!s?.current) {
@@ -1162,6 +1372,19 @@ export function mountTrainingLab(root: HTMLElement) {
   async function loadModels() {
     const s = service;
     models = s?.current ? await s.listModels(s.current.dataset.id) : [];
+    finalRecord = null;
+    finalReadError = "";
+    if (s?.current) {
+      try {
+        finalRecord =
+          (await s.finalChecks().read(s.current.dataset.id)) ?? null;
+      } catch (error) {
+        finalReadError =
+          error instanceof Error
+            ? error.message
+            : "Final-check history is unavailable.";
+      }
+    }
   }
 
   async function act(action: () => Promise<void | string>) {
@@ -1185,6 +1408,7 @@ export function mountTrainingLab(root: HTMLElement) {
     updateProgress();
     renderResults();
     renderSaved();
+    renderFinal();
   }
 
   function aboutPanel() {
@@ -1269,6 +1493,19 @@ export function mountTrainingLab(root: HTMLElement) {
     renderAll();
   }
 
+  const stopFinal = () => {
+    if (phase === "final-test") abort?.abort();
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopFinal();
+  });
+  window.addEventListener("pagehide", stopFinal);
   say("Opening local dataset storage…");
-  return { refresh, leave: () => lessons.cancel(true) };
+  return {
+    refresh,
+    leave: () => {
+      lessons.cancel(true);
+      stopFinal();
+    },
+  };
 }

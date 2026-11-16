@@ -310,6 +310,7 @@ export class DatasetService {
         blobs: imageIds,
         embeddings: learning.embeddings,
         models: learning.models,
+        finalChecks: [id],
       },
     });
     this.datasets = this.datasets.filter((d) => d.id !== id);
@@ -365,6 +366,10 @@ export class DatasetService {
       put: { embeddings: records },
       require: { images: records.map((r) => r.imageId) },
     });
+  }
+
+  finalChecks() {
+    return this.db.finalChecks();
   }
 
   listModels(datasetId: string) {

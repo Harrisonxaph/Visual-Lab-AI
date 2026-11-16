@@ -3,6 +3,8 @@
 ## Current summary (roadmap reset, 2026-10-26)
 
 A static Vite + TypeScript app with a framework-free DOM UI, no backend and no paid services.
+The current local database is v3: the Phase 4 final-check store is additive to the Phase 3 schema,
+which is recorded below in its original context.
 
 | Area | Modules | Reuse for training phases |
 | --- | --- | --- |
@@ -45,7 +47,7 @@ opening it pauses running detection. Thumbnails are drawn on canvases, so the CS
 | `learning/models.ts`, `learning/types.ts` | Saved-model record and compatibility check (damaged weights, encoder key, dataset, missing labels refused; changed dataset version warns) |
 | `ui/training-lab.ts`, `ui/training-chart.ts` | Training lab tab: data and settings, live loss/accuracy charts, before/after table, parameter evidence, saved models |
 
-- **Storage:** the dataset database moves to version 2, which only adds two stores: `embeddings`
+- **Storage:** Phase 3 introduced database version 2, adding two stores: `embeddings`
   (key `imageId`, one vector per photo for the current encoder) and `models` (up to 5 per dataset,
   weights stored as `Float64Array` by IndexedDB structured clone rather than JSON). Deleting a
   photo deletes its embedding; deleting a label with its photos or a dataset deletes their
@@ -60,7 +62,8 @@ opening it pauses running detection. Thumbnails are drawn on canvases, so the CS
   write transaction); model and embedding saves use it. The Training lab cancels a job whose
   dataset is deleted and re-checks before showing results.
 - **Test split sealed:** test photos are never embedded or evaluated in Phase 3 (code guard plus
-  unit and browser tests). Phase 4 will open them once for a final check.
+  unit and browser tests). Only the explicit Phase 4 final-check path described below can open
+  them; routine training/validation guards remain in force.
 - The Training lab reopens its own storage connection whenever its tab is shown, so it sees the
   Dataset lab's latest changes; the detector path and the CSP are unchanged.
 
@@ -391,3 +394,29 @@ counts. A fixed epoch budget is not equal compute: data volume can change both b
 number of optimiser updates. Training losses use different examples in size mode; validation
 measurements use identical recorded examples. Existing restoration remains same-snapshot only.
 No optimiser, encoder, model schema or storage behaviour changes, and test photos remain sealed.
+
+## Phase 4 explicit final held-out evaluation — sixth slice
+
+`learning/final-evaluation.ts` preflights a saved model against the exact current dataset/run
+manifest. The snapshot must match; the model must be complete and compatible. Every selected
+class needs test examples. Exact/near-copy overlap with training or validation is refused (rather
+than filtering test examples and changing the exam). The model fingerprint covers parameters,
+encoder, class order, settings and recorded provenance. No test pixels are read during preflight.
+
+`learning/final-store.ts` uses a single readwrite IndexedDB transaction across datasets, labels,
+images, models and the new `finalChecks` store. It validates current data and parameters before
+saving a durable per-dataset choice. Competing choices across tabs serialize. Completion requires
+the original lock, unchanged snapshot/model and valid full predictions. The result cannot overwrite
+a completed entry or resurrect deleted data. A failed/cancelled check leaves a committed lock
+retryable only for that same model/snapshot. Transaction cancellation rolls back its writes.
+Database v3 adds only this store; existing datasets, model weights and embedding caches are kept.
+Dataset deletion and Delete all remove final records; deleting a model removes its weights but
+leaves the disclosed historical report. No duplicate model weights or photos are stored here.
+
+The dedicated executor computes test embeddings in memory using the existing worker, then evaluates
+the frozen classifier. It never calls `embedImages`, saves test embeddings or updates weights.
+Abortable waits discard partial results; tab/background/pagehide cancellation releases the worker.
+The Training lab publishes metrics only after atomic completion, using the existing metrics panel.
+Training, validation, comparisons and lessons keep their test guards. Historical reports remain
+labelled with their original version even if data/model changes later. There is no lock-reset UI.
+This is local state, not a security boundary against devtools, storage clearing or eviction.
