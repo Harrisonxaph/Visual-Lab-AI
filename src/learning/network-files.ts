@@ -133,8 +133,9 @@ export function parseNetworkFile(json: string): NetworkFile {
       ) && new Set(refs.map((r) => r.id)).size === refs.length,
     );
     valid(
-      a.train.every((r) => /^[0-9a-f]{16}$/i.test(r.dhash)) &&
-        ids.every((id) => a.train.some((r) => r.labelId === id)),
+      a.train.every(
+        (r) => typeof r.dhash === "string" && /^[0-9a-f]{16}$/i.test(r.dhash),
+      ) && ids.every((id) => a.train.some((r) => r.labelId === id)),
     );
     const hashes = new Set(a.train.map((r) => r.sha256));
     valid(!a.validation.some((r) => hashes.has(r.sha256)));
@@ -199,7 +200,10 @@ export function parseNetworkFile(json: string): NetworkFile {
       })),
       settings: settingsCopy(a.settings),
       history: a.history.map(rowCopy),
-      train: a.train.map((r) => ({ ...refCopy(r), dhash: r.dhash })),
+      train: a.train.map((r) => ({
+        ...refCopy(r),
+        dhash: r.dhash.toLowerCase(),
+      })),
       validation: a.validation.map(refCopy),
       network: {
         dims: a.dims,

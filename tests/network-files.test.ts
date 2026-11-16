@@ -72,6 +72,7 @@ describe("bounded neural-network model files", () => {
       (x: any) => (x.schema = "other"),
       (x: any) => x.network.input.pop(),
       (x: any) => (x.network.outputBias[0] = null),
+      (x: any) => (x.train[0].dhash = 1234567890123456),
       (x: any) => (x.classes[1].id = x.classes[0].id),
       (x: any) => (x.train = []),
       (x: any) => (x.validation[0].sha256 = x.train[0].sha256),
@@ -106,6 +107,17 @@ describe("bounded neural-network model files", () => {
     expect(parsed.settings).not.toHaveProperty("secret");
     expect(parsed.network).not.toHaveProperty("embedding");
     expect(({} as any).polluted).toBeUndefined();
+  });
+  it("canonicalises uppercase difference hashes before screening copies", async () => {
+    const { f, run, plan } = await fixture();
+    const raw = JSON.parse(serializeNetworkFile(f.model, run, plan));
+    raw.train[1].dhash = raw.train[1].dhash.toUpperCase();
+    const parsed = parseNetworkFile(JSON.stringify(raw));
+    expect(parsed.train[1].dhash).toBe("ffffffffffffffff");
+    expect(prepareNetworkCheck(f, parsed).images.map((i) => i.id)).toEqual([
+      "va",
+      "vb",
+    ]);
   });
   it("requires the original encoder/dataset and labels, while changed versions warn", async () => {
     const { f, run, plan } = await fixture(),
