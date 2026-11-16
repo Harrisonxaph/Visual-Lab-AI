@@ -13,7 +13,7 @@ classifier, measuring it honestly, and improving it with human feedback. See
 | 1 | Live detection, tracking, inspector, confidence and privacy safeguards | Implemented |
 | 2 | Build labelled image datasets from your photos | Implemented (Dataset lab tab) |
 | 3 | Train a real classifier and watch it learn | Implemented and merged (Training lab tab) |
-| 4 | Validation metrics, reproducible reports, controlled/L2 experiments, 1-NN baseline, photo/numeric method comparisons and an explicit final test | In progress |
+| 4 | Validation metrics, reproducible reports, controlled/L2 experiments, 1-NN baseline, photo/numeric comparisons, neural model files and an explicit final test | In progress |
 | 5 | Active learning: improve the model with your feedback | Planned |
 
 The detector does not learn from the camera. Training happens in the Training lab (Phase 3), which
@@ -88,3 +88,12 @@ Application source: MIT. Third-party assets keep their own terms.
 
 Deployment: `vercel.json` disables automatic Git deployments. Production still serves the original
 README-only commit; any deployment requires explicit owner approval.
+
+
+### Neural-network model files
+
+After a photo-method comparison, explicitly export the trained network as JSON. Label names are
+optional; the file includes weights and provenance, not photos or embeddings. Reload it with the
+original dataset and labels to compute current validation metrics without retraining. Imported
+training claims are unverified; final-test evaluation for networks is not available yet. Downloads
+are separate from app data and must be deleted separately. Camera access is not required.

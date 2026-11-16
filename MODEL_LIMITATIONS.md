@@ -396,8 +396,30 @@ Prediction losses exclude penalties. One seed or small validation sample cannot 
 repeated tuning can overfit validation. If a final score already guided choices, these comparisons
 do not make the same test images independent again.
 
-The network stays in page memory: no save/reload, report export or final-test path for this method
-yet. Stored source models and final locks are unchanged. Long runs may be slower on mobile; batch
+Fresh comparison results stay in page memory until explicit model-file export (see below).
+Reloaded files also stay in page memory; the neural-network final-test path is not available yet. Stored source models and final locks are unchanged. Long runs may be slower on mobile; batch
 yields provide cancellation but do not establish hardware performance or physical Safari support.
 Physical-device evidence is not required or fabricated for this slice. Existing accepted limits
 and unresolved camera reports remain unchanged.
+
+
+## Neural-network file export and reload
+
+Model files include learned parameters, identifiers, file fingerprints, settings and history; they
+are private rather than anonymous. Label names are excluded unless explicitly enabled. They contain
+no images or cached features and are not dataset backups. Reload needs the original dataset/label
+IDs and pinned encoder; copying a file to another browser without that dataset is insufficient.
+Clearing website data cannot delete downloaded files, and deleting a training photo does not
+unlearn it from an exported model. Remove unwanted files separately in Downloads/Files.
+
+Import rejects unsupported/malformed files before inference and never runs file-supplied code.
+Finite but unusable weights can still produce invalid calculations; such checks fail without
+publishing scores. File-reported history and provenance are not independently verified. Screening
+uses claimed training references and cannot establish that unlisted images were never used.
+Fresh validation metrics are computed locally; they are not a final test, proof of improvement or
+proof of independent training. Changed snapshots warn and known copies are excluded.
+
+The app holds one reloaded network in page memory, without adding a model store or migrating data.
+Existing run-report JSON still excludes weights and remains a separate softmax-run report format.
+Neural-network final-test selection is deferred. Automated Chromium download/import/CSP checks are
+not physical Safari evidence; no new device-support or network-inspection claim is made.

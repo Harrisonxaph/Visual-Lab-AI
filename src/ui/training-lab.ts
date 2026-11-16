@@ -1,4 +1,17 @@
 import {
+  MAX_NETWORK_FILE_BYTES,
+  NetworkFileError,
+  parseNetworkFile,
+  prepareNetworkCheck,
+  serializeNetworkFile,
+} from "../learning/network-files";
+import { evaluateNetwork } from "../learning/nonlinear";
+import {
+  downloadNetworkFile,
+  networkFilePanel,
+  type LoadedNetwork,
+} from "./network-file-panel";
+import {
   prepareMethodComparison,
   runMethodComparison,
   type MethodRun,
@@ -144,6 +157,8 @@ export function mountTrainingLab(root: HTMLElement) {
   let reportNames = false;
   let baseline: BaselineComparison | null = null;
   let methodComparison: PhotoMethodComparison | null = null;
+  let loadedNetwork: LoadedNetwork | null = null;
+  let networkExportNames = false;
   let baselineProgress = "";
   let finalRecord: FinalCheckRecord | null = null;
   let finalReadError = "";
@@ -258,6 +273,7 @@ export function mountTrainingLab(root: HTMLElement) {
   function describeError(error: unknown) {
     if (
       error instanceof BaselineError ||
+      error instanceof NetworkFileError ||
       error instanceof FinalCheckError ||
       error instanceof RunReportError ||
       error instanceof UserError ||
@@ -1006,6 +1022,147 @@ export function mountTrainingLab(root: HTMLElement) {
       baselineSection.append(
         baselineComparisonPanel(baseline, finalRecord?.status === "complete"),
       );
+    baselineSection.append(
+      networkFilePanel({
+        busy: busy(),
+        hasDataset: !!service?.current,
+        canExport: !!methodComparison,
+        includeNames: networkExportNames,
+        loaded: loadedNetwork,
+        onNames: (value) => {
+          networkExportNames = value;
+        },
+        onExport: () => {
+          const comparison = methodComparison;
+          if (comparison) void act(() => exportNetwork(comparison));
+        },
+        onImport: (file) => void importNetwork(file),
+        onClear: () => {
+          loadedNetwork = null;
+          renderBaseline();
+        },
+      }),
+    );
+  }
+
+  async function exportNetwork(comparison: PhotoMethodComparison) {
+    const s = service;
+    if (!s)
+      throw new NetworkFileError(
+        "Choose the original dataset before exporting.",
+      );
+    await s.reload();
+    if (!s.current)
+      throw new NetworkFileError(
+        "The dataset was deleted; no file was exported.",
+      );
+    prepareMethodComparison(s.current, comparison.record);
+    if (
+      !(await s.listModels(comparison.record.datasetId)).some(
+        (m) => m.id === comparison.record.id,
+      )
+    )
+      throw new NetworkFileError(
+        "The source run was deleted; run a complete comparison again.",
+      );
+    const json = serializeNetworkFile(
+      comparison.record,
+      comparison.run.network,
+      comparison.plan,
+      networkExportNames,
+    );
+    downloadNetworkFile(json);
+    return "Network model download requested. The file is separate from app data; source models and final-test locks were not changed.";
+  }
+
+  async function importNetwork(input: File) {
+    const s = service;
+    if (!s?.current || busy()) return;
+    phase = "baseline";
+    loadedNetwork = null;
+    baselineProgress = "Reading network model file locally…";
+    jobDatasetId = s.current.dataset.id;
+    jobDatasetGone = false;
+    abort = new AbortController();
+    const signal = abort.signal;
+    let cancelEncoding: (() => void) | undefined;
+    progress.hidden = true;
+    say("");
+    renderAll();
+    try {
+      if (input.size > MAX_NETWORK_FILE_BYTES)
+        throw new NetworkFileError(
+          "Network file is too large. Maximum size: 1 MiB.",
+        );
+      const json = await input.text();
+      if (signal.aborted) throw new CancelledError();
+      const file = parseNetworkFile(json);
+      await s.reload();
+      if (signal.aborted) throw new CancelledError();
+      if (!s.current)
+        throw new NetworkFileError(
+          "The dataset was deleted; the check was discarded.",
+        );
+      const version = s.current.dataset.version;
+      const plan = prepareNetworkCheck(s.current, file);
+      embedder ??= new Embedder();
+      const encoder = embedder;
+      const cancelled = new Promise<never>((_, reject) => {
+        cancelEncoding = () => reject(new CancelledError());
+        signal.addEventListener("abort", cancelEncoding, { once: true });
+      });
+      const embedded = await Promise.race([
+        embedImages(s, (image) => encoder.embed(image), plan.images, {
+          signal,
+        }),
+        cancelled,
+      ]);
+      const evaluation = evaluateNetwork(
+        file.network,
+        plan.images.map((i) => embedded.vectors.get(i.id)!),
+        plan.truth,
+      );
+      if (!Number.isFinite(evaluation.loss))
+        throw new NetworkFileError(
+          "The network returned invalid measurements and cannot be checked.",
+        );
+      await s.reload();
+      if (signal.aborted) throw new CancelledError();
+      if (
+        !s.current ||
+        s.current.dataset.id !== file.dataset.id ||
+        s.current.dataset.version !== version
+      )
+        throw new NetworkFileError(
+          "The dataset changed during this check. Reload the file to check it again.",
+        );
+      prepareNetworkCheck(s.current, file);
+      loadedNetwork = {
+        file,
+        evaluation,
+        truth: plan.truth,
+        names: plan.names,
+        excluded: plan.excluded,
+        warning: plan.warning,
+        checkedVersion: version,
+      };
+      baselineProgress =
+        "Network file checked — no weights changed. Current validation only; no test photos were opened.";
+    } catch (error) {
+      loadedNetwork = null;
+      baselineProgress =
+        signal.aborted || error instanceof CancelledError
+          ? "Network file check cancelled. No partial result was published; select the file again to retry."
+          : describeError(error);
+      say(baselineProgress);
+    } finally {
+      if (cancelEncoding) signal.removeEventListener("abort", cancelEncoding);
+      phase = "idle";
+      abort = null;
+      jobDatasetId = null;
+      releaseEncoder();
+      await refresh();
+    }
   }
 
   async function compareBaseline(
@@ -1018,6 +1175,7 @@ export function mountTrainingLab(root: HTMLElement) {
     phase = "baseline";
     baseline = null;
     methodComparison = null;
+    loadedNetwork = null;
     baselineProgress = "Preparing shared validation inputs…";
     jobDatasetId = candidate.datasetId;
     jobDatasetGone = false;
@@ -1124,6 +1282,7 @@ export function mountTrainingLab(root: HTMLElement) {
       if (trained) {
         methodComparison = {
           record: candidate,
+          plan,
           run: trained,
           truth: plan.truth,
           trainCount: plan.train.length,
@@ -1692,7 +1851,7 @@ export function mountTrainingLab(root: HTMLElement) {
       el(
         "p",
         { className: "ds-help" },
-        "What learns is a small classifier on top: one weight per embedding number per label, plus one bias per label. Each training step nudges those weights to make the right label more likely. This is genuine training, but it is not retraining the Detection lab's object detector, which is unchanged.",
+        "Photo training learns a softmax classifier: one weight per embedding number per label, plus biases. The method comparison also trains an 8-unit hidden-layer network, updating both layers and biases. These are genuine classifier-training steps on frozen features; neither retrains the Detection lab's object detector or fine-tunes the encoder.",
       ),
       el(
         "p",
@@ -1762,9 +1921,19 @@ export function mountTrainingLab(root: HTMLElement) {
         baselineProgress =
           "Earlier comparison cleared because its dataset or source model changed.";
       }
+      if (
+        loadedNetwork &&
+        (loadedNetwork.file.dataset.id !== service.current?.dataset.id ||
+          loadedNetwork.checkedVersion !== service.current?.dataset.version)
+      ) {
+        loadedNetwork = null;
+        baselineProgress =
+          "Reloaded network cleared because the current dataset changed. Select its file again for a fresh check.";
+      }
       if (status.textContent === "Opening local dataset storage…") say("");
     } catch (error) {
       service = null;
+      loadedNetwork = null;
       say(
         error instanceof StorageError
           ? `${error.message} The Detection lab still works.`

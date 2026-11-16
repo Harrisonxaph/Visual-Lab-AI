@@ -1,3 +1,4 @@
+import type { ImageRecord } from "../datasets/types";
 import type { MethodRun } from "../learning/method-comparison";
 import type { ModelRecord } from "../learning/types";
 import { classificationMetricsPanel } from "./classification-metrics";
@@ -5,6 +6,7 @@ import { drawEpochChart } from "./training-chart";
 
 export interface PhotoMethodComparison {
   record: ModelRecord;
+  plan: { train: ImageRecord[]; validation: ImageRecord[] };
   run: MethodRun;
   truth: number[];
   trainCount: number;
@@ -71,7 +73,7 @@ export function photoMethodComparisonPanel(
     charts,
     el(
       "p",
-      "Results and both newly trained models are temporary page memory. The saved source model and final-test locks are unchanged; missing train/validation features may be cached locally. Reload, relevant dataset edits or deleting the source clears this result. No network save/reload or neural-network final-test path is offered yet. Repeat on the same source and features to reproduce; recomputed embeddings may differ across runtimes. Repeated validation tuning and small samples can mislead.",
+      "Results and both newly trained models are temporary page memory. The saved source model and final-test locks are unchanged; missing train/validation features may be cached locally. Reload, relevant dataset edits or deleting the source clears this result. Use the explicit model-file export/reload controls below to keep the trained network. No neural-network final-test path is offered yet. Repeat on the same source and features to reproduce; recomputed embeddings may differ across runtimes. Repeated validation tuning and small samples can mislead.",
     ),
   );
   if (finalOpened)

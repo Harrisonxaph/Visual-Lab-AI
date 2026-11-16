@@ -517,3 +517,31 @@ and accuracy histories. Results/models are page-memory only and cleared on relev
 changes. Missing training/validation features may use the existing local cache; test features are
 never requested or cached. No source model, final lock, saved format, schema or dependency changes.
 Saving networks and evaluating a selected network on final-test data are later bounded slices.
+
+
+## Neural-network files — eleventh Phase 4 slice
+
+`learning/network-files.ts` defines `visual-labs.network-model/v1`: explicit JSON parameter files,
+not the existing metadata-only run reports and not a dataset backup. Four weight/bias arrays are
+encoded as numbers and decoded into Float64 arrays. Known tanh8 algorithm tags distinguish zero
+and positive L2. Encoder/preprocessing, dimensions, class order, settings, complete epoch history,
+original dataset/version/split seed and actual training/validation references accompany the model.
+Label names are opt-in; source/dataset names, raw photos and cached embeddings are excluded.
+
+Read at most 1 MiB. Shape, finite values, class/ref uniqueness, split hash disjointness, settings,
+history and final objective consistency are checked before allocating model arrays. Unknown fields
+are discarded through explicit allowlists. Files do not execute code. Compatibility requires the
+original encoder, dataset ID and label IDs. Changed dataset versions warn. Current validation is
+screened against recorded training IDs, SHA hashes and difference hashes, using the existing rule;
+no test pixels are requested. File history/provenance is not signed or independently verified;
+current predictions are actually recomputed, but screening cannot prove no unrecorded training.
+
+`ui/network-file-panel.ts` provides explicit downloads (generic filename, temporary blob URL) and
+file selection. The Training lab uses its existing cancellable comparison job to parse/check,
+encode only current permitted validation images and run inference without training. Dataset
+changes during a check discard the result; later changes clear page-memory results. Reloaded
+networks hold the dataset version when checked, so an older exported model's warning does not
+incorrectly erase a completed current check. Nothing is written to the model database: the schema
+stays v3, saved softmax models and durable final locks remain unchanged. Missing current validation
+features may use the existing guarded embedding cache. Download deletion belongs to Files/Downloads;
+clearing app storage cannot remove exports. A network final-test path remains separate work.

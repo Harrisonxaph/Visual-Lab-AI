@@ -13,6 +13,7 @@ export default defineConfig({
     "regularisation.spec.ts",
     "nonlinear.spec.ts",
     "photo-methods.spec.ts",
+    "network-files.spec.ts",
   ],
   timeout: 90000,
   workers: 1,

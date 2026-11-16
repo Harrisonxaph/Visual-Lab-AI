@@ -260,3 +260,23 @@ is saved or exported; source weights and final locks are unchanged. Missing trai
 may be cached locally, but no test pixels or test embeddings are used. Cancel/background/leave to
 discard incomplete work. Network save/reload and a deliberate final-test selection path remain
 separate work. Preserve final-test reuse rules after any final score has influenced your choices.
+
+
+## Keeping and reloading a trained neural network
+
+After a complete photo comparison, choose **Export trained network (.json)**. Label names are off
+by default; the file includes learned weights, identifiers/fingerprints, settings and history,
+but no photos or embeddings. This private file is separate from metadata-only run reports.
+A download requires explicit action and remains outside the app's storage/deletion controls.
+
+Select the original dataset, then choose the model file under **Reload and check on current
+validation**. The app checks format/compatibility, screens recorded training copies and computes
+fresh validation CE, accuracy, precision/recall and confusion matrix without changing weights.
+A changed dataset warns; no test images are opened. Imported history/provenance is file-supplied
+and not independently verified. These checks do not prove the file's original training claims.
+
+Reload/Clear removes the imported model from page memory, not from Downloads/Files. The format
+is limited to 1 MiB and the current pinned encoder, original dataset/labels and tanh8 architecture.
+It does not enable neural-network final tests or reset earlier final-test exposure. Existing saved
+softmax models and their locks remain unchanged. The raw dataset is still needed; this is not a
+portable dataset backup or a new guarantee of generalisation.
