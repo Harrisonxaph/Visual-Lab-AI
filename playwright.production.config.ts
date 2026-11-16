@@ -11,6 +11,7 @@ export default defineConfig({
     "final-evaluation.spec.ts",
     "nearest-neighbour.spec.ts",
     "regularisation.spec.ts",
+    "nonlinear.spec.ts",
   ],
   timeout: 90000,
   workers: 1,

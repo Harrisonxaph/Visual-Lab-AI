@@ -6,6 +6,7 @@ import {
 } from "../learning/lessons";
 import type { EpochRecord } from "../learning/types";
 import { drawEpochChart } from "./training-chart";
+import { mountNonlinearLesson } from "./nonlinear-lesson";
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, text = "") {
   const node = document.createElement(tag);
@@ -22,6 +23,8 @@ export function mountLearningLessons(
     blocked = false,
     discarded = false;
   let abort: AbortController | null = null;
+  let comparisonRunning = false;
+  let comparison: ReturnType<typeof mountNonlinearLesson> | null = null;
   const select = el("select");
   select.id = "lesson-scenario";
   select.setAttribute("aria-label", "Synthetic learning lesson");
@@ -67,7 +70,7 @@ export function mountLearningLessons(
     el("h2", "Learning patterns — controlled lessons"),
     el(
       "p",
-      "Synthetic numeric features: no camera, photos or pretrained encoder. The same softmax optimiser really updates weights. Nothing here is saved or uploaded.",
+      "Synthetic numeric features: no camera, photos or pretrained encoder. The single-model lessons use the same softmax optimiser as photo training. Weights really change. Nothing here is saved or uploaded.",
     ),
     controls,
     explanation,
@@ -79,8 +82,9 @@ export function mountLearningLessons(
     ),
   );
   const sync = () => {
-    select.disabled = run.disabled = blocked || running;
+    select.disabled = run.disabled = blocked || running || comparisonRunning;
     stop.disabled = !running;
+    comparison?.setBlocked(blocked || running);
   };
   const draw = (history: EpochRecord[]) => {
     const series = (
@@ -109,6 +113,7 @@ export function mountLearningLessons(
     });
   };
   function cancel(discard = false) {
+    comparison?.cancel(discard);
     if (!running) return;
     if (discard) {
       discarded = true;
@@ -120,7 +125,7 @@ export function mountLearningLessons(
     abort?.abort();
   }
   async function start() {
-    if (running || blocked) return;
+    if (running || blocked || comparisonRunning) return;
     running = true;
     discarded = false;
     abort = new AbortController();
@@ -188,6 +193,13 @@ export function mountLearningLessons(
     if (document.hidden) cancel(true);
   });
   window.addEventListener("pagehide", () => cancel(true));
+  const comparisonRoot = el("section");
+  root.append(comparisonRoot);
+  comparison = mountNonlinearLesson(comparisonRoot, (value) => {
+    comparisonRunning = value;
+    sync();
+    options.onRunning(value);
+  });
   sync();
   return {
     cancel,

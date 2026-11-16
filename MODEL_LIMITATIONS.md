@@ -367,3 +367,16 @@ and objective fields; they still exclude weights/images and require opt-in for c
 Cached features may differ across runtimes; no cross-device bitwise guarantee or new physical
 Safari evidence is claimed. Existing accepted limits/unresolved reports stay in force. No routine
 manual camera/battery/device session is required for this numerical and configuration change.
+
+
+## Nonlinear numeric comparison
+
+The hidden-layer lesson uses one fixed, deliberately nonlinear numeric task. It is not a model
+trained on your photos or on pretrained embeddings; its result cannot support a claim of better
+image recognition. Linear and neural models share examples and optimiser settings but differ in
+capacity (6 vs 42 parameters) and initialisation. Equal epochs are not equal compute. One chosen
+seed and task do not establish general superiority. No untouched test set is involved; separate
+validation examples illustrate the same generated relationship. Both layers learn from scratch,
+and the validation labels never enter updates. There is no network save/reload or photo inference
+in this slice. All results remain in page memory. Desktop Chromium automation is not physical
+Safari evidence; accepted device limitations and unresolved reports are unchanged.

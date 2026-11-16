@@ -1,8 +1,8 @@
 import { seededRandom } from "../datasets/example";
 
 /**
- * A softmax classifier ("multinomial logistic regression"): the only part of the system that
- * learns. For each label k it keeps one weight per embedding number (row k of `weights`) and a
+ * A softmax classifier ("multinomial logistic regression"): the trainable photo classifier
+ * on top of the frozen encoder. For each label k it keeps one weight per embedding number (row k of `weights`) and a
  * bias. A photo's score for label k is weights[k] · x + bias[k]; softmax turns the scores into
  * probabilities that add up to 1.
  */

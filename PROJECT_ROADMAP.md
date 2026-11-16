@@ -202,6 +202,16 @@ hold strength fixed. No schema migration or new dependency is needed. Improvemen
 strong penalties can underfit and poorly chosen steps can oscillate. Neural-network method
 comparison remains deferred, and this does not authorize Phase 5 or close the project.
 
+Ninth slice: compare softmax regression with a tiny two-layer neural network on the same existing
+synthetic XOR-style task. The network has 2 inputs, 8 tanh hidden units, 2 outputs and 42 trainable
+parameters; all start from seeded random values (biases zero). Both layers learn by backpropagation
+and mini-batch SGD. Show measured training/validation curves, accuracy and parameter changes.
+Use identical data, seed, batch size, learning rate and epochs, with distinct disclosed initialisation
+schemes. Equal epochs do not mean equal compute. Results stay in page memory, with cancellation
+and no camera, dataset, encoder, test-split or storage access. This teaching result does not establish
+superiority on photos. Neural-network comparison on photo embeddings and compatible saved network
+models remain deferred; Phase 4 remains in progress and Phase 5 is not authorized.
+
 Scope:
 
 - Accuracy, precision, recall per label; confusion matrix.
