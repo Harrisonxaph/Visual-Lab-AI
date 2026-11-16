@@ -9,6 +9,7 @@ export default defineConfig({
     "datasets-production.spec.ts",
     "run-report.spec.ts",
     "final-evaluation.spec.ts",
+    "nearest-neighbour.spec.ts",
   ],
   timeout: 90000,
   workers: 1,

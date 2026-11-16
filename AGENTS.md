@@ -36,12 +36,12 @@ The foundation, Dataset lab and first genuine Training lab are implemented and m
 PR #22, main at `98686c12f48a8f9604cf99b0de949f59bdf14872` when this policy was written.
 Implementation is not comprehensive physical-device validation. Accepted limits and unresolved
 reports remain unchanged. On 2026-11-15 the owner asked Codex to resume development and
-self-review with minimal input. Phase 4 metrics, reproducible comparisons/reports, learning lessons
-and dataset-size experiments are merged through PR #28 (`7534fcb`). The next bounded slice adds
-an explicit final held-out check of one chosen saved classifier per dataset. Atomic durable locks
-prevent switching final models; cancelled/failed attempts may retry only the same unchanged choice.
-Test embeddings are ephemeral. Routine training/validation guards stay sealed. No new algorithm,
-Phase 5, deployment or settings changes are included. Merge and deployment require owner approval.
+self-review with minimal input. Phase 4's final held-out path is merged through PR #29 (`99dbb94`).
+The next bounded slice adds a 1-nearest-neighbour validation baseline using the saved classifier's
+exact training snapshot/cap and the same independently checkable validation images. It does not
+update weights, access test images, alter final locks or create another saved model. Results are
+page-memory only. Training/validation embeddings may be cached through the existing guarded path.
+No new schema/dependency, neural-network architecture, Phase 5, merge or deployment is authorized.
 
 Stay strictly within PROJECT_ROADMAP.md and the approved milestone. Preserve existing code and
 tests; defer unrelated cleanup, stretch features, new frameworks and speculative optimisations.

@@ -420,3 +420,27 @@ The Training lab publishes metrics only after atomic completion, using the exist
 Training, validation, comparisons and lessons keep their test guards. Historical reports remain
 labelled with their original version even if data/model changes later. There is no lock-reset UI.
 This is local state, not a security boundary against devtools, storage clearing or eviction.
+
+## Phase 4 1-nearest-neighbour validation baseline — seventh slice
+
+`learning/nearest-neighbour.ts` provides the fixed squared-L2/first-tie 1-NN predictor and a strict
+metadata preflight. It requires the saved run's exact dataset/version, class order, encoder key,
+ordered capped selection and complete matching training provenance. It reuses the existing
+independence filter and refuses an empty check. Ground-truth validation labels are used only for
+scoring, never passed to the neighbour predictor. Vectors/labels are validated and left unchanged;
+the loop yields between queries and discards partial output on cancellation. Dataset limits bound
+work. No weights are learned by 1-NN and no probabilities, confidence or cross-entropy are fabricated.
+
+The Training lab serialises a dedicated cancellable comparison job with other work. Existing
+`embedImages` loads/recomputes/caches only training/validation features. Both methods then use the
+same current validation embeddings; the softmax parameters are frozen. Preflight is repeated after
+computation, and deleted models/changed snapshots discard the result. Cancel, hide, pagehide and
+leaving the lab stop active comparisons. Initial reads happen before creating the encoding-cancel
+promise, preventing an early unused rejection; abort listeners are removed afterwards.
+
+`ui/baseline-comparison.ts` reuses the metrics panels and reports counts, exclusions, actual saved
+training epochs and method rules. Results stay in page memory, not the model/database/report JSON.
+Reload or a refresh detecting relevant data/model changes clears them. The existing final choice
+and test guards are unchanged; an already-opened final test gets an explicit reuse warning. Cached
+features may be regenerated with small runtime-dependent differences; exact historical feature
+bits are not guaranteed. No new stores, schema changes, dependencies or model resources are needed.
