@@ -249,3 +249,25 @@ Lessons are bounded and cancel between epochs. Cancellation reports only complet
 leaving or hiding the page suppresses pending results. No lesson model is saved. Physical Safari
 execution of these new lessons has not been checked; existing accepted device/privacy limitations
 remain unchanged. Automated numeric and Chromium tests are evidence only for their tested paths.
+
+## Saved-run JSON reports
+
+Reports describe recorded training/validation results, not a fresh evaluation or final test.
+They omit class names by default; selecting the checkbox includes the names from training time,
+which may contain personal information. Model/dataset names, photos, embeddings and weights
+are excluded. Local IDs, timestamps and original-file SHA-256 fingerprints are included for
+reproducibility: matching fingerprints can link files, so omission of names is not anonymisation.
+Review a downloaded file before sharing it. The app does not upload it.
+
+A report is not a dataset backup or reloadable model; there is no report import. Reproduction
+requires the original images/labels/splits, compatible encoder and training implementation.
+Legacy runs without manifests explicitly lack exact-replay metadata. Invalid records are refused
+instead of exporting misleading values. Export does not establish absence of near-duplicate
+leakage or certify labels, and repeated validation tuning can still overfit validation.
+Browser download preparation is tested in Chromium under the current CSP; actual file saving
+in physical Safari remains untested. A success message means a download was requested, not that
+the browser saved the file. Object URL release is scheduled after 30 seconds; background timer
+throttling can delay it. Historical browser/hardware details were not recorded and cannot be
+recovered by exporting a run. Existing accepted
+privacy/device limitations and unresolved reports remain unchanged; no new manual session is
+required for this slice.

@@ -148,6 +148,13 @@ real-image generalisation. No camera, encoder, dataset writes or saved models ar
 test photos remain sealed. Manual acceptance is optional; numerical and browser tests cover the
 lesson logic and lifecycle.
 
+Fourth slice: explicit local JSON reports for saved runs, containing settings, recorded histories
+and ordered training/validation references. Class names are omitted by default and require an
+opt-in. Reports disclose that IDs and image fingerprints remain linkable. They exclude photos,
+embeddings and model weights, are not backups, and cannot be imported. Reproduction still needs
+the original dataset snapshot and compatible encoder/implementation. Final-test evaluation,
+additional learning methods and dataset-size comparisons remain deferred.
+
 Scope:
 
 - Accuracy, precision, recall per label; confusion matrix.

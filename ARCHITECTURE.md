@@ -358,3 +358,20 @@ change. It yields between epochs. The Training lab serialises lessons with photo
 actions; each has its own cancel control. Manual cancellation retains completed epochs, labelled
 partial. Leaving the lab, backgrounding or pagehide cancels and discards the pending lesson result.
 This does not change the existing photo-training lifecycle or expose final-test photos.
+
+## Phase 4 saved-run reports — fourth slice
+
+`learning/run-report.ts` serializes an explicit allowlist from a saved `ModelRecord`. The versioned
+`visual-labs.run-report/v1` JSON contains recorded settings, epoch history, counts, encoder key,
+dataset/version, class IDs and the optional ordered run manifest. It retains null validation
+measurements, distinguishes planned/completed epochs and labels missing legacy manifests. It
+rejects invalid measurements/settings and inconsistent manifests rather than silently converting
+non-finite numbers to JSON null. It bounds output to 1 MiB. Class names require explicit opt-in;
+model/dataset names, training-provenance extras, weights, embeddings and images are excluded.
+
+`ui/run-report.ts` prepares an application/json Blob only on an explicit download click. Its
+constant filename avoids including user text. The temporary anchor is removed immediately and
+its object URL is released after 30 seconds so the browser can acquire the download. It never
+opens data stores, runs inference or uploads. The existing Training lab action guard serialises
+exports with jobs. Existing deletion, model compatibility and final-test sealing are unchanged.
+There is no report importer or new schema/store.

@@ -32,6 +32,8 @@ import type { EpochRecord, ModelRecord } from "../learning/types";
 import { drawEpochChart } from "./training-chart";
 import { classificationMetricsPanel } from "./classification-metrics";
 import { runComparisonPanel } from "./run-comparison";
+import { RunReportError } from "../learning/run-report";
+import { downloadRunReport } from "./run-report";
 import { mountLearningLessons } from "./learning-lessons";
 import {
   createRunManifest,
@@ -112,6 +114,7 @@ export function mountTrainingLab(root: HTMLElement) {
   let abort: AbortController | null = null;
   let actionPending = false;
   let lessonRunning = false;
+  let reportNames = false;
   let chosen: Set<string> | null = null;
   let chosenFor: string | null = null;
   let learningRate = String(DEFAULT_SETTINGS.learningRate);
@@ -208,6 +211,7 @@ export function mountTrainingLab(root: HTMLElement) {
 
   function describeError(error: unknown) {
     if (
+      error instanceof RunReportError ||
       error instanceof UserError ||
       error instanceof StorageError ||
       error instanceof EncoderError ||
@@ -909,6 +913,18 @@ export function mountTrainingLab(root: HTMLElement) {
             disabled: busy(),
             dataset: { testid: "tr-restore" },
           }),
+          button(
+            "Download run report (.json)",
+            () =>
+              act(async () => {
+                downloadRunReport(m, reportNames);
+                return "Report download requested. Check your browser’s Downloads; no data was uploaded.";
+              }),
+            {
+              disabled: busy(),
+              dataset: { testid: "tr-report" },
+            },
+          ),
           button("Load", () => act(() => loadModel(m)), {
             disabled: busy(),
             dataset: { testid: "tr-load" },
@@ -934,8 +950,32 @@ export function mountTrainingLab(root: HTMLElement) {
         ),
       );
     }
-    const sections: Node[] = [
-      el("h2", {}, "Saved models"),
+    const sections: Node[] = [el("h2", {}, "Saved models")];
+    if (models.length) {
+      const names = el("input", {
+        type: "checkbox",
+        checked: reportNames,
+        disabled: busy(),
+        dataset: { testid: "tr-report-names" },
+      });
+      names.addEventListener("change", () => {
+        reportNames = names.checked;
+      });
+      sections.push(
+        el(
+          "p",
+          { className: "ds-help", id: "tr-report-disclosure" },
+          "A report downloads settings, recorded metrics, local IDs and image file fingerprints. No photos, embeddings or model weights. Fingerprints can link matching files; the report is not anonymous. It is not a model backup and cannot be imported. Class names are optional and may contain personal information.",
+        ),
+        el(
+          "label",
+          { className: "ds-row" },
+          names,
+          "Include class names in report downloads",
+        ),
+      );
+    }
+    sections.push(
       models.length
         ? list
         : el(
@@ -943,8 +983,6 @@ export function mountTrainingLab(root: HTMLElement) {
             { className: "ds-help" },
             "No saved models for this dataset yet.",
           ),
-    ];
-    sections.push(
       runComparisonPanel(models, {
         leftId: comparisonLeft,
         rightId: comparisonRight,

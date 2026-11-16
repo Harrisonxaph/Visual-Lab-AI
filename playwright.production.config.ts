@@ -7,6 +7,7 @@ export default defineConfig({
     "diagnostics.spec.ts",
     "stress-profile.spec.ts",
     "datasets-production.spec.ts",
+    "run-report.spec.ts",
   ],
   timeout: 90000,
   workers: 1,
