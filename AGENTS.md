@@ -36,11 +36,11 @@ The foundation, Dataset lab and first genuine Training lab are implemented and m
 PR #22, main at `98686c12f48a8f9604cf99b0de949f59bdf14872` when this policy was written.
 Implementation is not comprehensive physical-device validation. Accepted limits and unresolved
 reports remain unchanged. On 2026-11-15 the owner asked Codex to resume development and
-self-review with minimal input. Phase 4 validation metrics and reproducible saved-run comparisons
-are merged through PR #25 (`aee0b36`). The next bounded slice adds controlled numeric lessons for
-useful learning, overfitting and underfitting, using the existing optimiser and charts. It does not
-access photos, run an encoder or save models. Final held-out evaluation, additional algorithms and
-Phase 5 remain outside this slice. Merge and deployment still require owner approval.
+self-review with minimal input. Phase 4 metrics, reproducible comparisons and controlled learning
+lessons are merged through PR #26 (`a8f31f4`). The next bounded slice adds explicit local JSON
+reports for saved runs: settings, recorded histories and reproducibility metadata, with class names
+omitted unless selected. No photos, embeddings or weights are exported. No report import, new
+algorithm, final-test access or Phase 5 is included. Merge and deployment require owner approval.
 
 Stay strictly within PROJECT_ROADMAP.md and the approved milestone. Preserve existing code and
 tests; defer unrelated cleanup, stretch features, new frameworks and speculative optimisations.

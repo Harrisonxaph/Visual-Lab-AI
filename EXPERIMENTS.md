@@ -143,3 +143,17 @@ Independent review profiling, supplied by the user: Chromium 153, 4 cores as rep
 p95 6.5 ms, extra snapshot-copy p95 1.0 ms and combined approximately 7 ms. Raw samples, hardware
 model and full test conditions were not supplied. This is another shared-desktop observation,
 not a controlled comparison or mobile evidence. It does not resolve the inconsistent 8 ms budget.
+
+## Local saved-run report format (Phase 4)
+
+Use **Download run report (.json)** beside a saved Training lab model. Reports contain settings,
+ordered run references when available, encoder/preprocessing key, dataset/version and epoch
+history. Accuracy is a fraction in [0, 1]; loss is mean cross-entropy. Epoch 0 is the untrained
+starting point. Null validation metrics mean not measured, not zero. Planned epochs and completed
+epochs are separate, including cancelled runs. No evaluation is rerun during export.
+
+Schema: `visual-labs.run-report/v1`. Class names are opt-in; local IDs and file fingerprints
+remain included and linkable. No photos, embeddings or model weights are exported. This is a
+report rather than a backup, and cannot be imported. Retain the original dataset snapshot to
+repeat settings in the app; results across different runtimes/hardware need not match bitwise.
+Legacy manifests may be absent, explicitly marked unavailable. Test photos stay sealed.
