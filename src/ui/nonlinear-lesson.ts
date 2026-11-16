@@ -57,7 +57,7 @@ export function mountNonlinearLesson(
     charts,
     el(
       "p",
-      "Synthetic numeric task only: no camera, photos, encoder or test split. Nothing is saved or uploaded. Both network layers learn from scratch; no pretrained model is fine-tuned. This illustrates capacity, not proof the network is generally better. Photo-model comparison and saving neural networks are deferred.",
+      "Synthetic numeric task only: no camera, photos, encoder or test split. Nothing is saved or uploaded. Both network layers learn from scratch; no pretrained model is fine-tuned. This illustrates capacity, not proof the network is generally better. For photo-model comparisons and model-file export/reload, use the saved-run controls above. This numeric lesson does not produce photo models.",
     ),
   );
   function sync() {

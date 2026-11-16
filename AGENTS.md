@@ -36,12 +36,13 @@ The foundation, Dataset lab and first genuine Training lab are implemented and m
 PR #22, main at `98686c12f48a8f9604cf99b0de949f59bdf14872` when this policy was written.
 Implementation is not comprehensive physical-device validation. Accepted limits and unresolved
 reports remain unchanged. On 2026-11-15 the owner asked Codex to resume development and
-self-review with minimal input. The numeric linear/neural comparison is merged through PR #32
-(`eb520f3`), merge CI 43905035207 succeeded. The next bounded Phase 4 slice compares freshly
-trained softmax and an 8-unit tanh network on the same frozen photo embeddings, using a completed
-saved run's exact snapshot, capped order and settings. Results are temporary: no new model format,
-network save/reload, network final-test path, schema or dependency changes. Preserve source models,
-final locks and accepted limitations. Phase 5, merges and deployments remain unauthorized.
+self-review with minimal input. Photo-feature method comparison is merged through PR #33
+(`5eba9f6`), merge CI 43909345429 succeeded. The next bounded Phase 4 slice adds explicit
+neural-network model-file export/reload with versioned, bounded validation and current validation
+inference. Keep the model database/schema unchanged. Files contain learned weights/provenance,
+with label names opt-in; imported history/provenance is not independently verified. Preserve
+source models, final locks and accepted limitations. No neural-network final-test path, dependency,
+Phase 5, merge or deployment is authorized.
 
 Stay strictly within PROJECT_ROADMAP.md and the approved milestone. Preserve existing code and
 tests; defer unrelated cleanup, stretch features, new frameworks and speculative optimisations.

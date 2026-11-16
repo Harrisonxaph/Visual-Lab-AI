@@ -223,6 +223,16 @@ page memory; compatible network saving and neural-network final-test evaluation 
 This is classifier training from random weights on frozen features, not encoder fine-tuning or
 detector retraining. Phase 4 stays in progress; no Phase 5 authorization is implied.
 
+Eleventh slice: explicitly export a completed photo-comparison network as a versioned model file
+and reload it for fresh validation inference. The file contains both learned matrices/biases,
+settings, history, encoder key and dataset/label/training provenance; optional label names default
+off. No photos or embeddings are included. Strict 1 MiB/shape/finite-number/metadata checks precede
+inference. Original encoder/dataset/labels must match; changed snapshots warn and known training
+copies are excluded from current validation. Imported provenance/history is file-supplied, not
+independently verified. Show current measured metrics separately. Model-file export is distinct
+from existing metadata-only run reports. There is no database migration, automatic persistence or
+network final-test path. Clearing app data does not remove downloaded files. Phase 4 remains open.
+
 Scope:
 
 - Accuracy, precision, recall per label; confusion matrix.
