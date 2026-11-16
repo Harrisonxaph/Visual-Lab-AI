@@ -4,7 +4,7 @@ import type { ImageRecord, LabelRecord } from "../datasets/types";
 export class SealedTestError extends Error {
   constructor() {
     super(
-      "Test photos are sealed: they are kept for a final check in a later lab and are never used for training or progress checks here.",
+      "Test photos are sealed from training and progress checks. Only the explicit final-check path may evaluate them.",
     );
   }
 }

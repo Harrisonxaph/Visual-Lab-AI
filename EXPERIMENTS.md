@@ -171,3 +171,19 @@ The table shows actual photo counts, planned/completed epochs and SGD batch upda
 are not equal compute; the number and size of batches can differ. Repeat experiments across seeds
 before generalising, and retain an untouched final test set for the final choice. This feature
 neither reruns evaluation nor opens test photos.
+
+## Final held-out test protocol
+
+Use validation to choose settings and a saved completed model first. In **Final held-out test**,
+select that model and confirm the lock. Preflight reads metadata only; exact/near-copy overlap is
+refused and each selected label needs test examples. A durable lock is committed before encoding
+any tests. Cancellation/encoding/storage failure shows no partial score; retry preserves that same
+model and unchanged snapshot. Complete results are saved once before displaying loss, accuracy,
+precision/recall and the confusion matrix. No weights learn during this check.
+
+The result is historical and cannot be overwritten. Do not use it to select later settings and
+then claim the same test set is untouched: obtain fresh held-out examples. Clearing local storage
+or creating another dataset does not undo having seen test outcomes. Labels, settings, fingerprints
+and metrics remain on-device until the dataset is deleted; no test embeddings are cached. Training,
+validation, lessons and saved-run comparisons still do not access test pixels. Existing run-report
+JSON contains training/validation history only; final reports are currently viewed in the app.

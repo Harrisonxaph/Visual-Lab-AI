@@ -1,3 +1,5 @@
+import { FinalCheckStore } from "../learning/final-store";
+import type { FinalCheckRecord } from "../learning/final-evaluation";
 import type { EmbeddingRecord, ModelRecord } from "../learning/types";
 import type {
   BlobRecord,
@@ -7,8 +9,8 @@ import type {
 } from "./types";
 
 export const DB_NAME = "visual-labs-datasets";
-/** v1: datasets, labels, images, blobs. v2 adds cached embeddings and saved models. */
-export const DB_VERSION = 2;
+/** v1 datasets; v2 embeddings/models; v3 durable per-dataset final-check choices and results. */
+export const DB_VERSION = 3;
 
 interface StoreMap {
   datasets: DatasetRecord;
@@ -17,6 +19,7 @@ interface StoreMap {
   blobs: BlobRecord;
   embeddings: EmbeddingRecord;
   models: ModelRecord;
+  finalChecks: FinalCheckRecord;
 }
 type StoreName = keyof StoreMap;
 const STORES: StoreName[] = [
@@ -26,6 +29,7 @@ const STORES: StoreName[] = [
   "blobs",
   "embeddings",
   "models",
+  "finalChecks",
 ];
 
 /** A batch of writes applied together: all succeed or none do. */
@@ -110,6 +114,8 @@ export class DatasetDb {
             "datasetId",
           );
         }
+        if (oldVersion < 3)
+          db.createObjectStore("finalChecks", { keyPath: "datasetId" });
       };
       const db = await request(open);
       // Let "Delete all" (here or in another tab) proceed instead of being blocked.
@@ -256,6 +262,10 @@ export class DatasetDb {
         reject(describe(error));
       }
     });
+  }
+
+  finalChecks() {
+    return new FinalCheckStore(this.db);
   }
 
   async datasetExists(id: string): Promise<boolean> {

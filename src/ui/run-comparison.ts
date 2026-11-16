@@ -182,7 +182,7 @@ export function runComparisonPanel(
     ),
     el(
       "p",
-      "These are validation results used while choosing settings, not a final test score or proof of general improvement. Small samples and repeated tuning can mislead. Test photos remain sealed.",
+      "These are validation results used while choosing settings, not a final test score or proof of general improvement. Small samples and repeated tuning can mislead. Test photos remain sealed from this comparison.",
     ),
   );
   return section;

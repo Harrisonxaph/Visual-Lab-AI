@@ -315,9 +315,17 @@ test("upgrading storage from version 1 keeps existing datasets", async ({
         };
       }),
   );
-  expect(info.version).toBe(2);
+  expect(info.version).toBe(3);
   expect(info.stores.sort()).toEqual(
-    ["blobs", "datasets", "embeddings", "images", "labels", "models"].sort(),
+    [
+      "blobs",
+      "datasets",
+      "embeddings",
+      "images",
+      "labels",
+      "models",
+      "finalChecks",
+    ].sort(),
   );
 });
 
