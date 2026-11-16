@@ -193,6 +193,9 @@ describe("L2 weight regularisation", () => {
       bias: new Float64Array(2),
     };
     expect(lossAndGradients(m, [[1, 0]], [1]).loss).toBeCloseTo(2000, 10);
+    // Positive subnormal probabilities also lose precision before reaching zero.
+    m.weights.set([372, 0, -372, 0]);
+    expect(lossAndGradients(m, [[1, 0]], [1]).loss).toBeCloseTo(744, 10);
   });
   it("cancellation keeps only completed epochs and their actual objective", async () => {
     const controller = new AbortController();

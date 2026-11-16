@@ -451,8 +451,9 @@ bits are not guaranteed. No new stores, schema changes, dependencies or model re
 UI accepts 0–1, initially 0; zero is omitted when storing new settings. `lossAndGradients` adds
 lambda W once to each mean minibatch gradient and lambda/2 sum(W²) to its loss. Bias gradients
 are unchanged. `trainEpoch` uses that gradient with the existing SGD, seed, batches and ordering.
-Zero skips penalty arithmetic. Minibatch CE now uses the same stable log-sum-exp as evaluation,
-fixing clipping at ~744 when a correct-class probability underflows; valid zero-strength training
+Zero skips penalty arithmetic. Minibatch CE reuses forward probabilities when normal, with a
+log-sum-exp fallback for subnormal or zero probabilities. This avoids a second forward pass in
+ordinary batches while fixing clipping at ~744 and subnormal rounding errors; valid zero-strength training
 updates/history remain unchanged, verified against a pre-change numerical fixture.
 
 `EpochRecord.trainLoss` and validation/final losses remain mean prediction cross-entropy. Positive

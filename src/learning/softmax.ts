@@ -106,7 +106,13 @@ export function lossAndGradients(
   for (const i of indices) {
     const x = xs[i];
     const p = predict(m, x);
-    loss += exampleLoss(m, x, ys[i]);
+    // Reuse the forward pass unless the probability is subnormal or zero.
+    // Subnormal rounding makes -log(p) inaccurate; use scores in that case.
+    const probability = p[ys[i]];
+    loss +=
+      probability >= 2 ** -1022
+        ? -Math.log(probability)
+        : exampleLoss(m, x, ys[i]);
     for (let k = 0; k < m.classes; k++) {
       const d = (p[k] - (k === ys[i] ? 1 : 0)) / n;
       gb[k] += d;
