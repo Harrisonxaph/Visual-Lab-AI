@@ -1,4 +1,12 @@
 import {
+  ReviewError,
+  prepareReviewPool,
+  scoreReviewPool,
+  setReviewDecision,
+  type ReviewOrder,
+} from "../learning/active-review";
+import { activeReviewPanel, type ReviewSession } from "./active-review-panel";
+import {
   MAX_NETWORK_FILE_BYTES,
   NetworkFileError,
   parseNetworkFile,
@@ -151,8 +159,13 @@ interface Loaded {
 export function mountTrainingLab(root: HTMLElement) {
   let service: DatasetService | null = null;
   let embedder: Embedder | null = null;
-  let phase: "idle" | "embedding" | "training" | "final-test" | "baseline" =
-    "idle";
+  let phase:
+    | "idle"
+    | "embedding"
+    | "training"
+    | "final-test"
+    | "baseline"
+    | "review" = "idle";
   let abort: AbortController | null = null;
   let actionPending = false;
   let lessonRunning = false;
@@ -162,6 +175,9 @@ export function mountTrainingLab(root: HTMLElement) {
   let loadedNetwork: LoadedNetwork | null = null;
   let networkExportNames = false;
   let baselineProgress = "";
+  let reviewSession: ReviewSession | null = null;
+  let reviewProgress = "";
+  let reviewMode: ReviewOrder = "uncertainty";
   let finalRecord: FinalCheckRecord | null = null;
   let finalReadError = "";
   let finalModelId = "";
@@ -241,6 +257,7 @@ export function mountTrainingLab(root: HTMLElement) {
     className: "panel ds-panel",
     id: "tr-baseline",
   });
+  const reviewSection = el("div");
   const finalSection = el("section", {
     className: "panel ds-panel",
     id: "tr-final",
@@ -256,6 +273,7 @@ export function mountTrainingLab(root: HTMLElement) {
     results,
     saved,
     baselineSection,
+    reviewSection,
     finalSection,
     lessonRoot,
     aboutPanel(),
@@ -275,6 +293,7 @@ export function mountTrainingLab(root: HTMLElement) {
   function describeError(error: unknown) {
     if (
       error instanceof BaselineError ||
+      error instanceof ReviewError ||
       error instanceof NetworkFileError ||
       error instanceof FinalCheckError ||
       error instanceof RunReportError ||
@@ -1322,6 +1341,149 @@ export function mountTrainingLab(root: HTMLElement) {
     }
   }
 
+  function renderReview() {
+    reviewSection.replaceChildren(
+      activeReviewPanel({
+        session: reviewSession,
+        mode: reviewMode,
+        busy: busy(),
+        running: phase === "review",
+        onCancel: () => abort?.abort(),
+        progress: reviewProgress,
+        thumb: thumbCanvas,
+        onOrder: (mode) => {
+          reviewMode = mode;
+          renderReview();
+        },
+        onClear: () => {
+          reviewSession = null;
+          reviewProgress = "Review queue cleared; no dataset labels changed.";
+          renderReview();
+        },
+        onDecision: (id, decision) => {
+          if (!reviewSession || busy()) return;
+          try {
+            reviewSession.decisions = setReviewDecision(
+              reviewSession.decisions,
+              reviewSession.scores,
+              reviewSession.source.labelIds,
+              id,
+              decision,
+            );
+            renderReview();
+          } catch (error) {
+            say(describeError(error));
+          }
+        },
+      }),
+    );
+  }
+
+  async function scoreUnlabelled(source: ModelRecord) {
+    const s = service;
+    if (!s?.current || busy()) return;
+    const candidate = structuredClone(source);
+    phase = "review";
+    reviewSession = null;
+    reviewProgress = "Preparing unlabelled review pool…";
+    jobDatasetId = candidate.datasetId;
+    jobDatasetGone = false;
+    abort = new AbortController();
+    const signal = abort.signal;
+    let cancelEncoding: (() => void) | undefined;
+    progress.hidden = true;
+    say("");
+    renderAll();
+    try {
+      await s.reload();
+      if (signal.aborted) throw new CancelledError();
+      if (!s.current) throw new ReviewError("The dataset was deleted.");
+      const plan = prepareReviewPool(s.current, candidate);
+      // Review features remain temporary; a concurrent role change must not create
+      // a persisted test embedding. Training-only commits are a separate later action.
+      const reviewStore = {
+        getEmbeddings: (ids: readonly string[]) => s.getEmbeddings(ids),
+        saveEmbeddings: async () => {},
+        getBlob: async (id: string) => {
+          await s.reload();
+          if (signal.aborted) throw new CancelledError();
+          if (
+            !s.current ||
+            s.current.dataset.id !== candidate.datasetId ||
+            s.current.dataset.version !== candidate.datasetVersion ||
+            !s.current.images.some(
+              (i) => i.id === id && i.labelId === null && i.split === null,
+            )
+          )
+            throw new ReviewError(
+              "The dataset or review pool changed before image access; review discarded.",
+            );
+          return s.getBlob(id);
+        },
+      };
+      embedder ??= new Embedder();
+      const encoder = embedder;
+      const cancelled = new Promise<never>((_, reject) => {
+        cancelEncoding = () => reject(new CancelledError());
+        signal.addEventListener("abort", cancelEncoding, { once: true });
+      });
+      const embedded = await Promise.race([
+        embedImages(reviewStore, (image) => encoder.embed(image), plan.images, {
+          signal,
+          onProgress: (done, total) => {
+            if (signal.aborted) return;
+            reviewProgress = `Scoring unlabelled photos: ${done} of ${total}. No partial queue is published.`;
+            const node = reviewSection.querySelector("#tr-review-status");
+            if (node) node.textContent = reviewProgress;
+          },
+        }),
+        cancelled,
+      ]);
+
+      await s.reload();
+      if (signal.aborted) throw new CancelledError();
+      if (!s.current)
+        throw new ReviewError("The dataset was deleted; review discarded.");
+      const current = prepareReviewPool(s.current, candidate);
+      if (
+        JSON.stringify(current.images.map((i) => i.id)) !==
+          JSON.stringify(plan.images.map((i) => i.id)) ||
+        !(await s.listModels(candidate.datasetId)).some(
+          (m) => m.id === candidate.id,
+        )
+      )
+        throw new ReviewError(
+          "The pool or saved source changed; review discarded.",
+        );
+      if (signal.aborted) throw new CancelledError();
+      const scores = scoreReviewPool(plan.images, embedded.vectors, candidate);
+      reviewSession = {
+        source: candidate,
+        scores,
+        decisions: {},
+        total: plan.total,
+        excluded: plan.excluded,
+        deferred: plan.deferred,
+      };
+      reviewProgress =
+        "Review queue ready — suggestions only, not accuracy or a learning improvement.";
+    } catch (error) {
+      reviewSession = null;
+      reviewProgress =
+        signal.aborted || error instanceof CancelledError
+          ? "Pool scoring cancelled; no partial queue was published. Choose Score again to retry."
+          : describeError(error);
+      say(reviewProgress);
+    } finally {
+      if (cancelEncoding) signal.removeEventListener("abort", cancelEncoding);
+      phase = "idle";
+      abort = null;
+      jobDatasetId = null;
+      releaseEncoder();
+      await refresh();
+    }
+  }
+
   function renderFinal() {
     const state = service?.current;
     finalSection.replaceChildren(
@@ -1606,6 +1768,10 @@ export function mountTrainingLab(root: HTMLElement) {
               dataset: { testid: "tr-methods-run" },
             },
           ),
+          button("Score unlabelled photos", () => void scoreUnlabelled(m), {
+            disabled: busy() || m.stoppedEarly,
+            dataset: { testid: "tr-review-run" },
+          }),
           button("Load", () => act(() => loadModel(m)), {
             disabled: busy(),
             dataset: { testid: "tr-load" },
@@ -1879,6 +2045,7 @@ export function mountTrainingLab(root: HTMLElement) {
     renderResults();
     renderSaved();
     renderBaseline();
+    renderReview();
     renderFinal();
   }
 
@@ -1952,6 +2119,17 @@ export function mountTrainingLab(root: HTMLElement) {
         loaded = null;
       if (draft && draft.record.datasetId !== service.current?.dataset.id)
         draft = null;
+      if (
+        reviewSession &&
+        (reviewSession.source.datasetId !== service.current?.dataset.id ||
+          reviewSession.source.datasetVersion !==
+            service.current?.dataset.version ||
+          !models.some((m) => m.id === reviewSession!.source.id))
+      ) {
+        reviewSession = null;
+        reviewProgress =
+          "Review queue cleared because its source snapshot changed. No labels were committed.";
+      }
       const comparisonSource = baseline?.record ?? methodComparison?.record;
       if (
         comparisonSource &&
@@ -1978,6 +2156,9 @@ export function mountTrainingLab(root: HTMLElement) {
     } catch (error) {
       service = null;
       loadedNetwork = null;
+      reviewSession = null;
+      reviewProgress =
+        "Local storage is unavailable; review cleared until the source can be checked again.";
       say(
         error instanceof StorageError
           ? `${error.message} The Detection lab still works.`
@@ -1988,7 +2169,8 @@ export function mountTrainingLab(root: HTMLElement) {
   }
 
   const stopEvaluation = () => {
-    if (phase === "final-test" || phase === "baseline") abort?.abort();
+    if (phase === "final-test" || phase === "baseline" || phase === "review")
+      abort?.abort();
   };
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) stopEvaluation();

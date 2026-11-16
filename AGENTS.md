@@ -36,15 +36,15 @@ The foundation, Dataset lab and first genuine Training lab are implemented and m
 PR #22, main at `98686c12f48a8f9604cf99b0de949f59bdf14872` when this policy was written.
 Implementation is not comprehensive physical-device validation. Accepted limits and unresolved
 reports remain unchanged. On 2026-11-15 the owner asked Codex to resume development and
-self-review with minimal input. Neural-network file export/reload is merged through PR #34
-(`9c78da8`), merge CI 43926119518 succeeded. The remaining bounded Phase 4 slice adds protected
-final testing for a completed in-session neural comparison, using the same per-dataset final lock
-as softmax. Imported files remain ineligible. Persist exact neural parameters/provenance only
-after explicit final-choice confirmation, for durable retries; retain them with history until
-dataset deletion and disclose this. Preserve legacy softmax identities, existing locks/schema,
-source models, privacy and accepted limitations. Prepare a concise Phase 4 closeout for the owner's
-decision in this functional PR; do not add stretch features or manual-test rounds. No Phase 5,
-dependency, merge or deployment is authorized.
+self-review with minimal input. On 2026-11-16 the owner explicitly approved Phase 4 closeout
+with its documented limitations and authorised Phase 5 development. PR #35 is merged as
+`0302438`; merge CI 43936757329 succeeded. The first bounded Phase 5 slice scores a current saved
+softmax source's eligible unlabelled pool and offers uncertainty/random review ordering plus
+page-memory accept/correct/skip decisions. Do not relabel, change splits, retrain or claim a learning
+improvement in this slice. Protect all labelled/test metadata cohorts and never read test pixels.
+Training-only promotion and measured retraining versus random selection follow separately.
+Preserve accepted limitations, existing weights/locks/schema and privacy. No dependency, merge,
+deployment, production/protection/settings or automatic-Git changes are authorised.
 
 Stay strictly within PROJECT_ROADMAP.md and the approved milestone. Preserve existing code and
 tests; defer unrelated cleanup, stretch features, new frameworks and speculative optimisations.

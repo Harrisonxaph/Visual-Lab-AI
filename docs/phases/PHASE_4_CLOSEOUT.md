@@ -1,9 +1,11 @@
 # Phase 4 — functional closeout for owner decision
 
-Status: functional scope implemented in this change; **owner closeout pending**. Based on PR #34
-merge `9c78da8f86c55aeb0437abd0b684e2ac3d1f41c8` (merge CI 43926119518 succeeded). The functional
-PR and delivery report record its exact final head, automated counts and exact-head CI result.
-This document neither approves a merge/deployment nor starts Phase 5.
+Status: **closed by explicit owner approval on 2026-11-16**, with the documented limitations.
+The owner also authorised Phase 5 development. Functional PR #35 merged as
+`0302438222349dc8a0ffb8aa7f3718c7c7dfea02`; merge CI 43936757329 succeeded. The original PR
+records exact-head evidence: 209 unit, 102 development-browser and 32 production tests. No new
+physical-device, deployment or absence-of-uploads evidence is inferred from closeout.
+
 
 ## Completion against the roadmap
 
@@ -60,10 +62,9 @@ manual battery/heat/camera walkthrough is required to finish this Phase 4 scope.
 
 ## Owner decisions
 
-1. Decide the functional PR's merge after its concrete evidence is ready.
-2. Approve Phase 4 closeout with documented limitations, or identify a specific material blocker.
-3. Separately authorize Phase 5 scope if desired. Nothing here authorizes implementation or deployment.
+1. Functional PR #35 merged: completed by the owner.
+2. Phase 4 closeout with documented limitations: explicitly approved on 2026-11-16.
+3. Phase 5 development: explicitly authorised on 2026-11-16. Deployment remains unauthorised.
 
 There is no separate documentation-only PR or repeated manual-testing round required for this
-closeout decision. No merge, deployment, production/protection/settings or automatic-Git changes
-are performed by this work.
+closeout decision. No deployment, production/protection/settings or automatic-Git changes were authorised by closeout.

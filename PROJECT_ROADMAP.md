@@ -30,13 +30,13 @@ described as retraining or fine-tuning EfficientDet (type 5).
 | 1 | Computer vision foundation | Implemented (with documented limitations) | Done |
 | 2 | Dataset laboratory | Implemented and merged (documented device limits) | Medium (3/5) |
 | 3 | First genuine AI training system | Implemented and merged (**first genuine training**) | Medium–high (3.5/5) |
-| 4 | Learning and evaluation laboratory | Planned | Medium (3/5) |
-| 5 | Active learning | Planned | Medium (3/5) |
+| 4 | Learning and evaluation laboratory | Closed by owner 2026-11-16 (documented limits) | Medium (3/5) |
+| 5 | Active learning | Authorised; review queue first slice | Medium (3/5) |
 
 - **Minimum meaningful result:** end of Phase 3. You will have trained a real model and seen its
   weights and loss change.
 - **Core project complete:** end of Phase 5. Train, evaluate, improve with human feedback, and
-  prove the improvement on held-out data.
+  measure its effects honestly, reserving a fresh final test after selection.
 - Stretch targets are optional and not required to call the project complete.
 
 ## Phase 1 — Computer vision foundation
@@ -125,6 +125,10 @@ Done when, in plain terms:
    the same seed.
 
 ## Phase 4 — Learning and evaluation laboratory
+
+**Closed by explicit owner approval on 2026-11-16, with documented limitations.** The slices below
+record implementation history and their scope boundaries at the time; current Phase 5 authority
+is recorded in its section.
 
 Explore what "good" means for a model.
 
@@ -243,10 +247,11 @@ snapshot must be unchanged. No test features are cached, no parameters learn, no
 are published and completed scores cannot be replaced by changing method, settings or splits.
 Legacy softmax identities and existing locks remain unchanged; no schema migration is needed.
 
-This completes the intended **functional Phase 4 scope**, subject to final automated checks and
-owner closeout. See [Phase 4 closeout](docs/phases/PHASE_4_CLOSEOUT.md) for evidence and limitations.
-No further stretch features or routine device-testing rounds are prerequisites. Phase 4 is not
-closed and Phase 5 is not authorized until the owner decides.
+The intended **functional Phase 4 scope is complete and was closed by explicit owner approval
+on 2026-11-16**. See [Phase 4 closeout](docs/phases/PHASE_4_CLOSEOUT.md) for evidence and retained
+limitations. The owner separately authorised Phase 5 development on the same date. No additional
+stretch feature or routine device-testing round is required for that closed scope; deployment
+still requires separate approval.
 
 Scope:
 
@@ -268,7 +273,23 @@ Done when, in plain terms:
 
 ## Phase 5 — Active learning
 
-Improve a model with human feedback and prove the improvement.
+**Authorised by the owner on 2026-11-16, after explicit Phase 4 closeout.** First slice: score at
+most 50 eligible, independent unlabelled/unsplit photos using a completed saved softmax classifier
+from the exact current dataset snapshot. Exclude known protected-data copies and near-duplicate
+pool groups. Display up to 10 suggestions in small-margin or seeded-random review order, with
+actual confidence/margin/entropy and page-memory accept/correct/skip decisions. No test pixels,
+label/split changes, annotation persistence or retraining happen in this slice. Newly computed
+review features are temporary too; no review cache records are written. Random review
+ordering is not an evaluated learning baseline. Import the pool before training/saving the source;
+new imports after training require a refreshed source snapshot for now.
+
+Remaining Phase 5 work: explicit training-only approval commit with cohort/provenance integrity,
+retraining and before/after validation measurement against equally budgeted random selection,
+reproducible round records and the final-test reuse protocol. Ordinary label assignment is not
+sufficient: it may place a new labelled group in validation/test, so promotion needs a dedicated
+protected transaction. Improvement must be measured, never promised or inferred from confidence.
+
+Build a human-feedback learning loop and measure its effects.
 
 1. Run the trained model on unlabelled images.
 2. Rank images by uncertainty (e.g. lowest top-score margin or highest entropy).
@@ -334,4 +355,4 @@ development and a distinct, explicitly labelled self-review using three stages: 
 review/fix/verify. Continue autonomously within approved milestone scope; defer optional work and
 preserve the roadmap's learning objectives and completion criteria. The owner approves new scope,
 merges and deployments. Ask for at most one focused manual session per milestone where practical,
-only for a justified gap. This workflow change does not authorize Phase 4 implementation.
+only for a justified gap. Milestone implementation still requires owner scope authorisation; current approvals are recorded above.
