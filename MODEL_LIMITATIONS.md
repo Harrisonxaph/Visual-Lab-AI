@@ -443,7 +443,7 @@ Existing accepted limits, unresolved camera reports and physical Safari training
 gaps remain unchanged. No new production/network-inspection or physical-device evidence is claimed.
 
 
-## Phase 5 review queue — first slice only
+## Phase 5 review queue and training-only approval
 
 This slice scores only existing unlabelled/unsplit photos with a completed saved softmax source
 whose exact dataset snapshot still matches. Import the pool before training/saving that source;
@@ -456,8 +456,12 @@ or calibrated uncertainty. Seeded random ordering is a review control, not measu
 active learning beats random selection. The app has no labels for the pool until human review and
 does not fabricate ground truth. Suggestions may be wrong; corrections use existing source classes.
 
-Approvals/corrections/skips remain page memory only, clearing on reload or detected source/snapshot
-changes. They do not change labels/splits, persist annotations, retrain or prove improvement yet.
+Approvals/corrections/skips remain page memory until explicit consent and Commit. The protected
+transaction saves approved labels to training only, with per-image review provenance; skips stay
+unlabelled. It revalidates the source and pool under the same transaction lock and refuses detected
+changes or any hash-connected protected group. Existing evaluation assignments stay unchanged.
+Committing is not optimisation and proves no improvement. Ordinary later Dataset-lab edits can
+still alter splits; a future controlled round must revalidate its frozen cohorts.
 Source weights and final locks remain unchanged. Newly computed review features stay in page
 memory; existing permitted features may be reused. Protected validation/test images are not
 selected for this queue, and detected snapshot changes discard it. Further independent final claims after earlier

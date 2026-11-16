@@ -249,3 +249,115 @@ test("pool scoring cancels or rejects changed snapshots without a partial queue"
     ),
   ).toHaveLength(0);
 });
+
+test("explicit approval commit saves training-only provenance without changing protected cohorts", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  await trained(page);
+  await page.getByTestId("tr-review-run").click();
+  await expect(page.locator("#tr-review-status")).toContainText(
+    "Review queue ready",
+    { timeout: 90000 },
+  );
+  const before = await state(page);
+  await page
+    .getByTestId("tr-review-item")
+    .first()
+    .getByRole("button", { name: "Accept suggestion" })
+    .click();
+  await expect(page.getByTestId("tr-review-commit")).toBeDisabled();
+  await page.getByTestId("tr-review-consent").check();
+  await page.getByTestId("tr-review-commit").click();
+  await expect(page.locator("#tr-review-status")).toContainText(
+    "1 approved photo committed to training",
+  );
+  const after = await state(page);
+  expect(after.images.filter((i) => i.review)).toHaveLength(1);
+  expect(after.images.find((i) => i.review)).toMatchObject({
+    split: "train",
+    review: {
+      sourceModelId: before.models[0].id,
+      sourceDatasetVersion: before.datasets[0].version,
+    },
+  });
+  expect(after.images.filter((i) => !i.review)).toEqual(
+    before.images.filter((i) => i.id !== after.images.find((i) => i.review).id),
+  );
+  expect(after.models).toEqual(before.models);
+  expect(after.finals).toEqual(before.finals);
+  expect(after.datasets[0].version).toBe(before.datasets[0].version + 1);
+  await page.reload();
+  expect((await state(page)).images.filter((i) => i.review)).toHaveLength(1);
+});
+
+test("approval writes roll back on asynchronous failure and reject a stale source transaction", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  await trained(page);
+  await page.getByTestId("tr-review-run").click();
+  await expect(page.locator("#tr-review-status")).toContainText(
+    "Review queue ready",
+    { timeout: 90000 },
+  );
+  await page
+    .getByTestId("tr-review-item")
+    .first()
+    .getByRole("button", { name: "Accept suggestion" })
+    .click();
+  await page
+    .getByTestId("tr-review-item")
+    .nth(1)
+    .getByRole("button", { name: "Accept suggestion" })
+    .click();
+  const before = await state(page);
+  await page.evaluate(() => {
+    const original = IDBObjectStore.prototype.put;
+    let writes = 0;
+    Object.assign(window, {
+      restorePromotionPut: () => {
+        IDBObjectStore.prototype.put = original;
+      },
+    });
+    IDBObjectStore.prototype.put = function (
+      ...args: Parameters<typeof original>
+    ) {
+      if (this.name === "images" && args[0].review && ++writes === 2)
+        return this.add(args[0]);
+      return original.apply(this, args);
+    };
+  });
+  await page.getByTestId("tr-review-consent").check();
+  await page.getByTestId("tr-review-commit").click();
+  await expect(page.locator("#tr-review-status")).toContainText(
+    "could not save dataset changes",
+  );
+  expect(await state(page)).toEqual(before);
+  await page.evaluate(() => (window as any).restorePromotionPut());
+  // Another tab's version update occurs before the approval transaction takes its lock.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const r = indexedDB.open("visual-labs-datasets");
+        r.onsuccess = () => {
+          const db = r.result,
+            tx = db.transaction("datasets", "readwrite"),
+            store = tx.objectStore("datasets"),
+            get = store.getAll();
+          get.onsuccess = () =>
+            store.put({ ...get.result[0], version: get.result[0].version + 1 });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onabort = () => reject(tx.error);
+        };
+      }),
+  );
+  const stale = await state(page);
+  await page.getByTestId("tr-review-consent").check();
+  await page.getByTestId("tr-review-commit").click();
+  await expect(page.getByTestId("tr-review-item")).toHaveCount(0);
+  expect(await state(page)).toEqual(stale);
+});

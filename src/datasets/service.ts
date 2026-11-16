@@ -368,6 +368,11 @@ export class DatasetService {
     });
   }
 
+  /** Explicit local persistence of reviewed labels; existing validation/test assignments stay fixed. */
+  async promoteReview(...args: Parameters<DatasetDb["promoteReview"]>) {
+    return this.db.promoteReview(...args);
+  }
+
   finalChecks() {
     return this.db.finalChecks();
   }
