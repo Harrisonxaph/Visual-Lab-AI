@@ -22,7 +22,8 @@
 - The model's "sure" percentage is its own confidence, not its accuracy, and is not calibrated.
 - The encoder stretches every photo to 224 × 224 (no crop), which distorts very wide or tall
   photos. Everything about a photo that the frozen encoder does not capture cannot be learned.
-- No regularisation, early stopping or learning-rate schedule yet (Phase 4). With length-1
+- Optional L2 weight regularisation is now available (details below); no early stopping or
+  learning-rate schedule. With length-1
   embeddings the allowed learning rates (0.01–2) cannot make the numbers overflow; the
   non-finite guard is tested directly with out-of-range values.
 - Training runs on the main thread between frames; very large selections on slow phones may make
@@ -343,3 +344,26 @@ Results are page-memory only: no saved comparison or report export is added. Rel
 relevant dataset/model changes clear them at the next Training lab refresh, not through real-time
 cross-tab synchronisation. Physical Safari remains untested; existing accepted limitations and
 historical reports remain unchanged. No routine manual device session is required for this slice.
+
+## L2 regularisation of the classifier
+
+Strength is 0–1, default 0; omitted on legacy records means zero. The penalty is lambda/2 sum(W²)
+on classifier weights only, not biases and not the encoder. This is distinct from normalising an
+embedding to length 1. It can reduce overfitting or instead cause underfitting; neither larger
+strength nor a smaller weight norm guarantees better validation accuracy. Large steps and penalties
+can oscillate or fail to converge. Existing finite-number guards remain; unsupported strengths
+are refused before loading the encoder.
+
+Training/validation/final prediction losses are mean CE. The penalised objective is separate and
+is not directly comparable across different strengths. Validation/test labels never enter the
+optimisation gradient. Different strengths can change confidence without changing accuracy;
+confidence remains uncalibrated. Choose using validation, preserve final-test reuse rules and
+obtain fresh held-out data for new claims after a final score influenced decisions.
+
+Old records are not mutated or migrated. New positive runs carry a distinct algorithm tag; earlier
+builds do not support restoring/comparing that tag. Classifier shapes and prediction maths remain
+unchanged, and the current build supports legacy zero records. Reports include optional strength
+and objective fields; they still exclude weights/images and require opt-in for class names.
+Cached features may differ across runtimes; no cross-device bitwise guarantee or new physical
+Safari evidence is claimed. Existing accepted limits/unresolved reports stay in force. No routine
+manual camera/battery/device session is required for this numerical and configuration change.

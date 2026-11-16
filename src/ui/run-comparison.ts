@@ -120,6 +120,7 @@ export function runComparisonPanel(
       second.settings.learningRate,
     ],
     ["Seed", first.settings.seed, second.settings.seed],
+    ["L2 strength", first.settings.l2 ?? 0, second.settings.l2 ?? 0],
     [
       "Completed / planned epochs",
       `${lastA.epoch} / ${first.settings.epochs}${first.stoppedEarly ? " (stopped early)" : ""}`,
@@ -132,6 +133,17 @@ export function runComparisonPanel(
       second.settings.perLabelCap ?? "All",
     ],
     ["Validation photos", first.validationCount, second.validationCount],
+    [
+      "Training objective (CE + L2 penalty)",
+      ((first.settings.l2 ?? 0) > 0
+        ? lastA.trainObjective!
+        : lastA.trainLoss
+      ).toFixed(3),
+      ((second.settings.l2 ?? 0) > 0
+        ? lastB.trainObjective!
+        : lastB.trainLoss
+      ).toFixed(3),
+    ],
     ["Training loss", lastA.trainLoss.toFixed(3), lastB.trainLoss.toFixed(3)],
     [
       "Validation loss",
@@ -166,6 +178,10 @@ export function runComparisonPanel(
   scroll.append(table);
   section.append(
     scroll,
+    el(
+      "p",
+      "Prediction loss is mean cross-entropy; validation loss excludes the weight penalty. Different L2 strengths define different training objectives, so compare shared validation prediction loss and accuracy rather than ranking penalised objectives.",
+    ),
     ...(mode === "dataset-size"
       ? [
           el(

@@ -5,6 +5,7 @@ import {
   initModel,
   parameterEvidence,
   trainEpoch,
+  weightPenalty,
   type Evaluation,
   type ParameterEvidence,
   type SoftmaxModel,
@@ -16,17 +17,31 @@ export const DEFAULT_SETTINGS = {
   learningRate: 0.5,
   epochs: 50,
   batchSize: 16,
+  l2: 0,
 } as const;
 export const SETTING_RANGES = {
   learningRate: { min: 0.01, max: 2 },
   epochs: { min: 1, max: 300 },
+  l2: { min: 0, max: 1 },
 } as const;
+
+/** Missing is the legacy zero penalty; null/NaN are not valid settings. */
+export function validateL2(value: number | undefined): string | null {
+  const l2 = value === undefined ? 0 : value;
+  return Number.isFinite(l2) &&
+    l2 >= SETTING_RANGES.l2.min &&
+    l2 <= SETTING_RANGES.l2.max
+    ? null
+    : "L2 strength must be a number between 0 and 1.";
+}
 
 /** Problems with the chosen settings, in plain words; empty when they are usable. */
 export function validateSettings(
-  s: Pick<TrainingSettings, "learningRate" | "epochs" | "perLabelCap">,
+  s: Pick<TrainingSettings, "learningRate" | "epochs" | "perLabelCap" | "l2">,
 ) {
   const problems: string[] = [];
+  const l2Problem = validateL2(s.l2);
+  if (l2Problem) problems.push(l2Problem);
   const { learningRate: lr, epochs } = SETTING_RANGES;
   if (!(s.learningRate >= lr.min && s.learningRate <= lr.max))
     problems.push(`Learning rate must be between ${lr.min} and ${lr.max}.`);
@@ -68,7 +83,12 @@ export interface TrainingRun {
   evidence: ParameterEvidence;
 }
 
-function record(epoch: number, m: SoftmaxModel, d: TrainingData): EpochRecord {
+function record(
+  epoch: number,
+  m: SoftmaxModel,
+  d: TrainingData,
+  l2: number,
+): EpochRecord {
   const t = evaluate(m, d.trainX, d.trainY);
   const v = d.validationX.length
     ? evaluate(m, d.validationX, d.validationY)
@@ -77,6 +97,7 @@ function record(epoch: number, m: SoftmaxModel, d: TrainingData): EpochRecord {
     epoch,
     trainLoss: t.loss,
     trainAccuracy: t.accuracy,
+    ...(l2 > 0 ? { trainObjective: t.loss + weightPenalty(m, l2) } : {}),
     validationLoss: v?.loss ?? null,
     validationAccuracy: v?.accuracy ?? null,
   };
@@ -99,11 +120,14 @@ export async function runTraining(
     yieldBetweenEpochs?: () => Promise<void>;
   } = {},
 ): Promise<TrainingRun> {
+  const l2Problem = validateL2(settings.l2);
+  if (l2Problem) throw new Error(l2Problem);
+  const l2 = settings.l2 ?? 0;
   const pause = options.yieldBetweenEpochs ?? nextTask;
   const initial = initModel(data.classes, data.dims, settings.seed);
   const model = cloneModel(initial);
   const random = seededRandom(settings.seed ^ 0x5bd1e995);
-  const history = [record(0, model, data)];
+  const history = [record(0, model, data, l2)];
   options.onEpoch?.(history[0], model);
   let stoppedEarly = false;
   for (let epoch = 1; epoch <= settings.epochs; epoch++) {
@@ -119,8 +143,9 @@ export async function runTraining(
       settings.learningRate,
       settings.batchSize,
       random,
+      l2,
     );
-    history.push(record(epoch, model, data));
+    history.push(record(epoch, model, data, l2));
     options.onEpoch?.(history.at(-1)!, model);
   }
   const hasValidation = data.validationX.length > 0;

@@ -84,8 +84,8 @@ export function mountLearningLessons(
   };
   const draw = (history: EpochRecord[]) => {
     const series = (
-      train: keyof EpochRecord,
-      validation: keyof EpochRecord,
+      train: "trainLoss" | "trainAccuracy",
+      validation: "validationLoss" | "validationAccuracy",
     ) => [
       {
         name: "training",

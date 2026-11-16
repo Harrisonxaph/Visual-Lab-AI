@@ -46,7 +46,7 @@ export function baselineComparisonPanel(
       `Saved softmax: ${a.correct} / ${a.total} correct. 1-nearest neighbour: ${b.correct} / ${b.total} correct. These are measured validation results, not a final test or proof that either method is generally better.`,
     ),
     paragraph(
-      `Saved softmax training progress (${record.history.at(-1)?.epoch ?? 0} / ${record.settings.epochs} epochs${record.stoppedEarly ? ", stopped early" : ""}). Softmax training is the parameter-learning method; 1-nearest neighbour updates no weights: it assigns the label of the closest training embedding. Both use the same frozen image encoder and share the current validation embeddings. Recomputed features may differ slightly across devices or runtimes.`,
+      `Saved softmax classifier ${record.name}: learning rate ${record.settings.learningRate}, seed ${record.settings.seed}, L2 ${record.settings.l2 ?? 0}. Training progress (${record.history.at(-1)?.epoch ?? 0} / ${record.settings.epochs} epochs${record.stoppedEarly ? ", stopped early" : ""}). Softmax training is the parameter-learning method; 1-nearest neighbour updates no weights: it assigns the label of the closest training embedding. Both use the same frozen image encoder and share the current validation embeddings. Recomputed features may differ slightly across devices or runtimes.`,
     ),
     paragraph(
       "Distance is not confidence or accuracy. The rule is one neighbour, squared L2 distance, with exact ties choosing the first example in recorded training order. Hard 1-NN labels have no probability-based cross-entropy or confidence score here.",

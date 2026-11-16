@@ -206,3 +206,20 @@ determinism. Recomputed embeddings can differ across runtimes; small validation 
 tuning do not prove superiority. If final-test outcomes already guided choices, use fresh held-out
 images before making a new final claim. Model-run JSON exports still contain only saved classifier
 training/validation history, not this ephemeral comparison.
+
+## L2 weight-penalty experiments
+
+Keep dataset/version, encoder, cap, seed, learning rate and epochs fixed; vary only **L2 strength**
+(0 disables, 0–1 accepted). Train/save each run and use the same-data comparison. The learner
+optimises mean training CE + lambda/2 sum(W²); it does not penalise biases or change the frozen
+encoder. Curves and validation/final losses show prediction CE. The separately reported training
+objective includes the penalty and should not be ranked across different strengths as if it were
+the same measurement. Report better/unchanged/worse validation results honestly.
+
+Missing strength is legacy zero. Positive runs use `softmax-sgd-f64-l2/v1`; zero retains the
+original tag/behaviour. Reports optionally add `settings.l2` and per-epoch `trainObjective` without
+changing existing loss definitions. Exact restore copies strength; old runs restore 0. Size
+experiments require strength to stay fixed. Neighbour comparison uses the actual saved weights;
+the final test evaluates prediction quality without adding the training penalty. No final locks
+are reset and no test data enter optimisation. Further tuning after viewing final scores requires
+fresh held-out images before a new independent final claim.
