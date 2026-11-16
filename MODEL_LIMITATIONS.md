@@ -441,3 +441,25 @@ the locked choice is not replaced; do not reuse exposed test images as an untouc
 Older builds cannot retry neural locks; no cross-runtime bitwise inference guarantee is offered.
 Existing accepted limits, unresolved camera reports and physical Safari training/file-handling
 gaps remain unchanged. No new production/network-inspection or physical-device evidence is claimed.
+
+
+## Phase 5 review queue — first slice only
+
+This slice scores only existing unlabelled/unsplit photos with a completed saved softmax source
+whose exact dataset snapshot still matches. Import the pool before training/saving that source;
+post-training imports require a refreshed source for now. At most the first 50 eligible group
+representatives by import order are scored and 10 are displayed. This window can be biased.
+Conservative hash screening can exclude unrelated plain images or miss crops/new viewpoints.
+
+Small probability margins or high entropy are ranking signals, not proof of an error, accuracy
+or calibrated uncertainty. Seeded random ordering is a review control, not measured evidence that
+active learning beats random selection. The app has no labels for the pool until human review and
+does not fabricate ground truth. Suggestions may be wrong; corrections use existing source classes.
+
+Approvals/corrections/skips remain page memory only, clearing on reload or detected source/snapshot
+changes. They do not change labels/splits, persist annotations, retrain or prove improvement yet.
+Source weights and final locks remain unchanged. Newly computed review features stay in page
+memory; existing permitted features may be reused. Protected validation/test images are not
+selected for this queue, and detected snapshot changes discard it. Further independent final claims after earlier
+final-test-guided choices still require fresh held-out data. Physical Safari and prior accepted
+limits/unresolved reports remain unchanged; no new device or deployed network-inspection claim.

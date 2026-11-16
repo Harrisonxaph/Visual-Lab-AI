@@ -577,3 +577,33 @@ and commits one complete result before displaying it. Cancellation/failure keeps
 choice, publishes no partial score and cannot reset exposure. Source/configuration changes refuse
 retry. Older builds cannot retry neural locks because their source-only fingerprint mismatches;
 use a compatible current build. Historical scores are never a fresh evaluation of edited data.
+
+
+## Phase 5 first slice — bounded review queue
+
+`learning/active-review.ts` reuses strict source snapshot/provenance checks. Pool members must have
+both labelId and split null. Known exact/near copies of any protected image are excluded, including
+validation/test metadata; protected images are never selected as review inputs. Conservative grouping ignores manual
+not-related overrides. One representative per pool group is retained; at most the first 50 by
+stable import order are scored, and deferred counts are shown. Difference-hash limitations remain.
+
+The frozen saved softmax head produces actual probabilities. Uncertainty ordering uses top-two
+margin (ascending); entropy uses natural logs, skipping p=0 terms. Seeded hash ordering is a review
+control on the same scored window, not a learning-quality comparison. Feature and probability
+non-finiteness fail rather than manufacturing rankings. The model does not optimise or change.
+
+`ui/active-review-panel.ts` shows at most 10 candidates, local thumbnails, confidence/margin/entropy,
+and accept/correct/skip controls. Decisions are bounded page memory only. The Training lab uses a
+separate cancellable review phase in its existing job/busy gate, encodes only eligible pool photos
+with a read-only embedding-store adapter. Existing permitted features may be reused, but newly
+computed review features are page memory only. It rechecks metadata before each uncached image
+read and the full snapshot/source before publishing a complete queue. A role change in another
+tab cannot turn a review cache write into a persistent test embedding because there are no review
+cache writes. Cancel/background/navigation publishes no partial queue. Relevant changes/reload clear decisions.
+No dataset metadata, model weights, final locks, schema or dependencies change.
+
+Future training-only promotion must not call ordinary setImageLabel and trust recompute: that can
+assign new groups to validation/test or merge protected groups. It needs an explicit atomic
+training-only policy preserving evaluation cohorts, consent and provenance, followed by controlled
+retraining/validation comparison with a seeded random-selection arm. Those are not implemented by
+this review slice. Test results cannot guide rounds or be silently refreshed after Phase 4 exposure.

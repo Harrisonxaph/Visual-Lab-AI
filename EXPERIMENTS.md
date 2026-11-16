@@ -299,3 +299,20 @@ precision/recall and confusion matrix. It is not an improvement claim on a small
 Neural parameters stay with local final history until dataset deletion, even if the saved source
 is removed. Downloaded files remain separate. Use fresh held-out data for any later independent
 claim influenced by seeing these scores. The owner decides Phase 4 closeout; Phase 5 is separate.
+
+
+## Phase 5 review queue preparation
+
+Import unlabelled photos before training/saving a completed softmax classifier. Choose **Score
+unlabelled photos** beside it. The source must match the current snapshot; known copies of
+protected data and duplicate pool groups are screened out. At most 50 representatives are scored,
+with 10 shown, using the frozen classifier's actual outputs. Read margin/entropy as review signals,
+not accuracy. You can switch between uncertainty-first and seeded random review ordering without
+running inference again; this does not compare learning effectiveness.
+
+New review features remain temporary; existing permitted embeddings can be reused without new
+cache writes. Accept, correct to an existing class, or skip. Decisions are page-memory only in this first slice;
+reload clears them. No training examples are added, no splits change and no weights learn yet.
+Training-only commit, measured retraining, an equally budgeted random-selection arm and round
+records follow separately. Preserve all held-out/test-reuse rules. No test pixels are scored, and
+no improvement claim follows from a larger confidence or from accepting a proposed label.

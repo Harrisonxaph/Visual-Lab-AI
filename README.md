@@ -13,8 +13,8 @@ classifier, measuring it honestly, and improving it with human feedback. See
 | 1 | Live detection, tracking, inspector, confidence and privacy safeguards | Implemented |
 | 2 | Build labelled image datasets from your photos | Implemented (Dataset lab tab) |
 | 3 | Train a real classifier and watch it learn | Implemented and merged (Training lab tab) |
-| 4 | Validation metrics, reproducible reports, controlled/L2 experiments, 1-NN baseline, photo/numeric comparisons, neural model files and an explicit final test | In progress |
-| 5 | Active learning: improve the model with your feedback | Planned |
+| 4 | Validation metrics, reproducible experiments, method comparisons, model files and protected final tests | Closed by owner (documented limits) |
+| 5 | Unlabelled review queue; training feedback loop follows | In progress |
 
 The detector does not learn from the camera. Training happens in the Training lab (Phase 3), which
 trains a small classifier on top of a frozen image encoder, and the app
@@ -95,12 +95,20 @@ README-only commit; any deployment requires explicit owner approval.
 After a photo-method comparison, explicitly export the trained network as JSON. Label names are
 optional; the file includes weights and provenance, not photos or embeddings. Reload it with the
 original dataset and labels to compute current validation metrics without retraining. Imported
-training claims are unverified; final tests accept only a completed in-session comparison network. Downloads
-are separate from app data and must be deleted separately. Camera access is not required.
+training claims are unverified; final tests accept only a completed in-session comparison network.
+Downloads are separate from app data and must be deleted separately. Camera access is not required.
 
 
 Phase 4's functional scope now includes one protected final choice for either softmax or a freshly
 trained comparison network. Both share the same dataset lock. A neural lock retains its exact
 parameters until dataset deletion so an interrupted check can retry after reload. See the
-[Phase 4 closeout](docs/phases/PHASE_4_CLOSEOUT.md) for evidence and remaining limitations. Owner
-closeout is pending; Phase 5 has not begun.
+[Phase 4 closeout](docs/phases/PHASE_4_CLOSEOUT.md) for evidence and remaining limitations. The owner
+approved Phase 4 closeout and authorised Phase 5 on 2026-11-16.
+
+
+### Active-learning review queue
+
+Import an unlabelled pool before training/saving a softmax source, then choose **Score unlabelled
+photos**. Review actual model suggestions in uncertainty or seeded random order; accept, correct
+or skip. This first Phase 5 slice keeps decisions in page memory only: it does not change labels,
+splits or weights, and does not yet measure a learning improvement. No camera is required.
