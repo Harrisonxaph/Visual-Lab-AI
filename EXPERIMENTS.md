@@ -324,6 +324,27 @@ Only approved labels enter training; pending/skipped photos remain unlabelled. T
 source/version/encoder, proposed/approved label, timestamp, seed/order and probability diagnostics
 on each approved image. Existing validation/test assignments and saved weights remain unchanged.
 A stale/deleted source, protected similarity group or storage error refuses the atomic batch.
-This is a data-annotation step, not retraining or measured improvement. After commit, train a new
-snapshot separately. Controlled before/after rounds and a matched-budget random learning arm remain
-pending; do not reuse exposed final-test results to guide those rounds.
+The commit itself is annotation, not optimisation. After commit, use the measured round below.
+A matched-budget random learning arm remains pending; do not reuse exposed final-test results to
+guide those rounds.
+
+### Measure one approved batch
+
+Use a completed saved source trained with no per-label cap. Review and commit a batch once, then
+choose **Retrain approved batch** beside that source without making other dataset edits. The app
+checks the batch/source and unchanged full validation cohort, prepares shared frozen image features,
+then trains a fresh original-data control and expanded-data softmax classifier using the source's
+seed, learning rate, L2, batch size and epoch budget. Neither model reads the test split.
+
+The table measures validation accuracy and cross-entropy for the saved source, fresh original-data
+control (before) and expanded-data classifier (after). The fresh control handles encoder-feature
+recomputation more fairly than comparing historical scores. Report improvement, no change or worse
+results as measured; no confidence-based improvement claim. Equal epochs are not equal compute.
+This is not yet an uncertainty-vs-random-selection learning comparison. The normal training results
+show the expanded classifier's loss/history and parameter changes; save it explicitly if wanted.
+
+Comparison evidence is temporary; reload/detected metadata/source changes clear it. Saved expanded
+models retain actual training/validation manifests for replay. Durable round comparison records and
+matched-budget random selection remain pending. Cancel/background/navigation discards incomplete
+rounds; transient features are never written as new cache records. No additional device session is
+required by this slice, and prior physical/network limitations remain as documented.

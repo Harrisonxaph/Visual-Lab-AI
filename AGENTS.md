@@ -39,11 +39,14 @@ reports remain unchanged. On 2026-11-15 the owner asked Codex to resume developm
 self-review with minimal input. On 2026-11-16 the owner explicitly approved Phase 4 closeout
 with its documented limitations and authorised Phase 5 development. PR #35 is merged as
 `0302438`; merge CI 43936757329 succeeded. PR #36 added a bounded unlabelled review queue and is merged as `e89ca50`.
-Current Phase 5 scope adds explicit local consent and an atomic training-only approval commit.
-Validate the saved source and metadata inside the write transaction; preserve all existing
-validation/test assignments, weights and final locks. Save image-level review provenance only
-with approval. No optimisation or improvement claim belongs to this slice. Measured retraining
-versus equally budgeted random selection and round records follow separately.
+PR #37 merged as `32781b3`; merge CI 43956459599 succeeded. It adds consent-gated,
+atomic training-only label promotion. Current scope is a measured feedback round from exactly one
+approved batch after a completed uncapped source, with no later dataset edits. Revalidate source,
+training provenance and the complete validation cohort. Train a fresh same-data control and an
+expanded-data softmax head on shared frozen features, seed and settings; keep test data sealed.
+Expanded weights may be explicitly saved as a new model using existing controls. Source weights
+and final locks stay unchanged. This is not a matched random-selection learning comparison.
+Durable round comparison records and the random-selection experiment follow separately.
 Preserve accepted limitations, existing weights/locks/schema and privacy. No dependency, merge,
 deployment, production/protection/settings or automatic-Git changes are authorised.
 

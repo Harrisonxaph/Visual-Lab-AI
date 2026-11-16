@@ -283,11 +283,17 @@ review features are temporary too; no review cache records are written. Random r
 ordering is not an evaluated learning baseline. Import the pool before training/saving the source;
 new imports after training require a refreshed source snapshot for now.
 
-The next slice adds a consent-gated atomic training-only approval commit, with per-image source,
+The merged promotion slice adds a consent-gated atomic training-only approval commit, with per-image source,
 encoder, approved/proposed label, time, seed and review-order provenance. Existing evaluation
 assignments remain fixed; skips stay unlabelled. No automatic retraining or improvement claim.
 
-Remaining Phase 5 work: retraining and before/after validation measurement against equally budgeted random selection,
+The measured-round slice trains a fresh same-data control and a fresh expanded classifier after
+one approved batch, using the same current features, initial seed, settings and unchanged validation
+cohort. It also re-evaluates the saved source on those features. The expanded classifier can be
+saved explicitly. Comparison results remain temporary. This first round requires an uncapped source
+and no dataset edits since the single approval commit. Equal epochs do not imply equal compute.
+
+Remaining Phase 5 work: before/after validation measurement against equally budgeted random selection,
 reproducible round records and the final-test reuse protocol. Ordinary label assignment is not
 sufficient: it may place a new labelled group in validation/test, so promotion needs a dedicated
 protected transaction. Improvement must be measured, never promised or inferred from confidence.

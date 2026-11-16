@@ -603,8 +603,8 @@ cache writes. Cancel/background/navigation publishes no partial queue. Relevant 
 Scoring alone changes no dataset metadata, model weights, final locks, schema or dependencies.
 
 Promotion uses the explicit protected transaction described below rather than ordinary
-setImageLabel/recompute, which can assign new groups to validation/test. Controlled retraining and
-validation comparison with a seeded random-selection arm remain unimplemented. Test results cannot
+setImageLabel/recompute, which can assign new groups to validation/test. The measured round below supports retraining;
+validation comparison with a seeded random-selection learning arm remains unimplemented. Test results cannot
 guide rounds or be silently refreshed after Phase 4 exposure.
 
 ### Consent-gated training promotion
@@ -624,4 +624,30 @@ labels, timestamp, score/margin/entropy, ordering and seed. It is deleted with t
 Decisions otherwise remain ephemeral. This short storage transaction is atomic, not cancellable;
 page closure leaves either the whole transaction or nothing, never a partial batch. Committing does
 not retrain, automatically compare runs or assert improvement. New dataset versions require a new
-source; controlled round records and equally budgeted random-selection learning remain future work.
+source for another review batch. Measured retraining is described below; durable round records and
+equally budgeted random-selection learning remain future work.
+
+### Measured human-feedback round
+
+`learning/learning-round.ts` requires one promotion since the completed, uncapped saved source
+(current version = source version + 1). Every added image must carry the same batch time and matching
+source/encoder/approved label. Reconstruct the prior pool roles, check the original training and
+validation manifests with `prepareBaseline`, require the full independent validation cohort, and
+re-run the protected promotion policy. Canonical expanded training order comes from `selectExamples`
+so an explicitly saved expanded classifier can later restore/replay its manifest normally.
+
+Both fresh softmax heads use shared current features, source settings/seed/epochs and initial
+weights: the control uses the original training set, the expanded head adds approved images.
+Evaluate the saved source on the same validation features as a separate historical-weight reference.
+The control reduces the effect of changed/recomputed encoder features; it is not a random-selection
+learning baseline. Equal epochs on different data sizes are not equal compute. Use actual measured
+accuracy/loss and report unchanged/worse outcomes honestly. Only the classifier learns.
+
+The UI's cancellable `round` phase shares the existing busy/lifecycle gate. Features are read-only
+cache reuse or temporary computations, with no new cache writes. Recheck metadata before uncached
+image reads and source/snapshot after training; cancellation, background/navigation or detected
+changes publish no partial round/model. The expanded model is a normal unsaved Draft with exact
+training/validation provenance and can be saved explicitly under the existing five-model limit.
+`ui/learning-round-panel.ts` comparisons clear on reload/detected source or dataset changes. Durable
+round comparison records, export and matched-budget random-selection learning remain pending.
+No new dependency/store/schema or test-pixel access is introduced. Final locks are untouched.

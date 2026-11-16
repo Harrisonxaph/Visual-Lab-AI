@@ -14,7 +14,7 @@ classifier, measuring it honestly, and improving it with human feedback. See
 | 2 | Build labelled image datasets from your photos | Implemented (Dataset lab tab) |
 | 3 | Train a real classifier and watch it learn | Implemented and merged (Training lab tab) |
 | 4 | Validation metrics, reproducible experiments, method comparisons, model files and protected final tests | Closed by owner (documented limits) |
-| 5 | Unlabelled review queue; training feedback loop follows | In progress |
+| 5 | Unlabelled review queue; measured feedback retraining; random comparison follows | In progress |
 
 The detector does not learn from the camera. Training happens in the Training lab (Phase 3), which
 trains a small classifier on top of a frozen image encoder, and the app
@@ -113,4 +113,8 @@ photos**. Review actual model suggestions in uncertainty or seeded random order;
 or skip. Decisions stay in page memory until you check the consent box and choose **Commit approved
 photos to training**. That saves approved labels and review provenance locally, preserving existing
 validation/test assignments. Skips stay unlabelled. It does not change weights or measure a learning
-improvement. Train a new snapshot separately; controlled round comparisons follow. No camera is required.
+improvement. Choose **Retrain approved batch** beside the source to train and compare a fresh
+same-data control with an expanded classifier on the unchanged validation photos. The first
+controlled round requires one approval batch, an uncapped source and no subsequent dataset edits.
+Save the expanded classifier explicitly using **Save this model**. Round comparisons stay in page
+memory; a matched random-selection learning arm remains pending. No camera is required.
