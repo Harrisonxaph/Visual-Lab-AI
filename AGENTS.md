@@ -42,12 +42,14 @@ with its documented limitations and authorised Phase 5 development. PR #35 is me
 PR #37 merged as `32781b3`; merge CI 43956459599 succeeded. It adds consent-gated,
 atomic training-only label promotion. PR #38 merged as `65d843a`; merge CI 43960863521
 succeeded. It adds measured retraining against a same-data control after one approved batch.
-Current Phase 5 scope adds a matched-budget uncertainty-vs-random experiment on freshly generated
-shapes (simulated oracle labels, separate generator seed from the stored example). Keep private
-and sealed data untouched, use equal label budgets/settings/features/validation, and report actual
-outcomes even when uncertainty performs worse. Save allowlisted human-round evidence only with
-explicit classifier Save and include it in existing local reports. No Phase 5 closeout is implied:
-prepare a concrete completion candidate and retain known limits for the owner's decision.
+PR #39 merged as `03e118e32472ded3eb13cd67165e3fbfeef32a52`; exact-head CI 43964979223
+succeeded (229 unit, 109 development-browser, 39 production tests). It adds a matched-budget
+generated-data acquisition experiment and saved allowlisted human-round evidence. On 2026-11-16
+the owner explicitly instructed “Close out p5”. Phase 5 and the revised educational core are closed
+with the limits in docs/phases/PHASE_5_CLOSEOUT.md. Current scope is recording that decision and
+verifying merge/closeout CI, with no runtime changes. Do not start stretch features, reopen routine
+manual validation, or implement further features without a new owner instruction. Closure does not
+resolve historical defects, establish physical Safari/network evidence or authorise deployment.
 Preserve accepted limitations, existing weights/locks/schema and privacy. No dependency, merge,
 deployment, production/protection/settings or automatic-Git changes are authorised.
 

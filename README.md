@@ -14,7 +14,7 @@ classifier, measuring it honestly, and improving it with human feedback. See
 | 2 | Build labelled image datasets from your photos | Implemented (Dataset lab tab) |
 | 3 | Train a real classifier and watch it learn | Implemented and merged (Training lab tab) |
 | 4 | Validation metrics, reproducible experiments, method comparisons, model files and protected final tests | Closed by owner (documented limits) |
-| 5 | Unlabelled review queue; Feedback retraining and generated acquisition comparison | In progress |
+| 5 | Unlabelled review, feedback retraining and generated acquisition comparison | Closed by owner (documented limits) |
 
 The detector does not learn from the camera. Training happens in the Training lab (Phase 3), which
 trains a small classifier on top of a frozen image encoder, and the app
@@ -120,4 +120,6 @@ Save the expanded classifier explicitly using **Save this model**. The live comp
 Saved models and their reports. **Compare uncertainty vs random** runs a separate, freshly generated
 shapes experiment with simulated labels, equal acquisition budgets and shared validation. Download
 its numerical report explicitly to keep it. This does not prove either method is generally better.
-No camera is required. Phase 5 closeout remains an owner decision.
+No camera is required. The owner closed Phase 5 and the revised educational core on 2026-11-16
+with the [documented limitations](docs/phases/PHASE_5_CLOSEOUT.md). This does not complete all
+features from the original master specification or authorise production deployment.

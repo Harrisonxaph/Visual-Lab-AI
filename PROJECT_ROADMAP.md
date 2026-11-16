@@ -31,11 +31,11 @@ described as retraining or fine-tuning EfficientDet (type 5).
 | 2 | Dataset laboratory | Implemented and merged (documented device limits) | Medium (3/5) |
 | 3 | First genuine AI training system | Implemented and merged (**first genuine training**) | Medium–high (3.5/5) |
 | 4 | Learning and evaluation laboratory | Closed by owner 2026-11-16 (documented limits) | Medium (3/5) |
-| 5 | Active learning | Authorised; review queue first slice | Medium (3/5) |
+| 5 | Active learning | Closed by owner 2026-11-16 (documented limits) | Medium (3/5) |
 
 - **Minimum meaningful result:** end of Phase 3. You will have trained a real model and seen its
   weights and loss change.
-- **Core project complete:** end of Phase 5. Train, evaluate, improve with human feedback, and
+- **Core project complete:** Phase 5 closed by owner 2026-11-16. Train, evaluate, use human feedback, and
   measure its effects honestly, reserving a fresh final test after selection.
 - Stretch targets are optional and not required to call the project complete.
 
@@ -306,10 +306,11 @@ and source/control/expanded measurements. Existing local reports include this ev
 generated experiment has its own numerical download. Original photos, encoder and compatible code
 are still needed to reproduce; reports are not backups and cross-runtime bits need not match.
 
-**Completion candidate, not closed:** see [Phase 5 closeout](docs/phases/PHASE_5_CLOSEOUT.md).
-Remaining work is review/merge and an explicit owner closeout decision with documented limitations;
-no additional routine device session is required by this slice. Preserve the final-test reuse
-protocol and all unresolved reports. No production deployment is authorised.
+**Closed by the owner on 2026-11-16:** see [Phase 5 closeout](docs/phases/PHASE_5_CLOSEOUT.md).
+The revised educational core is functionally complete with documented limitations. PR #39 merged
+as `03e118e32472ded3eb13cd67165e3fbfeef32a52`; exact-head CI 43964979223 succeeded.
+Unresolved reports and final-test reuse rules remain. Stretch targets and unimplemented original
+master-spec features remain optional; no further development or production deployment is authorised.
 
 Build a human-feedback learning loop and measure its effects.
 
