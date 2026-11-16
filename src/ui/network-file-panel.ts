@@ -111,7 +111,7 @@ export function networkFilePanel(options: {
   panel.append(
     el(
       "p",
-      "The reloaded network remains only in page memory; reload or clear removes it. Deleting app data cannot delete exported files from Downloads/Files. Remove downloads separately; deleting a training photo does not unlearn it from an exported model. Neural-network final-test evaluation is not available yet.",
+      "The reloaded network remains only in page memory; reload or clear removes it. Deleting app data cannot delete exported files from Downloads/Files. Remove downloads separately; deleting a training photo does not unlearn it from an exported model. Final tests require a freshly trained in-session comparison; imported files are not eligible because their training provenance is unverified.",
     ),
   );
   return panel;

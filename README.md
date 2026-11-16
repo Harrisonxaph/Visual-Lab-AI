@@ -95,5 +95,12 @@ README-only commit; any deployment requires explicit owner approval.
 After a photo-method comparison, explicitly export the trained network as JSON. Label names are
 optional; the file includes weights and provenance, not photos or embeddings. Reload it with the
 original dataset and labels to compute current validation metrics without retraining. Imported
-training claims are unverified; final-test evaluation for networks is not available yet. Downloads
+training claims are unverified; final tests accept only a completed in-session comparison network. Downloads
 are separate from app data and must be deleted separately. Camera access is not required.
+
+
+Phase 4's functional scope now includes one protected final choice for either softmax or a freshly
+trained comparison network. Both share the same dataset lock. A neural lock retains its exact
+parameters until dataset deletion so an interrupted check can retry after reload. See the
+[Phase 4 closeout](docs/phases/PHASE_4_CLOSEOUT.md) for evidence and remaining limitations. Owner
+closeout is pending; Phase 5 has not begun.

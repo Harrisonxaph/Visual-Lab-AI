@@ -1,5 +1,111 @@
 import { test, expect } from "@playwright/test";
 
+test("softmax and neural choices compete for the same durable dataset lock", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const result = await page.evaluate(async () => {
+    const { DatasetDb } = await import("/src/datasets/db.ts");
+    const { DatasetService } = await import("/src/datasets/service.ts");
+    const { finalFixture } = await import("/tests/fixtures/final-check.ts");
+    const { createNetworkFinalChoice, fingerprintModel } = await import(
+      "/src/learning/final-evaluation.ts"
+    );
+    const { prepareMethodComparison } = await import(
+      "/src/learning/method-comparison.ts"
+    );
+    const { trainNetwork } = await import("/src/learning/nonlinear.ts");
+    const f = finalFixture(),
+      db = await DatasetDb.open(),
+      second = await DatasetDb.open();
+    const x = [0, 1].map((j) =>
+      Float32Array.from({ length: f.model.dims }, (_, i) => (i === j ? 1 : 0)),
+    );
+    const run = await trainNetwork(
+      {
+        dims: f.model.dims,
+        classes: 2,
+        trainX: x,
+        trainY: [0, 1],
+        validationX: x,
+        validationY: [0, 1],
+      },
+      f.model.settings,
+    );
+    const choice = createNetworkFinalChoice(
+      f.model,
+      run,
+      prepareMethodComparison(f, f.model),
+    );
+    await db.commit({
+      put: {
+        datasets: [f.dataset],
+        labels: f.labels,
+        images: f.images,
+        models: [f.model],
+      },
+    });
+    const [nnHash, softmaxHash] = await Promise.all([
+      fingerprintModel(f.model, choice),
+      fingerprintModel(f.model),
+    ]);
+    const attempts = await Promise.allSettled([
+      db.finalChecks().claim(f.model, nnHash, undefined, choice),
+      second.finalChecks().claim(f.model, softmaxHash),
+    ]);
+    const lock = (
+      attempts.find(
+        (r) => r.status === "fulfilled",
+      ) as PromiseFulfilledResult<any>
+    ).value;
+    let switched = false;
+    try {
+      await second
+        .finalChecks()
+        .claim(
+          f.model,
+          lock.networkChoice ? softmaxHash : nnHash,
+          undefined,
+          lock.networkChoice ? undefined : choice,
+        );
+    } catch {
+      switched = true;
+    }
+    const complete = await db.finalChecks().complete(lock, f.model, {
+      completedAt: new Date().toISOString(),
+      loss: 0.5,
+      truth: [0, 1],
+      predicted: [0, 1],
+    });
+    let overwritten = false;
+    try {
+      await second.finalChecks().claim(f.model, nnHash, undefined, choice);
+    } catch {
+      overwritten = true;
+    }
+    const service = await DatasetService.open();
+    await service.deleteDataset(f.dataset.id);
+    const deleted = await db.finalChecks().read(f.dataset.id);
+    service.close();
+    db.close();
+    second.close();
+    return {
+      successes: attempts.filter((r) => r.status === "fulfilled").length,
+      switched,
+      overwritten,
+      status: complete.status,
+      deleted: deleted ?? null,
+    };
+  });
+  expect(result).toEqual({
+    successes: 1,
+    switched: true,
+    overwritten: true,
+    status: "complete",
+    deleted: null,
+  });
+});
+
 test("the final choice is atomic across connections, immutable after completion, and removed with its dataset", async ({
   page,
 }) => {

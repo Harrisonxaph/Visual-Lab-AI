@@ -545,3 +545,35 @@ incorrectly erase a completed current check. Nothing is written to the model dat
 stays v3, saved softmax models and durable final locks remain unchanged. Missing current validation
 features may use the existing guarded embedding cache. Download deletion belongs to Files/Downloads;
 clearing app storage cannot remove exports. A network final-test path remains separate work.
+
+
+## Protected neural final choice — twelfth Phase 4 slice
+
+`FinalPlan.networkChoice` is optional: absence retains the original softmax path and byte-for-byte
+legacy model signature. Presence records the tanh8 algorithm, all four parameter arrays, actual
+network history and actual training/validation references. The `modelId` remains the saved source
+run ID; `sourceRun` describes that source's configuration/selection, while `networkChoice` describes
+the actual selected neural classifier. UI method labels make this distinction explicit.
+
+Only the completed in-session photo comparison produces an eligible neural choice. Imported
+network files are not offered, because their provenance is unverified. Choice construction reuses
+the bounded parameter/history/provenance validator from model-file export; this internal data-only
+normalisation creates no download or persistence. Preflight verifies it against the exact current
+source selection and applies the existing held-out integrity guards. The identity hash adds actual
+network parameters and provenance to the existing source signature. No legacy signature is changed.
+
+`FinalCheckStore` uses its existing readwrite transaction and single dataset key for both methods.
+It verifies the saved source and unchanged dataset, and refuses method/parameter/provenance changes
+to an existing choice, even for the same source ID. Exact network parameters are stored with an
+explicitly confirmed lock before any test pixels are read. Reload can retry that immutable network
+without retraining; the original source must remain available. Parameters remain with completed
+history until dataset deletion, which already removes the finalChecks record atomically. The
+confirmation and retention explanation disclose this extra copy; deleting a source does not remove
+these retained network parameters. No new store or database version is needed.
+
+`runFinalCheck` fingerprints the actual locked choice before reading test blobs and dispatches to
+frozen softmax or neural inference. It uses only locked test references, keeps embeddings in memory
+and commits one complete result before displaying it. Cancellation/failure keeps the original
+choice, publishes no partial score and cannot reset exposure. Source/configuration changes refuse
+retry. Older builds cannot retry neural locks because their source-only fingerprint mismatches;
+use a compatible current build. Historical scores are never a fresh evaluation of edited data.

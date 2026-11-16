@@ -280,3 +280,22 @@ is limited to 1 MiB and the current pinned encoder, original dataset/labels and 
 It does not enable neural-network final tests or reset earlier final-test exposure. Existing saved
 softmax models and their locks remain unchanged. The raw dataset is still needed; this is not a
 portable dataset backup or a new guarantee of generalisation.
+
+
+## Choosing a neural network for the final check
+
+Use validation to choose a method first. To choose a neural network, complete **Compare training
+methods**, then select its **current in-session comparison** option under Final held-out test.
+Imported files are intentionally not eligible. Confirm the chosen method and local retention of
+its exact parameters/provenance. Softmax and neural choices share one dataset lock, saved before
+any test photo is read. No training takes place and no test embeddings are cached.
+
+A cancelled attempt can retry after page reload using identical stored neural parameters; the
+saved source and unchanged dataset must remain. Completion saves one historical score and never
+offers a method switch or overwrite. Parameter/history identity is independent of a later rerun
+or exported file. The result labels which classifier was used and reports prediction CE, accuracy,
+precision/recall and confusion matrix. It is not an improvement claim on a small generated set.
+
+Neural parameters stay with local final history until dataset deletion, even if the saved source
+is removed. Downloaded files remain separate. Use fresh held-out data for any later independent
+claim influenced by seeing these scores. The owner decides Phase 4 closeout; Phase 5 is separate.

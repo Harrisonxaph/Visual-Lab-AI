@@ -224,7 +224,10 @@ export function parseNetworkFile(json: string): NetworkFile {
 /** Explicit export only: learned parameters and provenance, never pixels or cached embeddings. */
 export function serializeNetworkFile(
   source: ModelRecord,
-  run: Awaited<ReturnType<typeof trainNetwork>>,
+  run: Pick<
+    Awaited<ReturnType<typeof trainNetwork>>,
+    "model" | "history" | "stoppedEarly"
+  >,
   plan: { train: ImageRecord[]; validation: ImageRecord[] },
   includeNames = false,
 ): string {

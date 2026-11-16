@@ -12,6 +12,13 @@ import { replayProblem } from "./experiments";
 import { checkCompatibility, toSoftmax } from "./models";
 import { evaluate } from "./softmax";
 import { validateSettings } from "./trainer";
+import { prepareMethodComparison } from "./method-comparison";
+import {
+  parseNetworkFile,
+  serializeNetworkFile,
+  type NetworkFile,
+} from "./network-files";
+import { evaluateNetwork, type trainNetwork } from "./nonlinear";
 import type {
   ModelRecord,
   RunExampleRef,
@@ -20,16 +27,43 @@ import type {
 } from "./types";
 
 export class FinalCheckError extends Error {}
+export type NetworkFinalChoice = Pick<
+  NetworkFile,
+  "algorithm" | "network" | "history" | "train" | "validation"
+>;
+/** Only completed in-session comparisons are offered by the UI. Imported files are not eligible.
+ * Reuse the same bounded parameter/provenance validator as explicit model-file export. */
+export function createNetworkFinalChoice(
+  source: ModelRecord,
+  run: Pick<
+    Awaited<ReturnType<typeof trainNetwork>>,
+    "model" | "history" | "stoppedEarly"
+  >,
+  plan: Parameters<typeof serializeNetworkFile>[2],
+): NetworkFinalChoice {
+  const file = parseNetworkFile(serializeNetworkFile(source, run, plan));
+  return {
+    algorithm: file.algorithm,
+    network: file.network,
+    history: file.history,
+    train: file.train,
+    validation: file.validation,
+  };
+}
 export interface FinalPlan {
   datasetId: string;
   datasetVersion: number;
+  /** Saved source-run ID; networkChoice identifies the actual neural classifier when present. */
   modelId: string;
   encoderKey: string;
   labelIds: string[];
   labelNames: string[];
   settings: TrainingSettings;
+  /** Source selection/configuration; the neural method and its own history live in networkChoice. */
   sourceRun: RunManifest;
   test: RunExampleRef[];
+  /** Present only when a trusted in-session network was explicitly chosen; absent means legacy softmax. */
+  networkChoice?: NetworkFinalChoice;
 }
 export interface FinalResult {
   completedAt: string;
@@ -54,6 +88,7 @@ export function prepareFinalPlan(
   labels: readonly LabelRecord[],
   images: readonly ImageRecord[],
   model: ModelRecord,
+  networkChoice?: NetworkFinalChoice,
 ): FinalPlan {
   if (
     model.labelNames.length !== model.labelIds.length ||
@@ -131,6 +166,36 @@ export function prepareFinalPlan(
     fail(
       "Test photos overlap with, or look like a near-copy of, training/validation photos. Resolve dataset integrity before a final check.",
     );
+  let checkedNetwork: NetworkFinalChoice | undefined;
+  if (networkChoice) {
+    try {
+      const shared = prepareMethodComparison(
+        { dataset, labels: [...labels], images: [...images] },
+        model,
+      );
+      checkedNetwork = createNetworkFinalChoice(
+        model,
+        {
+          model: networkChoice.network,
+          history: networkChoice.history,
+          stoppedEarly: false,
+        },
+        shared,
+      );
+      if (
+        finalChoiceSignature(model, checkedNetwork) !==
+        finalChoiceSignature(model, networkChoice)
+      )
+        fail(
+          "The network's recorded training/validation provenance or method does not match this snapshot.",
+        );
+    } catch (error) {
+      if (error instanceof FinalCheckError) throw error;
+      fail(
+        "The completed network candidate is invalid or no longer matches the original training snapshot.",
+      );
+    }
+  }
   return {
     datasetId: dataset.id,
     datasetVersion: dataset.version,
@@ -145,6 +210,7 @@ export function prepareFinalPlan(
       sha256,
       labelId: labelId!,
     })),
+    ...(checkedNetwork ? { networkChoice: checkedNetwork } : {}),
   };
 }
 
@@ -165,8 +231,32 @@ export function finalModelSignature(m: ModelRecord): string {
     Array.from(m.bias),
   ]);
 }
-export async function fingerprintModel(model: ModelRecord): Promise<string> {
-  const bytes = new TextEncoder().encode(finalModelSignature(model));
+/** Legacy identities remain byte-for-byte unchanged; neural choices bind all parameters and provenance. */
+export function finalChoiceSignature(
+  model: ModelRecord,
+  choice?: NetworkFinalChoice,
+): string {
+  const source = finalModelSignature(model);
+  if (!choice) return source;
+  return JSON.stringify([
+    source,
+    choice.algorithm,
+    choice.network.dims,
+    choice.network.classes,
+    Array.from(choice.network.input),
+    Array.from(choice.network.hiddenBias),
+    Array.from(choice.network.output),
+    Array.from(choice.network.outputBias),
+    choice.history,
+    choice.train,
+    choice.validation,
+  ]);
+}
+export async function fingerprintModel(
+  model: ModelRecord,
+  choice?: NetworkFinalChoice,
+): Promise<string> {
+  const bytes = new TextEncoder().encode(finalChoiceSignature(model, choice));
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest), (b) =>
     b.toString(16).padStart(2, "0"),
@@ -208,11 +298,13 @@ export async function runFinalCheck(
   if (
     lock.status !== "locked" ||
     lock.modelId !== candidate.id ||
-    (await abortable(fingerprintModel(candidate), options.signal)) !==
-      lock.modelFingerprint
+    (await abortable(
+      fingerprintModel(candidate, lock.networkChoice),
+      options.signal,
+    )) !== lock.modelFingerprint
   )
     fail("Only the originally locked model can run this final check.");
-  const model = toSoftmax(candidate),
+  const model = lock.networkChoice ? null : toSoftmax(candidate),
     vectors: Float32Array[] = [],
     truth: number[] = [];
   for (const ref of lock.test) {
@@ -221,14 +313,16 @@ export async function runFinalCheck(
     if (!image)
       fail("A locked test photo is missing. No partial results were saved.");
     const vector = await abortable(embed(image), options.signal);
-    if (vector.length !== model.dims || !vector.every(Number.isFinite))
+    if (vector.length !== candidate.dims || !vector.every(Number.isFinite))
       fail("The encoder returned invalid values; no final result was saved.");
     vectors.push(vector);
     truth.push(lock.labelIds.indexOf(ref.labelId));
     options.onProgress?.(vectors.length, lock.test.length);
   }
   if (options.signal?.aborted) throw new CancelledError();
-  const result = evaluate(model, vectors, truth);
+  const result = lock.networkChoice
+    ? evaluateNetwork(lock.networkChoice.network, vectors, truth)
+    : evaluate(model!, vectors, truth);
   return {
     completedAt: new Date().toISOString(),
     loss: result.loss,

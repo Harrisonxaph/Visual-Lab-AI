@@ -397,7 +397,7 @@ repeated tuning can overfit validation. If a final score already guided choices,
 do not make the same test images independent again.
 
 Fresh comparison results stay in page memory until explicit model-file export (see below).
-Reloaded files also stay in page memory; the neural-network final-test path is not available yet. Stored source models and final locks are unchanged. Long runs may be slower on mobile; batch
+Reloaded files also stay in page memory; the imported file itself is ineligible for final testing. Stored source models and final locks are unchanged. Long runs may be slower on mobile; batch
 yields provide cancellation but do not establish hardware performance or physical Safari support.
 Physical-device evidence is not required or fabricated for this slice. Existing accepted limits
 and unresolved camera reports remain unchanged.
@@ -421,5 +421,23 @@ proof of independent training. Changed snapshots warn and known copies are exclu
 
 The app holds one reloaded network in page memory, without adding a model store or migrating data.
 Existing run-report JSON still excludes weights and remains a separate softmax-run report format.
-Neural-network final-test selection is deferred. Automated Chromium download/import/CSP checks are
+Final-test selection is available only for completed in-session comparisons, not imported files. Automated Chromium download/import/CSP checks are
 not physical Safari evidence; no new device-support or network-inspection claim is made.
+
+
+## Neural final-test limits and retained parameters
+
+Final choice can use the network from a completed current in-session comparison. Imported files
+are not eligible: parsing/provenance claims cannot prove how they were trained. Both classifier
+methods share one durable dataset lock; changing method cannot gain another final score. Test
+copy screening is heuristic and cannot prove all leakage absent. Small/generated held-out sets
+remain weak evidence of general real-world quality. Do not tune using the final score.
+
+A neural lock retains its exact parameters and provenance locally until the dataset is deleted,
+even after completion or source-model deletion. This is explicitly disclosed before confirmation.
+Delete the dataset or all app data to remove that copy; downloaded model files require separate
+deletion. A retry requires the original saved source and unchanged snapshot. If those disappear,
+the locked choice is not replaced; do not reuse exposed test images as an untouched final set.
+Older builds cannot retry neural locks; no cross-runtime bitwise inference guarantee is offered.
+Existing accepted limits, unresolved camera reports and physical Safari training/file-handling
+gaps remain unchanged. No new production/network-inspection or physical-device evidence is claimed.
