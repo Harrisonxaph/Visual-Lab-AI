@@ -176,6 +176,19 @@ Further tuning needs fresh held-out data for a new final claim. Final reports ca
 deleting their dataset. Additional learning methods/regularisation remain deferred; this slice does
 not itself declare Phase 4 or the project closed, or authorize Phase 5.
 
+Seventh slice: compare a saved softmax classifier with a fixed 1-nearest-neighbour baseline on
+the same validation images/embeddings. Both use the saved run's original capped training images,
+class order, encoder key and dataset snapshot. Known training copies are excluded from validation
+for both methods. The baseline updates no weights; it remembers labelled training features and
+uses squared L2 distance, with deterministic first-in-recorded-order ties. It has no probability
+or cross-entropy output. Metrics, not distances/confidence, measure correctness.
+
+Missing train/validation embeddings may be computed/cached locally; tests never enter this path.
+Comparison results are page-memory only and cleared on reload or the next refresh after relevant
+data/model edits. Current shared embeddings are used for validation; historical training embeddings
+regenerated on another runtime need not match bitwise. Neural-network method comparison and
+regularisation remain deferred. No final-test result is reused, and no Phase 5 work is included.
+
 Scope:
 
 - Accuracy, precision, recall per label; confusion matrix.

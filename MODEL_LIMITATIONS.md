@@ -316,3 +316,30 @@ Automated evidence covers numerical/planning guards, cross-connection atomic cho
 completion, cancellation/retry, migrations and real-encoder integration in Chromium. New physical
 Safari behaviour remains untested; existing accepted device/privacy limits and unexplained reports
 remain. No additional manual camera, battery or cross-browser walkthrough is required by this slice.
+
+## Nearest-neighbour baseline comparison
+
+The fixed 1-NN baseline stores no new model and learns no parameters. It assigns the nearest
+training embedding's label using squared L2 distance; exact ties choose the earliest training
+example in recorded order. Distance is not confidence, probability or accuracy. No cross-entropy
+is reported for its hard labels. The softmax classifier is evaluated with its saved weights and
+actual completed epochs (including a stopped run), not retrained during comparison.
+
+Both methods use the same current validation embeddings and independently checkable examples,
+with identical exclusions and the original training cap/order. Changed snapshots, missing manifests
+or incomplete training provenance are refused. Screening can miss correlated examples; labels may
+still be wrong. Small sets, one seed and repeated validation tuning can mislead, so measured scores
+do not prove general improvement or superiority. No final-test photos are embedded/evaluated.
+Further tuning after a prior final check still needs fresh held-out images for a new final claim.
+
+Training/validation cache entries may be reused or regenerated. The same encoder key does not
+prove bit-identical historical features across browsers/devices; current shared validation inputs
+are identical for the two predictions. Memory/runtime grow with stored training examples, feature
+dimensions and validation count. The CPU loop yields between images; no mobile latency, battery
+or thermal guarantee is made. Cancellation publishes no partial comparison and may leave allowed
+train/validation cache entries already computed, as in ordinary training.
+
+Results are page-memory only: no saved comparison or report export is added. Reload clears them;
+relevant dataset/model changes clear them at the next Training lab refresh, not through real-time
+cross-tab synchronisation. Physical Safari remains untested; existing accepted limitations and
+historical reports remain unchanged. No routine manual device session is required for this slice.

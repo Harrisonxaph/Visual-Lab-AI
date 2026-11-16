@@ -187,3 +187,22 @@ or creating another dataset does not undo having seen test outcomes. Labels, set
 and metrics remain on-device until the dataset is deleted; no test embeddings are cached. Training,
 validation, lessons and saved-run comparisons still do not access test pixels. Existing run-report
 JSON contains training/validation history only; final reports are currently viewed in the app.
+
+## Fixed 1-nearest-neighbour validation baseline
+
+Train/save a classifier, then choose **Compare with 1-nearest neighbour** beside it. The original
+snapshot, class order, capped training subset, encoder key and provenance must still match. Both
+methods receive the same current validation embeddings and ground truth, after the existing
+independence exclusions. The classifier is frozen. 1-NN uses squared L2 distance and first-in-
+recorded-order exact ties; validation truth is never used to choose a neighbour.
+
+Read each method's accuracy counts, precision/recall and confusion matrix. Do not treat neighbour
+distance as confidence or compare a fabricated probability loss for its hard labels. The baseline
+does not update weights; the saved classifier learned weights in its earlier training run. Missing
+train/validation features may be cached; test images and final locks are never used or altered.
+
+Results are intentionally page-memory only. Repeat with the same snapshot/model/cap/order to check
+determinism. Recomputed embeddings can differ across runtimes; small validation sets and repeated
+tuning do not prove superiority. If final-test outcomes already guided choices, use fresh held-out
+images before making a new final claim. Model-run JSON exports still contain only saved classifier
+training/validation history, not this ephemeral comparison.

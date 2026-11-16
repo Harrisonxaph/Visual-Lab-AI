@@ -1,4 +1,13 @@
 import {
+  BaselineError,
+  nearestNeighbour,
+  prepareBaseline,
+} from "../learning/nearest-neighbour";
+import {
+  baselineComparisonPanel,
+  type BaselineComparison,
+} from "./baseline-comparison";
+import {
   FinalCheckError,
   prepareFinalPlan,
   fingerprintModel,
@@ -118,11 +127,14 @@ interface Loaded {
 export function mountTrainingLab(root: HTMLElement) {
   let service: DatasetService | null = null;
   let embedder: Embedder | null = null;
-  let phase: "idle" | "embedding" | "training" | "final-test" = "idle";
+  let phase: "idle" | "embedding" | "training" | "final-test" | "baseline" =
+    "idle";
   let abort: AbortController | null = null;
   let actionPending = false;
   let lessonRunning = false;
   let reportNames = false;
+  let baseline: BaselineComparison | null = null;
+  let baselineProgress = "";
   let finalRecord: FinalCheckRecord | null = null;
   let finalReadError = "";
   let finalModelId = "";
@@ -197,6 +209,10 @@ export function mountTrainingLab(root: HTMLElement) {
   );
   const results = el("div", { className: "ds-body", id: "tr-results" });
   const saved = el("div", { className: "ds-body", id: "tr-saved" });
+  const baselineSection = el("section", {
+    className: "panel ds-panel",
+    id: "tr-baseline",
+  });
   const finalSection = el("section", {
     className: "panel ds-panel",
     id: "tr-final",
@@ -211,6 +227,7 @@ export function mountTrainingLab(root: HTMLElement) {
     progress,
     results,
     saved,
+    baselineSection,
     finalSection,
     lessonRoot,
     aboutPanel(),
@@ -229,6 +246,7 @@ export function mountTrainingLab(root: HTMLElement) {
 
   function describeError(error: unknown) {
     if (
+      error instanceof BaselineError ||
       error instanceof FinalCheckError ||
       error instanceof RunReportError ||
       error instanceof UserError ||
@@ -913,6 +931,151 @@ export function mountTrainingLab(root: HTMLElement) {
     );
   }
 
+  function renderBaseline() {
+    baselineSection.replaceChildren(
+      el("h2", {}, "Learning methods — nearest-neighbour baseline"),
+    );
+    baselineSection.append(
+      el(
+        "p",
+        { className: "ds-help" },
+        "Save a classifier, then choose Compare with 1-nearest neighbour beside it. The comparison requires its unchanged dataset snapshot and actual training subset. Both methods are checked on the same independent validation images. Missing training/validation embeddings may be computed and cached locally; test photos are never opened by this action.",
+      ),
+    );
+    const message = el(
+      "p",
+      { id: "tr-baseline-status", className: "ds-notice" },
+      baselineProgress ||
+        "No comparison yet. Results are not saved automatically.",
+    );
+    message.setAttribute("role", "status");
+    baselineSection.append(message);
+    if (phase === "baseline")
+      baselineSection.append(
+        button("Cancel comparison", () => abort?.abort(), {
+          className: "button stop",
+          dataset: { testid: "tr-baseline-cancel" },
+        }),
+      );
+    if (baseline)
+      baselineSection.append(
+        baselineComparisonPanel(baseline, finalRecord?.status === "complete"),
+      );
+  }
+
+  async function compareBaseline(source: ModelRecord) {
+    const s = service;
+    if (!s?.current || busy()) return;
+    const candidate = structuredClone(source);
+    phase = "baseline";
+    baseline = null;
+    baselineProgress = "Preparing shared validation inputs…";
+    jobDatasetId = candidate.datasetId;
+    jobDatasetGone = false;
+    abort = new AbortController();
+    const signal = abort.signal;
+    let cancelEncoding: (() => void) | undefined;
+    progress.hidden = true;
+    say("");
+    renderAll();
+    const progressMessage = (message: string) => {
+      if (signal.aborted) return;
+      baselineProgress = message;
+      const node = baselineSection.querySelector("#tr-baseline-status");
+      if (node) node.textContent = message;
+    };
+    try {
+      await s.reload();
+      if (!s.current) throw new BaselineError("The dataset was deleted.");
+      const plan = prepareBaseline(s.current, candidate);
+      if (signal.aborted) throw new CancelledError();
+      embedder ??= new Embedder();
+      const encoder = embedder;
+      const cancelled = new Promise<never>((_, reject) => {
+        cancelEncoding = () => reject(new CancelledError());
+        signal.addEventListener("abort", cancelEncoding, { once: true });
+      });
+      const embedded = await Promise.race([
+        embedImages(
+          s,
+          (image) => encoder.embed(image),
+          [...plan.train, ...plan.validation],
+          {
+            signal,
+            onProgress: (done, total) =>
+              progressMessage(
+                `Preparing shared features: ${done} of ${total}.`,
+              ),
+          },
+        ),
+        cancelled,
+      ]);
+      const vector = (image: ImageRecord) => embedded.vectors.get(image.id)!;
+      const neighbour = await nearestNeighbour(
+        plan.train.map(vector),
+        plan.trainLabels,
+        plan.validation.map(vector),
+        candidate.labelIds.length,
+        {
+          signal,
+          onProgress: (done, total) =>
+            progressMessage(
+              `Comparing validation images: ${done} of ${total}. No partial comparison is published.`,
+            ),
+        },
+      );
+      const classifier = evaluate(
+        toSoftmax(candidate),
+        plan.validation.map(vector),
+        plan.truth,
+      );
+      if (!Number.isFinite(classifier.loss))
+        throw new BaselineError(
+          "The saved classifier returned invalid measurements.",
+        );
+      await s.reload();
+      if (signal.aborted) throw new CancelledError();
+      if (!s.current)
+        throw new BaselineError(
+          "The dataset was deleted; the comparison was discarded.",
+        );
+      prepareBaseline(s.current, candidate);
+      if (
+        !(await s.listModels(candidate.datasetId)).some(
+          (m) => m.id === candidate.id,
+        )
+      )
+        throw new BaselineError(
+          "The source model was deleted; the comparison was discarded.",
+        );
+      if (signal.aborted) throw new CancelledError();
+      baseline = {
+        record: candidate,
+        truth: plan.truth,
+        classifier,
+        neighbour,
+        trainCount: plan.train.length,
+        excluded: plan.excluded,
+      };
+      baselineProgress =
+        "Comparison completed — same validation images and frozen features. No weights changed.";
+    } catch (error) {
+      baseline = null;
+      baselineProgress =
+        signal.aborted || error instanceof CancelledError
+          ? "Comparison cancelled. No partial comparison was published; choose Compare again to retry."
+          : describeError(error);
+      say(baselineProgress);
+    } finally {
+      if (cancelEncoding) signal.removeEventListener("abort", cancelEncoding);
+      phase = "idle";
+      abort = null;
+      jobDatasetId = null;
+      releaseEncoder();
+      await refresh();
+    }
+  }
+
   function renderFinal() {
     const state = service?.current;
     finalSection.replaceChildren(
@@ -1136,6 +1299,11 @@ export function mountTrainingLab(root: HTMLElement) {
               disabled: busy(),
               dataset: { testid: "tr-report" },
             },
+          ),
+          button(
+            "Compare with 1-nearest neighbour",
+            () => void compareBaseline(m),
+            { disabled: busy(), dataset: { testid: "tr-baseline-run" } },
           ),
           button("Load", () => act(() => loadModel(m)), {
             disabled: busy(),
@@ -1408,6 +1576,7 @@ export function mountTrainingLab(root: HTMLElement) {
     updateProgress();
     renderResults();
     renderSaved();
+    renderBaseline();
     renderFinal();
   }
 
@@ -1481,6 +1650,16 @@ export function mountTrainingLab(root: HTMLElement) {
         loaded = null;
       if (draft && draft.record.datasetId !== service.current?.dataset.id)
         draft = null;
+      if (
+        baseline &&
+        (baseline.record.datasetId !== service.current?.dataset.id ||
+          baseline.record.datasetVersion !== service.current?.dataset.version ||
+          !models.some((m) => m.id === baseline!.record.id))
+      ) {
+        baseline = null;
+        baselineProgress =
+          "Earlier comparison cleared because its dataset or source model changed.";
+      }
       if (status.textContent === "Opening local dataset storage…") say("");
     } catch (error) {
       service = null;
@@ -1493,19 +1672,19 @@ export function mountTrainingLab(root: HTMLElement) {
     renderAll();
   }
 
-  const stopFinal = () => {
-    if (phase === "final-test") abort?.abort();
+  const stopEvaluation = () => {
+    if (phase === "final-test" || phase === "baseline") abort?.abort();
   };
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stopFinal();
+    if (document.hidden) stopEvaluation();
   });
-  window.addEventListener("pagehide", stopFinal);
+  window.addEventListener("pagehide", stopEvaluation);
   say("Opening local dataset storage…");
   return {
     refresh,
     leave: () => {
       lessons.cancel(true);
-      stopFinal();
+      stopEvaluation();
     },
   };
 }
