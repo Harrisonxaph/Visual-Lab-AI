@@ -212,6 +212,17 @@ and no camera, dataset, encoder, test-split or storage access. This teaching res
 superiority on photos. Neural-network comparison on photo embeddings and compatible saved network
 models remain deferred; Phase 4 remains in progress and Phase 5 is not authorized.
 
+Tenth slice: an explicit **Compare training methods** action beside a completed saved run freshly
+trains softmax and an 8-unit tanh network on exactly the same current frozen image embeddings.
+Reuse the original snapshot, capped training order, class order, copy exclusions and optimiser
+settings; test pixels remain sealed. Both use the same independent validation images. Show CE,
+accuracy, precision/recall, confusion matrices, curves and actual network parameter changes.
+Equal epochs are not equal compute; initialisation and capacity differ. The saved source model
+provides configuration/provenance, not either method's new weights or result. Results remain in
+page memory; compatible network saving and neural-network final-test evaluation remain deferred.
+This is classifier training from random weights on frozen features, not encoder fine-tuning or
+detector retraining. Phase 4 stays in progress; no Phase 5 authorization is implied.
+
 Scope:
 
 - Accuracy, precision, recall per label; confusion matrix.

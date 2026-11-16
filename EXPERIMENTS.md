@@ -239,3 +239,24 @@ Repeat runs are seeded. Initialisation scales differ between methods and equal e
 equal-compute comparison. Cancel or leave to discard incomplete comparisons. Results are temporary:
 there are no model writes, uploads, image reads or final-test checks. Photo-embedding comparisons
 and saved neural networks remain deferred. No improvement claim generalises beyond this task.
+
+
+## Comparing freshly trained methods on photo features
+
+Save a completed classifier, then choose **Compare training methods** beside it. The original
+snapshot, capped training order, class order and encoder must still match. Both softmax and an
+8-unit tanh network learn anew using the same current training embeddings, and use identical
+validation embeddings/truth after shared copy exclusions. Current form edits cannot replace the
+saved source's settings. Seed, learning rate, batch size, epochs, cap and L2 are held fixed.
+
+Read CE and accuracy curves, precision/recall, confusion matrices and per-layer changes. The
+comparison does not promise improvement. Xavier network initialization differs from the small
+normal softmax start; equal epochs are not equal compute. L2 objectives differ across architectures;
+use validation prediction metrics instead of ranking penalised objectives. Both network layers
+learn from scratch on frozen features; this is not fine-tuning the encoder or EfficientDet.
+
+Results are temporary and can be repeated with the same source/current features. No trained network
+is saved or exported; source weights and final locks are unchanged. Missing train/validation features
+may be cached locally, but no test pixels or test embeddings are used. Cancel/background/leave to
+discard incomplete work. Network save/reload and a deliberate final-test selection path remain
+separate work. Preserve final-test reuse rules after any final score has influenced your choices.

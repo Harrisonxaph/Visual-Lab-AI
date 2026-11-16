@@ -493,3 +493,27 @@ both methods and both splits; parameter evidence reports changes in each network
 Nothing is saved or uploaded. There are no dataset, encoder, camera or test-split dependencies.
 Photo classifiers, their saved format, final locks and database schema are unchanged. Training a
 network from random numeric features is not fine-tuning the detector or pretrained encoder.
+
+
+## Photo-feature method comparison — tenth Phase 4 slice
+
+The nonlinear core now supports 1–1,024 features and 2–10 classes with a fixed 8-unit tanh hidden
+layer. Default 2-feature/2-class initialization preserves the numeric lesson. Each matrix uses
+Xavier uniform based on its fan-in/fan-out; biases start zero. Backpropagation includes both layers;
+optional L2 adds lambda W to each mean minibatch weight gradient, with biases excluded. Training
+history keeps prediction CE separate from the penalised objective, just as softmax does.
+
+`learning/method-comparison.ts` reuses `prepareBaseline` snapshot, ordered cap, provenance,
+independence and test guards; it additionally requires a completed source run. Both models train
+afresh using exactly the same current feature arrays and source settings. Historical classifier
+weights/scores are not compared against newly encoded training features. The network yields and
+checks cancellation between batches; no incomplete comparison is published. Equal epochs do not
+mean equal compute, and different parameter counts/initialization/penalised objectives are disclosed.
+
+The existing comparison lifecycle in `ui/training-lab.ts` handles feature preparation, cancellation,
+hidden/pagehide/leaving, encoder disposal and post-job dataset/source rechecks for both kinds of
+comparison. `ui/photo-method-comparison.ts` shows shared validation metrics and both methods' CE
+and accuracy histories. Results/models are page-memory only and cleared on relevant snapshot/source
+changes. Missing training/validation features may use the existing local cache; test features are
+never requested or cached. No source model, final lock, saved format, schema or dependency changes.
+Saving networks and evaluating a selected network on final-test data are later bounded slices.
