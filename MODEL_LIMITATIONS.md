@@ -229,8 +229,9 @@ still load as before, but records without a run manifest cannot be restored or c
 experiments. No destructive migration is performed.
 
 Comparisons show saved validation results on exactly the same recorded examples, not fresh results
-on the current dataset or a final held-out score. Training and validation selections must both match;
-dataset-size comparisons are therefore deferred. Multiple changed settings do not isolate a cause,
+on the current dataset or a final held-out score. Training and validation selections must both match by default;
+the default same-data comparison remains strict. The explicit size mode below relaxes only the
+training-subset requirement under additional checks. Multiple changed settings do not isolate a cause,
 small samples can exaggerate differences, and repeated validation tuning can overfit validation.
 The existing near-duplicate and label-quality limits remain. Export, final-test evaluation and
 additional algorithms are not implemented by this slice. No extra device validation is claimed.
@@ -271,3 +272,17 @@ throttling can delay it. Historical browser/hardware details were not recorded a
 recovered by exporting a run. Existing accepted
 privacy/device limitations and unresolved reports remain unchanged; no new manual session is
 required for this slice.
+
+## Controlled training-set-size comparisons
+
+The explicit size mode permits only a different deterministic nested per-label training cap while
+keeping validation references, dataset version, labels, encoder, seed and other settings fixed.
+Both runs must finish. It does not claim that more photos improve accuracy: it shows the stored
+scores, including worse or unchanged results. Training loss is measured on different training
+photos, so use the shared validation measurements to investigate generalisation. The same epoch
+count can imply different batch sizes or update counts, and is not an equal-compute comparison.
+
+One seed and one small validation set cannot establish a general effect. Repeated tuning may
+still overfit validation. Hash checks reject exact train/validation overlap, but do not prove that
+all near-copies or correlated examples were found. Historical saved results are not a fresh
+check of the current dataset. No new physical-device evidence or final-test access is claimed.

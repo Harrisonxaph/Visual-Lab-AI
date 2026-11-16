@@ -1,4 +1,7 @@
-import { compareRecordedRuns } from "../learning/experiments";
+import {
+  compareRecordedRuns,
+  type ComparisonMode,
+} from "../learning/experiments";
 import type { ModelRecord } from "../learning/types";
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, text = "") {
@@ -14,7 +17,8 @@ export function runComparisonPanel(
     leftId: string;
     rightId: string;
     disabled: boolean;
-    onChange: (left: string, right: string) => void;
+    mode?: ComparisonMode;
+    onChange: (left: string, right: string, mode: ComparisonMode) => void;
   },
 ): HTMLElement {
   const section = el("section");
@@ -23,7 +27,10 @@ export function runComparisonPanel(
   section.append(el("h3", "Compare saved runs"));
   if (models.length < 2) {
     section.append(
-      el("p", "Save two runs to compare results on the same recorded data."),
+      el(
+        "p",
+        "Save two runs to compare results on the same recorded data. For a training-set-size experiment, finish both runs and change only the per-label photo cap; keep the dataset, learning rate, epochs and seed fixed.",
+      ),
     );
     return section;
   }
@@ -44,15 +51,40 @@ export function runComparisonPanel(
   };
   const left = select("tr-run-left", first.id, "First saved run");
   const right = select("tr-run-right", second.id, "Second saved run");
+  const mode = options.mode ?? "same-data";
+  const modeSelect = el("select");
+  modeSelect.id = "tr-comparison-mode";
+  modeSelect.disabled = options.disabled;
+  modeSelect.setAttribute("aria-label", "Saved run comparison type");
+  for (const [value, name] of [
+    ["same-data", "Same training data"],
+    ["dataset-size", "Training set size"],
+  ]) {
+    const option = el("option", name);
+    option.value = value;
+    option.selected = mode === value;
+    modeSelect.append(option);
+  }
   const controls = el("div");
   controls.className = "ds-row";
-  controls.append(left, right);
+  controls.append(modeSelect, left, right);
   section.append(controls);
-  for (const input of [left, right])
+  for (const input of [modeSelect, left, right])
     input.addEventListener("change", () =>
-      options.onChange(left.value, right.value),
+      options.onChange(
+        left.value,
+        right.value,
+        modeSelect.value as ComparisonMode,
+      ),
     );
-  const result = compareRecordedRuns(first, second);
+  if (mode === "dataset-size")
+    section.append(
+      el(
+        "p",
+        "Train and save two complete runs, changing only the per-label photo cap. Keep the dataset snapshot, learning rate, epochs and seed fixed. This mode checks the smaller run’s deterministic nested subset and identical validation photos.",
+      ),
+    );
+  const result = compareRecordedRuns(first, second, mode);
   const status = el("p");
   status.id = "tr-run-comparison-status";
   status.className = "ds-notice";
@@ -60,7 +92,9 @@ export function runComparisonPanel(
     first.id === second.id
       ? "Choose two different runs."
       : result.ok
-        ? `Same recorded training and validation examples, class order and encoder; dataset version ${first.datasetVersion}. This compares saved results, not a new check of the current dataset.`
+        ? mode === "dataset-size"
+          ? `Same recorded validation examples, class order and encoder; different verified nested training subsets at dataset version ${first.datasetVersion}. These are saved results, not a new check of the current dataset.`
+          : `Same recorded training and validation examples, class order and encoder; dataset version ${first.datasetVersion}. This compares saved results, not a new check of the current dataset.`
         : `Not comparable: ${result.reason}`;
   section.append(status);
   if (first.id === second.id || !result.ok) return section;
@@ -92,6 +126,11 @@ export function runComparisonPanel(
       `${lastB.epoch} / ${second.settings.epochs}${second.stoppedEarly ? " (stopped early)" : ""}`,
     ],
     ["Training photos", first.trainCount, second.trainCount],
+    [
+      "Per-label photo cap",
+      first.settings.perLabelCap ?? "All",
+      second.settings.perLabelCap ?? "All",
+    ],
     ["Validation photos", first.validationCount, second.validationCount],
     ["Training loss", lastA.trainLoss.toFixed(3), lastB.trainLoss.toFixed(3)],
     [
@@ -105,6 +144,12 @@ export function runComparisonPanel(
       percent(lastB.validationAccuracy!),
     ],
   ];
+  if (mode === "dataset-size")
+    rows.splice(4, 0, [
+      "SGD batch updates",
+      lastA.epoch * Math.ceil(first.trainCount / first.settings.batchSize),
+      lastB.epoch * Math.ceil(second.trainCount / second.settings.batchSize),
+    ]);
   for (const [name, a, b] of rows) {
     const row = el("tr");
     const th = el("th", String(name));
@@ -121,10 +166,18 @@ export function runComparisonPanel(
   scroll.append(table);
   section.append(
     scroll,
+    ...(mode === "dataset-size"
+      ? [
+          el(
+            "p",
+            "Only the photo cap changed. More photos can change batch sizes and the number of optimiser updates at the same epoch budget: this is not an equal-compute comparison. Training losses use different photos; validation measurements use identical recorded photos. One seed is not proof that more data generally helps.",
+          ),
+        ]
+      : []),
     el(
       "p",
       result.changes.length
-        ? `Run differences: ${result.changes.join(", ")}. When several settings change, this comparison cannot isolate which change caused a difference.`
+        ? `Run differences: ${result.changes.join(", ")}. ${mode === "dataset-size" ? "Other recorded settings match." : "When several settings change, this comparison cannot isolate which change caused a difference."}`
         : "The recorded settings match. Repeating a run checks reproducibility, not improvement.",
     ),
     el(

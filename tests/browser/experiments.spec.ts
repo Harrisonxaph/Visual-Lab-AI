@@ -132,3 +132,65 @@ test("invalid seeds are refused before encoding and changed snapshots are not co
     page.getByRole("region", { name: "Recorded run comparison" }),
   ).toHaveCount(0);
 });
+
+test("dataset-size mode compares nested caps on identical validation photos and refuses a changed seed", async ({
+  page,
+}) => {
+  test.setTimeout(180000);
+  await setup(page);
+  await page.locator("#tr-epochs").fill("2");
+  await page.locator("#tr-cap").fill("1");
+  await trainAndSave(page);
+  await page.locator("#tr-cap").fill("4");
+  await trainAndSave(page);
+  const saved = (await records(page)).sort((a, b) =>
+    a.createdAt.localeCompare(b.createdAt),
+  );
+  expect(saved[0].experiment.validation).toEqual(
+    saved[1].experiment.validation,
+  );
+  expect(saved[0].trainCount).toBe(3);
+  expect(saved[1].trainCount).toBe(12);
+  await expect(page.locator("#tr-run-comparison-status")).toContainText(
+    "Not comparable",
+  );
+  const requests: string[] = [];
+  page.on("request", (request) => requests.push(request.url()));
+  await expect(page.locator("#tr-comparison-mode")).toBeVisible();
+  await page.locator("#tr-comparison-mode").selectOption("dataset-size");
+  await expect(page.locator("#tr-run-comparison-status")).toContainText(
+    "Same recorded validation examples",
+  );
+  await expect(
+    page.getByRole("region", { name: "Recorded run comparison" }),
+  ).toBeVisible();
+  await expect(page.locator("#tr-run-comparison")).toContainText(
+    "not an equal-compute comparison",
+  );
+  await expect(page.locator("#tr-run-comparison")).toContainText(
+    "Test photos remain sealed",
+  );
+  for (const m of saved)
+    await expect(page.locator("#tr-run-comparison")).toContainText(
+      `${(m.history.at(-1).validationAccuracy * 100).toFixed(1)}%`,
+    );
+  expect(requests).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.locator("#tr-seed").fill("99");
+  await page.locator("#tr-cap").fill("8");
+  await trainAndSave(page);
+  const updated = (await records(page)).sort((a, b) =>
+    a.createdAt.localeCompare(b.createdAt),
+  );
+  await page.locator("#tr-run-right").selectOption(updated[2].id);
+  await expect(page.locator("#tr-run-comparison-status")).toContainText(
+    "Only change the photo cap",
+  );
+  await expect(
+    page.getByRole("region", { name: "Recorded run comparison" }),
+  ).toHaveCount(0);
+});

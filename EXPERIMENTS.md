@@ -157,3 +157,17 @@ remain included and linkable. No photos, embeddings or model weights are exporte
 report rather than a backup, and cannot be imported. Retain the original dataset snapshot to
 repeat settings in the app; results across different runtimes/hardware need not match bitwise.
 Legacy manifests may be absent, explicitly marked unavailable. Test photos stay sealed.
+
+## Comparing training-set sizes
+
+Train and save two complete runs on the same dataset snapshot, changing only the per-label photo
+cap. Keep learning rate, seed, batch size and epochs fixed. Select **Training set size** in the
+saved-run comparison. The smaller manifest must match the deterministic seeded subset of the
+larger run. Validation references remain identical. Arbitrary subsets, changed snapshots, stopped
+runs and changed training settings are refused. Normal same-data comparisons remain available.
+
+Read the stored validation loss/accuracy rather than comparing training loss on different photos.
+The table shows actual photo counts, planned/completed epochs and SGD batch updates. Equal epochs
+are not equal compute; the number and size of batches can differ. Repeat experiments across seeds
+before generalising, and retain an untouched final test set for the final choice. This feature
+neither reruns evaluation nor opens test photos.
