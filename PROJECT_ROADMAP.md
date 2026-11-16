@@ -28,8 +28,8 @@ described as retraining or fine-tuning EfficientDet (type 5).
 | Phase | Name | Status | Difficulty |
 | --- | --- | --- | --- |
 | 1 | Computer vision foundation | Implemented (with documented limitations) | Done |
-| 2 | Dataset laboratory | Implemented, in review (device acceptance pending) | Medium (3/5) |
-| 3 | First genuine AI training system | Implemented, in review (**highest educational priority**) | Medium–high (3.5/5) |
+| 2 | Dataset laboratory | Implemented and merged (documented device limits) | Medium (3/5) |
+| 3 | First genuine AI training system | Implemented and merged (**first genuine training**) | Medium–high (3.5/5) |
 | 4 | Learning and evaluation laboratory | Planned | Medium (3/5) |
 | 5 | Active learning | Planned | Medium (3/5) |
 
@@ -232,6 +232,21 @@ copies are excluded from current validation. Imported provenance/history is file
 independently verified. Show current measured metrics separately. Model-file export is distinct
 from existing metadata-only run reports. There is no database migration, automatic persistence or
 network final-test path. Clearing app data does not remove downloaded files. Phase 4 remains open.
+
+Twelfth slice: final testing can select either a saved softmax classifier or the neural network
+from a completed in-session comparison. Imported files remain ineligible. Both methods share the
+same durable one-choice-per-dataset lock, committed before test pixels are read. Neural identity
+includes its method, exact parameters, history and actual training/validation references. Confirmed
+network parameters are retained with the local final history until dataset deletion, allowing a
+cancelled check to retry after reload without retraining. Its saved source must still exist and the
+snapshot must be unchanged. No test features are cached, no parameters learn, no partial results
+are published and completed scores cannot be replaced by changing method, settings or splits.
+Legacy softmax identities and existing locks remain unchanged; no schema migration is needed.
+
+This completes the intended **functional Phase 4 scope**, subject to final automated checks and
+owner closeout. See [Phase 4 closeout](docs/phases/PHASE_4_CLOSEOUT.md) for evidence and limitations.
+No further stretch features or routine device-testing rounds are prerequisites. Phase 4 is not
+closed and Phase 5 is not authorized until the owner decides.
 
 Scope:
 

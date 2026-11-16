@@ -2,9 +2,11 @@ import { CancelledError } from "./embeddings";
 import {
   FinalCheckError,
   finalModelSignature,
+  finalChoiceSignature,
   prepareFinalPlan,
   type FinalCheckRecord,
   type FinalResult,
+  type NetworkFinalChoice,
 } from "./final-evaluation";
 import { classificationMetrics } from "./metrics";
 import type { ModelRecord } from "./types";
@@ -33,8 +35,13 @@ export class FinalCheckStore {
     });
   }
 
-  claim(candidate: ModelRecord, fingerprint: string, signal?: AbortSignal) {
-    return this.transition(candidate, { fingerprint }, signal);
+  claim(
+    candidate: ModelRecord,
+    fingerprint: string,
+    signal?: AbortSignal,
+    networkChoice?: NetworkFinalChoice,
+  ) {
+    return this.transition(candidate, { fingerprint, networkChoice }, signal);
   }
   complete(
     lock: FinalCheckRecord,
@@ -44,14 +51,24 @@ export class FinalCheckStore {
   ) {
     return this.transition(
       candidate,
-      { fingerprint: lock.modelFingerprint, lockId: lock.id, result },
+      {
+        fingerprint: lock.modelFingerprint,
+        lockId: lock.id,
+        result,
+        networkChoice: lock.networkChoice,
+      },
       signal,
     );
   }
 
   private async transition(
     candidate: ModelRecord,
-    action: { fingerprint: string; lockId?: string; result?: FinalResult },
+    action: {
+      fingerprint: string;
+      lockId?: string;
+      result?: FinalResult;
+      networkChoice?: NetworkFinalChoice;
+    },
     signal?: AbortSignal,
   ): Promise<FinalCheckRecord> {
     if (signal?.aborted) throw new CancelledError();
@@ -129,6 +146,7 @@ export class FinalCheckStore {
             labels.result,
             ordered,
             model.result,
+            action.networkChoice,
           );
           const old = existing.result as FinalCheckRecord | undefined;
           if (
@@ -136,6 +154,8 @@ export class FinalCheckStore {
             (old.status === "complete" ||
               old.modelId !== candidate.id ||
               old.modelFingerprint !== action.fingerprint ||
+              finalChoiceSignature(candidate, old.networkChoice) !==
+                finalChoiceSignature(candidate, plan.networkChoice) ||
               old.datasetVersion !== plan.datasetVersion ||
               JSON.stringify(old.test) !== JSON.stringify(plan.test))
           )

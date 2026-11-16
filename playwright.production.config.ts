@@ -14,6 +14,7 @@ export default defineConfig({
     "nonlinear.spec.ts",
     "photo-methods.spec.ts",
     "network-files.spec.ts",
+    "network-final.spec.ts",
   ],
   timeout: 90000,
   workers: 1,

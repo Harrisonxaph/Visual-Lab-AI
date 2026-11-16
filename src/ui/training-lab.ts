@@ -31,10 +31,12 @@ import {
 } from "./baseline-comparison";
 import {
   FinalCheckError,
+  createNetworkFinalChoice,
   prepareFinalPlan,
   fingerprintModel,
   runFinalCheck,
   type FinalCheckRecord,
+  type NetworkFinalChoice,
 } from "../learning/final-evaluation";
 import { StorageError } from "../datasets/db";
 import { DatasetService, UserError } from "../datasets/service";
@@ -1333,7 +1335,7 @@ export function mountTrainingLab(root: HTMLElement) {
       el(
         "p",
         { className: "ds-help" },
-        "Choose settings using validation first. This final check locks one saved model for this dataset before any test photo is encoded. Cancelled/failed attempts may retry only that same model and unchanged snapshot. No partial predictions are shown. Do not tune using this score: a later independent claim needs fresh held-out images. Clearing storage cannot make seen test images unseen.",
+        "Choose settings using validation first. Lock either a saved softmax model or the neural network from a completed in-session method comparison, before any test photo is encoded. Imported network files are not eligible because their provenance is unverified. A neural choice stores its exact weights with the lock for retry; its original source run must remain available. Cancelled/failed attempts may retry only that same model and unchanged snapshot. No partial predictions are shown. Do not tune using this score: a later independent claim needs fresh held-out images. Clearing storage cannot make seen test images unseen.",
       ),
     );
     if (finalReadError) {
@@ -1350,7 +1352,7 @@ export function mountTrainingLab(root: HTMLElement) {
         el(
           "p",
           { className: "ds-help" },
-          `Locked configuration: learning rate ${record.settings.learningRate}, seed ${record.settings.seed}, ${record.settings.epochs} epochs, L2 strength ${record.settings.l2 ?? 0}. Final prediction loss is cross-entropy without the training penalty.`,
+          `Locked classifier: ${record.networkChoice ? "8-unit tanh neural network" : "softmax"}. Locked configuration: learning rate ${record.settings.learningRate}, seed ${record.settings.seed}, ${record.settings.epochs} epochs, L2 strength ${record.settings.l2 ?? 0}. Final prediction loss is cross-entropy without the training penalty.`,
         ),
         classificationMetricsPanel(
           record.labelNames,
@@ -1358,7 +1360,9 @@ export function mountTrainingLab(root: HTMLElement) {
           record.result.predicted,
           {
             id: "tr-final-metrics",
-            title: "Final test measurements — locked classifier",
+            title: record.networkChoice
+              ? "Final test measurements — locked neural network"
+              : "Final test measurements — locked classifier",
           },
         ),
       );
@@ -1367,21 +1371,41 @@ export function mountTrainingLab(root: HTMLElement) {
         id: "tr-final-model",
         disabled: busy() || !!record,
       });
-      select.setAttribute("aria-label", "Final saved model");
-      select.append(
-        el("option", { value: "" }, "Choose the final saved model"),
-      );
+      select.setAttribute("aria-label", "Final classifier choice");
+      select.append(el("option", { value: "" }, "Choose the final classifier"));
+      const chosenValue = record?.networkChoice
+        ? `network:${record.modelId}`
+        : (record?.modelId ?? finalModelId);
       for (const m of models)
         select.append(
           el(
             "option",
             {
               value: m.id,
-              selected: m.id === (record?.modelId ?? finalModelId),
+              selected: m.id === chosenValue,
             },
             m.name,
           ),
         );
+      const neuralSource = record?.networkChoice
+        ? models.find((m) => m.id === record.modelId)
+        : !record
+          ? methodComparison?.record
+          : null;
+      if (neuralSource)
+        select.append(
+          el(
+            "option",
+            {
+              value: `network:${neuralSource.id}`,
+              selected: chosenValue === `network:${neuralSource.id}`,
+            },
+            `Neural network — ${record ? "locked choice" : "current in-session comparison"} (${neuralSource.name})`,
+          ),
+        );
+      const validSelection =
+        models.some((m) => m.id === finalModelId) ||
+        (!!neuralSource && finalModelId === `network:${neuralSource.id}`);
       select.addEventListener("change", () => {
         finalModelId = select.value;
         renderFinal();
@@ -1390,7 +1414,7 @@ export function mountTrainingLab(root: HTMLElement) {
         phase === "final-test"
           ? finalProgress
           : record
-            ? "The final choice is locked. No complete result yet; retry only this same model and unchanged dataset."
+            ? `The final choice is locked (${record.networkChoice ? "neural network" : "softmax"}). No complete result yet; retry only this same model and unchanged dataset.`
             : "Test photos remain sealed until you confirm a final model.";
       finalSection.append(
         select,
@@ -1404,7 +1428,7 @@ export function mountTrainingLab(root: HTMLElement) {
               busy() ||
               !(record
                 ? models.some((m) => m.id === record.modelId)
-                : finalModelId),
+                : validSelection),
             dataset: { testid: "tr-final-run" },
           },
         ),
@@ -1421,7 +1445,7 @@ export function mountTrainingLab(root: HTMLElement) {
       el(
         "p",
         { className: "ds-help" },
-        "The frozen encoder and classifier do not learn during evaluation. Test embeddings are temporary and never cached. Detected exact/near-copy overlap blocks the check; heuristics cannot prove all leakage is absent. Labels, fingerprints and the final result stay locally until this dataset is deleted. Deleting a saved model removes its weights but keeps this historical report. Small or generated test sets do not prove real-world accuracy.",
+        "The frozen encoder and classifier do not learn during evaluation. Test embeddings are temporary and never cached. Detected exact/near-copy overlap blocks the check; heuristics cannot prove all leakage is absent. Labels, fingerprints and the final result stay locally until this dataset is deleted. Deleting the saved source model removes its own weights but keeps this historical report. Any locked neural-network parameters are retained with the final history until the dataset is deleted. Small or generated test sets do not prove real-world accuracy.",
       ),
     );
   }
@@ -1435,20 +1459,35 @@ export function mountTrainingLab(root: HTMLElement) {
       finalReadError
     )
       return;
-    const source = models.find(
-      (m) => m.id === (finalRecord?.modelId ?? finalModelId),
-    );
+    const comparison = methodComparison;
+    const neuralSelected =
+      !finalRecord &&
+      comparison &&
+      finalModelId === `network:${comparison.record.id}`;
+    const sourceId =
+      finalRecord?.modelId ??
+      (neuralSelected ? comparison.record.id : finalModelId);
+    const source = models.find((m) => m.id === sourceId);
     if (!source) {
       say("The chosen saved model no longer exists.");
       return;
     }
     const candidate = structuredClone(source);
+    let networkChoice: NetworkFinalChoice | undefined =
+      finalRecord?.networkChoice;
     try {
+      if (neuralSelected)
+        networkChoice = createNetworkFinalChoice(
+          candidate,
+          comparison.run.network,
+          comparison.plan,
+        );
       prepareFinalPlan(
         s.current.dataset,
         s.current.labels,
         s.current.images,
         candidate,
+        networkChoice,
       );
     } catch (error) {
       say(describeError(error));
@@ -1457,7 +1496,10 @@ export function mountTrainingLab(root: HTMLElement) {
     if (
       !finalRecord &&
       !confirm(
-        "Lock this saved model as the one final choice for this dataset? Test photos will be evaluated only after the lock is saved. Cancellation or failure keeps the choice locked; only the same model and unchanged dataset can retry. Use fresh held-out images for any later independent claim. The local record keeps labels, fingerprints and results until you delete the dataset; test embeddings are not saved.",
+        (networkChoice
+          ? "Lock this neural network from the current in-session comparison as the one final choice? Its exact parameters/provenance will be stored locally until dataset deletion; keep the original source run for retries. "
+          : "Lock this saved model as the one final choice for this dataset? ") +
+          "Test photos will be evaluated only after the lock is saved. Cancellation or failure keeps the choice locked; only the same model and unchanged dataset can retry. Use fresh held-out images for any later independent claim. The local record keeps labels, fingerprints and results until you delete the dataset; test embeddings are not saved.",
       )
     )
       return;
@@ -1471,9 +1513,11 @@ export function mountTrainingLab(root: HTMLElement) {
     say("");
     renderAll();
     try {
-      const fingerprint = await fingerprintModel(candidate);
+      const fingerprint = await fingerprintModel(candidate, networkChoice);
       if (signal.aborted) throw new CancelledError();
-      const lock = await s.finalChecks().claim(candidate, fingerprint, signal);
+      const lock = await s
+        .finalChecks()
+        .claim(candidate, fingerprint, signal, networkChoice);
       finalRecord = lock;
       renderFinal();
       embedder ??= new Embedder();
