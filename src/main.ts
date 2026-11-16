@@ -481,7 +481,7 @@ window.addEventListener("pageshow", () => {
 render(lab.snapshot);
 
 let datasetLabMounted = false;
-let trainingLab: { refresh(): Promise<void> } | null = null;
+let trainingLab: { refresh(): Promise<void>; leave(): void } | null = null;
 const LABS = {
   detection: {
     tab: "#tab-detection",
@@ -505,6 +505,7 @@ const LABS = {
 type LabName = keyof typeof LABS;
 /** Switches between labs. Leaving the Detection lab pauses inference (camera preview stays on). */
 function showLab(name: LabName) {
+  if (name !== "training") trainingLab?.leave();
   if (name !== "detection" && lab.snapshot.state === "running") lab.pause();
   if (name === "datasets" && !datasetLabMounted) {
     mountDatasetLab(element("#dataset-view"));

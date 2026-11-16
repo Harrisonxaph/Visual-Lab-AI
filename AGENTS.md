@@ -36,11 +36,11 @@ The foundation, Dataset lab and first genuine Training lab are implemented and m
 PR #22, main at `98686c12f48a8f9604cf99b0de949f59bdf14872` when this policy was written.
 Implementation is not comprehensive physical-device validation. Accepted limits and unresolved
 reports remain unchanged. On 2026-11-15 the owner asked Codex to resume development and
-self-review with minimal input. The first bounded Phase 4 slice adds validation confusion matrices
-and per-label precision/recall using existing Training lab results. Test photos stay sealed.
-The owner subsequently requested continued development. The next bounded slice adds seed-controlled
-repeats and same-snapshot saved-run validation comparisons. Final held-out evaluation, additional
-algorithms and Phase 5 remain outside this slice. Merge and deployment still require owner approval.
+self-review with minimal input. Phase 4 validation metrics and reproducible saved-run comparisons
+are merged through PR #25 (`aee0b36`). The next bounded slice adds controlled numeric lessons for
+useful learning, overfitting and underfitting, using the existing optimiser and charts. It does not
+access photos, run an encoder or save models. Final held-out evaluation, additional algorithms and
+Phase 5 remain outside this slice. Merge and deployment still require owner approval.
 
 Stay strictly within PROJECT_ROADMAP.md and the approved milestone. Preserve existing code and
 tests; defer unrelated cleanup, stretch features, new frameworks and speculative optimisations.

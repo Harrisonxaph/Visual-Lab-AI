@@ -131,14 +131,22 @@ Explore what "good" means for a model.
 First implementation slice: validation confusion matrices and per-label precision/recall in the
 existing Training lab, including saved-model checks after their independence filter. Counts and
 zero-denominator "Not measured" values are explicit. This is partial Phase 4 delivery, not
-completion: experiment comparisons, overfitting demonstrations and final test evaluation remain
-planned. Test photos stay sealed; no new model, storage schema or deployment is introduced.
+completion: later slices cover recorded comparisons and controlled learning lessons; final test
+evaluation remains planned. Test photos stay sealed; no new model, storage schema or deployment is introduced.
 
 Second slice: a visible training seed, versioned ordered run manifests, guarded restoration of
 saved-run settings and side-by-side recorded validation comparisons. Comparisons require the same
 dataset/version, encoder, classes, split seed and exact ordered examples. Changed snapshots and
 legacy records without a manifest cannot be presented as controlled comparisons. Full experiment
 export, new learning methods and final held-out evaluation are still planned.
+
+Third slice: bounded synthetic numeric lessons reuse the actual softmax optimiser to demonstrate
+useful learning, memorisation of random labels (overfitting), and an insufficient linear model on
+a nonlinear task (underfitting). Separate training/validation examples and measured curves explain
+each result. These are deliberately different tasks, not an algorithm comparison or evidence of
+real-image generalisation. No camera, encoder, dataset writes or saved models are involved. Final
+test photos remain sealed. Manual acceptance is optional; numerical and browser tests cover the
+lesson logic and lifecycle.
 
 Scope:
 
