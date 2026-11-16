@@ -1,3 +1,4 @@
+import { checkedFeedback } from "./feedback-evidence";
 import { LIMITS } from "../datasets/limits";
 import { runAlgorithm, validateSeed } from "./experiments";
 import { validateSettings } from "./trainer";
@@ -151,6 +152,7 @@ function report(m: ModelRecord, includeClassNames: boolean) {
           validation: refs(manifest.validation),
         }
       : null,
+    ...(m.feedback ? { feedback: checkedFeedback(m) } : {}),
     limitations: [
       "This is a report, not a reloadable model or dataset backup. There is no report import feature.",
       "Repeating a run needs the original dataset snapshot, encoder and compatible implementation; identical bits across devices are not guaranteed.",

@@ -16,6 +16,7 @@ export default defineConfig({
     "network-files.spec.ts",
     "network-final.spec.ts",
     "active-review.spec.ts",
+    "acquisition.spec.ts",
   ],
   timeout: 90000,
   workers: 1,

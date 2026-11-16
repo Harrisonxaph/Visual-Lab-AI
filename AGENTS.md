@@ -40,13 +40,14 @@ self-review with minimal input. On 2026-11-16 the owner explicitly approved Phas
 with its documented limitations and authorised Phase 5 development. PR #35 is merged as
 `0302438`; merge CI 43936757329 succeeded. PR #36 added a bounded unlabelled review queue and is merged as `e89ca50`.
 PR #37 merged as `32781b3`; merge CI 43956459599 succeeded. It adds consent-gated,
-atomic training-only label promotion. Current scope is a measured feedback round from exactly one
-approved batch after a completed uncapped source, with no later dataset edits. Revalidate source,
-training provenance and the complete validation cohort. Train a fresh same-data control and an
-expanded-data softmax head on shared frozen features, seed and settings; keep test data sealed.
-Expanded weights may be explicitly saved as a new model using existing controls. Source weights
-and final locks stay unchanged. This is not a matched random-selection learning comparison.
-Durable round comparison records and the random-selection experiment follow separately.
+atomic training-only label promotion. PR #38 merged as `65d843a`; merge CI 43960863521
+succeeded. It adds measured retraining against a same-data control after one approved batch.
+Current Phase 5 scope adds a matched-budget uncertainty-vs-random experiment on freshly generated
+shapes (simulated oracle labels, separate generator seed from the stored example). Keep private
+and sealed data untouched, use equal label budgets/settings/features/validation, and report actual
+outcomes even when uncertainty performs worse. Save allowlisted human-round evidence only with
+explicit classifier Save and include it in existing local reports. No Phase 5 closeout is implied:
+prepare a concrete completion candidate and retain known limits for the owner's decision.
 Preserve accepted limitations, existing weights/locks/schema and privacy. No dependency, merge,
 deployment, production/protection/settings or automatic-Git changes are authorised.
 

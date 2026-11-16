@@ -624,8 +624,7 @@ labels, timestamp, score/margin/entropy, ordering and seed. It is deleted with t
 Decisions otherwise remain ephemeral. This short storage transaction is atomic, not cancellable;
 page closure leaves either the whole transaction or nothing, never a partial batch. Committing does
 not retrain, automatically compare runs or assert improvement. New dataset versions require a new
-source for another review batch. Measured retraining is described below; durable round records and
-equally budgeted random-selection learning remain future work.
+source for another review batch. Measured retraining is described below; saved round evidence and the generated-data random-selection comparison are described below.
 
 ### Measured human-feedback round
 
@@ -648,6 +647,40 @@ cache reuse or temporary computations, with no new cache writes. Recheck metadat
 image reads and source/snapshot after training; cancellation, background/navigation or detected
 changes publish no partial round/model. The expanded model is a normal unsaved Draft with exact
 training/validation provenance and can be saved explicitly under the existing five-model limit.
-`ui/learning-round-panel.ts` comparisons clear on reload/detected source or dataset changes. Durable
-round comparison records, export and matched-budget random-selection learning remain pending.
+`ui/learning-round-panel.ts` comparisons clear on reload/detected source or dataset changes. Saving the expanded model now retains numerical round evidence and includes it in local reports.
+The separate generated-data acquisition experiment is described below.
 No new dependency/store/schema or test-pixel access is introduced. Final locks are untouched.
+
+### Matched acquisition experiment and durable round evidence
+
+`learning/generated-acquisition.ts` always creates a fresh generated shapes copy, using seed
+502026 rather than the Dataset lab default 2026. It keeps only 60 normal examples, processes them
+with the existing JPEG/preprocessing/encoder path and never reads stored blobs or writes datasets.
+`learning/acquisition.ts` removes exact/near-duplicate groups before the predeclared balanced
+initial/validation design. Two examples per class seed the initial learner; four per class are
+fixed validation; the remainder forms the pool. No final-test cohort is created or consulted.
+
+A prediction-only selector receives IDs/features, not pool labels. Smallest top-two probability
+margin chooses one batch; a seeded Fisher–Yates permutation chooses the other. Each acquires six
+labels in the three-class example; generator truth is revealed only for selected IDs. Overlap is
+allowed and recorded. Selected sets use canonical pool order for SGD, independently of ranking
+order; identical acquired sets must give identical fitted results. Both expanded learners start from the same seed/settings on equal-sized
+training sets and shared features/validation. The source/initial head and both expanded heads really
+optimise softmax parameters; validation is never used for early stopping, settings or acquisition.
+
+The `acquisition` UI phase shares the existing busy/lifecycle gate. Cancellation/background/tab
+exit discard incomplete reports and release the encoder; no generated image, feature or weight is
+persisted. An explicit JSON download retains numerical metrics, selections, sample fingerprints,
+generator/configuration versions and browser metadata. This is an oracle simulation with one seed
+and small validation cohort, not a paired personal-photo human-review experiment or a general
+method superiority claim. Repeated validation observations cannot become independent final tests.
+
+`learning/feedback-evidence.ts` builds bounded allowlisted cohort references and measurements for
+actual human-feedback rounds. The optional `ModelRecord.feedback` is saved only with explicit
+classifier Save, using the existing model store and five-model limit. Deleting that model/dataset
+removes its evidence. The report serializer verifies that cohorts/version/expanded metrics match
+the classifier, strips unexpected fields and excludes weights, images and confidence; class names remain omitted
+unless the existing explicit names option is selected.
+Saved-model UI shows historical comparison evidence without new inference. Original files/encoder
+are needed for reruns; the source classifier is not duplicated, so deleting it prevents replay of its
+historical weights. No schema migration or new dependency is needed.

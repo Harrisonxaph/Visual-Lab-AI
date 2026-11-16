@@ -480,9 +480,31 @@ settings and epoch budget. They are trained from scratch, not fine-tuned; the en
 are frozen. The table also re-evaluates saved source weights on current validation features.
 Equal epochs are not equal compute, and validation differences from one seed/small cohort do not
 establish general improvement. Repeated validation tuning may overfit. Random review ordering is
-not a matched random-selection learning arm; that comparison is still pending.
+not a matched random-selection learning arm. The separate generated-data experiment uses simulated
+labels; it does not establish personal-photo acquisition performance.
 
-Comparison evidence is page memory, cleared by reload/detected source or dataset changes. The
-expanded classifier can be saved explicitly as a normal model; the comparison/control weights are
-not durable round records and no round-report export is implemented. Newly computed features stay
+Comparison evidence is page memory, cleared by reload/detected source or dataset changes. The expanded classifier can be saved explicitly with allowlisted historical cohort/measurement
+evidence; existing reports include it. Control weights are not saved. Deleting the source can
+prevent repeating its saved-weight reference; numerical reports are not dataset/model backups. Newly computed features stay
 temporary. Existing accepted Safari/network and final-test exposure limits remain unchanged.
+
+### Generated acquisition comparison
+
+The fixed experiment uses freshly generated shapes with generator seed 502026, separately from
+the bundled Dataset lab seed 2026. A failed fingerprint regression reproduced the earlier seed
+reuse; the corrected generated cohorts have no exact matches to the bundled stored example in
+automation. Intentional example copy fixtures are omitted; remaining exact/near groups are screened
+before partitioning. Hash limitations remain. This is not access to personal/test image storage.
+
+Known generator labels simulate an oracle. Ranking does not receive pool truth or validation
+scores; it receives only initial-model probabilities. The experiment uses a fixed balanced seed
+and validation design, six-label budgets, shared features/settings and one seeded random draw.
+It does not cover different seeds, real annotation noise/cost, new distributions or personal-photo
+random baselines. Both expanded models may perform worse than the initial model; report that.
+A result on 12 validation photos is coarse (one image is 8.33 percentage points), not proof that a
+method generally wins. No validation-guided retuning or test-set claim is made here.
+
+Reports contain local identifiers/fingerprints and browser metadata, so they are not anonymous.
+Only explicit downloads/saves persist evidence. No report import is supported. Safari training,
+download and storage behaviour remains unverified physically for these features; no new device,
+production-network or absence-of-upload evidence is inferred. All accepted prior limits remain.
