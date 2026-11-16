@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { ImageRecord } from "../src/datasets/types";
-import type { ExampleSelection } from "../src/learning/examples";
+import type { ImageRecord, LabelRecord } from "../src/datasets/types";
+import {
+  selectExamples,
+  type ExampleSelection,
+} from "../src/learning/examples";
 import {
   compareRecordedRuns,
   createRunManifest,
@@ -189,5 +192,170 @@ describe("recorded run reproducibility", () => {
     b.history[0].validationLoss = 0.5;
     b.history[0].trainLoss = Infinity;
     expect(compareRecordedRuns(a, b).ok).toBe(false);
+  });
+});
+
+// Build manifests through the real deterministic photo-cap selection, then compare stored runs.
+function sizeRuns() {
+  const labels = [
+    { id: "a", name: "a" },
+    { id: "b", name: "b" },
+  ];
+  const photos = labels.flatMap((l, k) =>
+    Array.from({ length: 4 }, (_, i) => ({
+      ...image(`${l.id}${i}`, l.id, "train"),
+      order: k * 4 + i,
+    })),
+  );
+  photos.push(
+    { ...image("va", "a", "validation"), order: 8 },
+    { ...image("vb", "b", "validation"), order: 9 },
+  );
+  const make = (cap: number | null) => {
+    const selected = selectExamples(
+      photos,
+      labels as LabelRecord[],
+      ["a", "b"],
+      cap,
+      7,
+    );
+    return {
+      ...model(),
+      trainCount: selected.train.length,
+      validationCount: selected.validation.length,
+      settings: { ...model().settings, perLabelCap: cap },
+      experiment: createRunManifest(7, selected),
+    };
+  };
+  return [make(1), make(null)];
+}
+
+describe("controlled training-set size comparisons", () => {
+  it("allows verified nested caps only in the explicit dataset-size mode, in either direction", () => {
+    const [small, large] = sizeRuns();
+    expect(compareRecordedRuns(small, large).ok).toBe(false);
+    expect(compareRecordedRuns(small, large, "dataset-size")).toMatchObject({
+      ok: true,
+    });
+    expect(compareRecordedRuns(large, small, "dataset-size")).toMatchObject({
+      ok: true,
+    });
+    expect(compareRecordedRuns(small, large, "dataset-size").changes).toContain(
+      "training photos",
+    );
+  });
+  it("requires fixed optimiser settings and complete epoch budgets", () => {
+    for (const mutate of [
+      (m: ModelRecord) => {
+        m.settings.learningRate = 0.1;
+      },
+      (m: ModelRecord) => {
+        m.settings.seed++;
+      },
+      (m: ModelRecord) => {
+        m.settings.batchSize = 8;
+      },
+      (m: ModelRecord) => {
+        m.settings.epochs = 3;
+      },
+      (m: ModelRecord) => {
+        m.stoppedEarly = true;
+      },
+      (m: ModelRecord) => {
+        m.history[0].epoch = 1;
+      },
+    ]) {
+      const [small, large] = sizeRuns();
+      mutate(large);
+      expect(compareRecordedRuns(small, large, "dataset-size").ok).toBe(false);
+    }
+  });
+  it("does not relax validation identity, encoder, class or dataset requirements", () => {
+    for (const mutate of [
+      (m: ModelRecord) => {
+        m.experiment!.validation.reverse();
+      },
+      (m: ModelRecord) => {
+        m.experiment!.validation[0].sha256 = "edited";
+      },
+      (m: ModelRecord) => {
+        m.encoderKey = "other";
+      },
+      (m: ModelRecord) => {
+        m.datasetVersion++;
+      },
+      (m: ModelRecord) => {
+        m.experiment!.splitSeed++;
+      },
+      (m: ModelRecord) => {
+        m.labelIds.reverse();
+      },
+    ]) {
+      const [small, large] = sizeRuns();
+      mutate(large);
+      expect(compareRecordedRuns(small, large, "dataset-size").ok).toBe(false);
+    }
+  });
+  it("rejects unrelated training examples and wrong seeded subsets", () => {
+    const [small, large] = sizeRuns();
+    small.experiment!.train[0].id = "unrelated";
+    expect(compareRecordedRuns(small, large, "dataset-size").ok).toBe(false);
+    const [other, full] = sizeRuns();
+    const alternative = full.experiment!.train.find(
+      (r) => r.labelId === "a" && r.id !== other.experiment!.train[0].id,
+    )!;
+    other.experiment!.train[0] = { ...alternative };
+    expect(compareRecordedRuns(other, full, "dataset-size").ok).toBe(false);
+  });
+  it("rejects training/validation overlap by ID or original-file hash, and duplicate references", () => {
+    for (const mutate of [
+      (m: ModelRecord) => {
+        m.experiment!.train[0].id = m.experiment!.validation[0].id;
+      },
+      (m: ModelRecord) => {
+        m.experiment!.train[0].sha256 = m.experiment!.validation[0].sha256;
+      },
+      (m: ModelRecord) => {
+        m.experiment!.train[1] = { ...m.experiment!.train[0] };
+      },
+      (m: ModelRecord) => {
+        m.experiment!.train[0].labelId = "missing";
+      },
+    ]) {
+      const [small, large] = sizeRuns();
+      mutate(large);
+      expect(compareRecordedRuns(small, large, "dataset-size").ok).toBe(false);
+    }
+  });
+  it("rejects invalid shared settings before treating them as controlled", () => {
+    for (const mutate of [
+      (m: ModelRecord) => {
+        m.settings.batchSize = 0;
+      },
+      (m: ModelRecord) => {
+        m.settings.learningRate = NaN;
+      },
+      (m: ModelRecord) => {
+        m.settings.seed = -1;
+      },
+      (m: ModelRecord) => {
+        m.experiment!.splitSeed = Infinity;
+      },
+    ]) {
+      const [a, b] = sizeRuns();
+      mutate(a);
+      mutate(b);
+      expect(compareRecordedRuns(a, b, "dataset-size").ok).toBe(false);
+    }
+  });
+
+  it("refuses identical counts, missing manifests and invalid recorded measurements", () => {
+    const [small, large] = sizeRuns();
+    expect(compareRecordedRuns(small, small, "dataset-size").ok).toBe(false);
+    delete large.experiment;
+    expect(compareRecordedRuns(small, large, "dataset-size").ok).toBe(false);
+    const [a, b] = sizeRuns();
+    b.history[0].validationAccuracy = NaN;
+    expect(compareRecordedRuns(a, b, "dataset-size").ok).toBe(false);
   });
 });

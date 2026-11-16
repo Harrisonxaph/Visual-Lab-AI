@@ -1,3 +1,6 @@
+import { LIMITS } from "../datasets/limits";
+import { validateSettings } from "./trainer";
+import { stableHash } from "../datasets/hash";
 import type { ExampleSelection } from "./examples";
 import { assertNoTestImages } from "./examples";
 import type {
@@ -48,7 +51,11 @@ const sameExamples = (a: RunExampleRef[], b: RunExampleRef[]) =>
       x.labelId === b[i].labelId,
   );
 
-function manifestProblem(a: RunManifest, b: RunManifest): string | null {
+function manifestProblem(
+  a: RunManifest,
+  b: RunManifest,
+  requireSameTraining = true,
+): string | null {
   if (
     a.version !== 1 ||
     b.version !== 1 ||
@@ -59,10 +66,79 @@ function manifestProblem(a: RunManifest, b: RunManifest): string | null {
   if (a.splitSeed !== b.splitSeed) return "The dataset split seeds differ.";
   if (!sameLabels(a.labelIds, b.labelIds)) return "The class order differs.";
   if (
-    !sameExamples(a.train, b.train) ||
+    (requireSameTraining && !sameExamples(a.train, b.train)) ||
     !sameExamples(a.validation, b.validation)
   )
     return "The ordered training or validation examples, labels or image hashes differ.";
+  return null;
+}
+
+export type ComparisonMode = "same-data" | "dataset-size";
+
+/** Only the cap may change, and the smaller run must be its actual seeded nested subset. */
+function datasetSizeProblem(a: ModelRecord, b: ModelRecord): string | null {
+  if (
+    [a, b].some(
+      (m) =>
+        validateSettings(m.settings).length > 0 ||
+        validateSeed(m.settings.seed) !== null ||
+        validateSeed(m.experiment!.splitSeed) !== null ||
+        !Number.isInteger(m.settings.batchSize) ||
+        m.settings.batchSize < 1 ||
+        m.settings.batchSize > LIMITS.maxImagesPerDataset,
+    )
+  )
+    return "Both runs need valid recorded settings and split seeds.";
+  if (a.trainCount === b.trainCount)
+    return "Choose runs with different training-photo counts.";
+  for (const key of ["learningRate", "epochs", "seed", "batchSize"] as const)
+    if (a.settings[key] !== b.settings[key])
+      return "Only change the photo cap; keep learning rate, epochs, seed and batch size identical.";
+  if (
+    [a, b].some(
+      (m) => m.stoppedEarly || m.history.at(-1)!.epoch !== m.settings.epochs,
+    )
+  )
+    return "Both runs must finish the same planned epoch budget; stopped runs are not controlled size comparisons.";
+  for (const m of [a, b]) {
+    const { train, validation } = m.experiment!;
+    const all = [...train, ...validation];
+    if (
+      new Set(all.map((r) => r.id)).size !== all.length ||
+      all.some((r) => !r.id || !r.sha256 || !m.labelIds.includes(r.labelId))
+    )
+      return "The run has duplicate, missing or inconsistent example references.";
+    const hashes = new Set(train.map((r) => r.sha256));
+    if (validation.some((r) => hashes.has(r.sha256)))
+      return "Training and validation share a file fingerprint; this is not an independent comparison.";
+  }
+  const [small, large] = a.trainCount < b.trainCount ? [a, b] : [b, a];
+  const cap = small.settings.perLabelCap,
+    largerCap = large.settings.perLabelCap;
+  if (cap === null || (largerCap !== null && largerCap <= cap))
+    return "The smaller run needs a lower per-label photo cap.";
+  const larger = large.experiment!.train;
+  const expected: RunExampleRef[] = [];
+  for (const labelId of large.labelIds) {
+    const group = larger.filter((r) => r.labelId === labelId);
+    if (!group.length || (largerCap !== null && group.length > largerCap))
+      return "The recorded training counts do not match the selected labels or caps.";
+    const chosen = new Set(
+      group
+        .map((ref, order) => ({ ref, order }))
+        .sort(
+          (x, y) =>
+            stableHash(`${large.experiment!.splitSeed}:${x.ref.id}`) -
+              stableHash(`${large.experiment!.splitSeed}:${y.ref.id}`) ||
+            x.order - y.order,
+        )
+        .slice(0, cap)
+        .map(({ ref }) => ref.id),
+    );
+    expected.push(...group.filter((r) => chosen.has(r.id)));
+  }
+  if (!sameExamples(small.experiment!.train, expected))
+    return "The smaller run is not the deterministic nested photo-cap subset of the larger run.";
   return null;
 }
 
@@ -76,6 +152,7 @@ export interface RecordedComparison {
 export function compareRecordedRuns(
   a: ModelRecord,
   b: ModelRecord,
+  mode: ComparisonMode = "same-data",
 ): RecordedComparison {
   const fail = (reason: string): RecordedComparison => ({
     ok: false,
@@ -92,7 +169,11 @@ export function compareRecordedRuns(
     return fail("The encoders or preprocessing differ.");
   if (!sameLabels(a.labelIds, b.labelIds))
     return fail("The class order differs.");
-  const problem = manifestProblem(a.experiment, b.experiment);
+  const problem = manifestProblem(
+    a.experiment,
+    b.experiment,
+    mode !== "dataset-size",
+  );
   if (problem) return fail(problem);
   if (
     !sameLabels(a.labelIds, a.experiment.labelIds) ||
@@ -123,7 +204,12 @@ export function compareRecordedRuns(
     return fail(
       "Both runs need recorded validation measurements and matching example counts.",
     );
+  if (mode === "dataset-size") {
+    const problem = datasetSizeProblem(a, b);
+    if (problem) return fail(problem);
+  }
   const changes: string[] = [];
+  if (a.trainCount !== b.trainCount) changes.push("training photos");
   for (const [key, name] of [
     ["learningRate", "learning rate"],
     ["epochs", "planned epochs"],

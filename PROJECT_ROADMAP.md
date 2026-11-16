@@ -153,7 +153,15 @@ and ordered training/validation references. Class names are omitted by default a
 opt-in. Reports disclose that IDs and image fingerprints remain linkable. They exclude photos,
 embeddings and model weights, are not backups, and cannot be imported. Reproduction still needs
 the original dataset snapshot and compatible encoder/implementation. Final-test evaluation,
-additional learning methods and dataset-size comparisons remain deferred.
+additional learning methods remain deferred; the next slice covers dataset-size comparisons.
+
+Fifth slice: explicit **Training set size** mode compares completed saved runs with identical
+validation examples, dataset/version, labels, encoder, split seed and optimiser settings. Only the
+per-label cap changes. The smaller run must match the seeded nested subset of the larger run.
+The default same-training-data comparison stays strict. This compares saved measurements without
+inference or new storage. Fixed epochs can mean different batch sizes/update counts, so this is
+not an equal-compute benchmark. One seed or small validation set cannot prove general improvement.
+Final-test evaluation and additional learning methods remain deferred.
 
 Scope:
 

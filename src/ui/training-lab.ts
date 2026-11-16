@@ -41,6 +41,7 @@ import {
   replayProblem,
   repeatSettings,
   validateSeed,
+  type ComparisonMode,
 } from "../learning/experiments";
 
 class DatasetGoneError extends Error {}
@@ -123,6 +124,7 @@ export function mountTrainingLab(root: HTMLElement) {
   let trainingSeed = String(DEFAULT_TRAINING_SEED);
   let comparisonLeft = "";
   let comparisonRight = "";
+  let comparisonMode: ComparisonMode = "same-data";
   let models: ModelRecord[] = [];
   let draft: Draft | null = null;
   let loaded: Loaded | null = null;
@@ -987,9 +989,11 @@ export function mountTrainingLab(root: HTMLElement) {
         leftId: comparisonLeft,
         rightId: comparisonRight,
         disabled: busy(),
-        onChange: (left, right) => {
+        mode: comparisonMode,
+        onChange: (left, right, mode) => {
           comparisonLeft = left;
           comparisonRight = right;
+          comparisonMode = mode;
           renderSaved();
         },
       }),

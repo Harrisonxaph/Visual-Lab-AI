@@ -375,3 +375,19 @@ its object URL is released after 30 seconds so the browser can acquire the downl
 opens data stores, runs inference or uploads. The existing Training lab action guard serialises
 exports with jobs. Existing deletion, model compatibility and final-test sealing are unchanged.
 There is no report importer or new schema/store.
+
+## Phase 4 training-set-size experiments — fifth slice
+
+`compareRecordedRuns` defaults to strict same-data comparison. An explicit `dataset-size` mode
+keeps dataset/version, class order, encoder, split seed and ordered validation references fixed.
+It additionally requires valid identical optimiser settings (excluding the cap), complete matching
+epoch budgets, and different actual training counts. It rejects duplicate IDs, missing label/hash
+references and train/validation hash overlap. The smaller training manifest must equal the exact
+seeded cap selection from the larger manifest, preserving recorded order; arbitrary subsets fail.
+This reuses the Dataset lab's stable hash ranking and does not read images or run inference.
+
+`ui/run-comparison.ts` exposes the mode and labels recorded counts, caps, metrics and batch-update
+counts. A fixed epoch budget is not equal compute: data volume can change both batch sizes and
+number of optimiser updates. Training losses use different examples in size mode; validation
+measurements use identical recorded examples. Existing restoration remains same-snapshot only.
+No optimiser, encoder, model schema or storage behaviour changes, and test photos remain sealed.
