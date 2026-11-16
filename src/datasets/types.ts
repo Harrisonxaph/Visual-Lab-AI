@@ -43,6 +43,20 @@ export interface ImageRecord {
   order: number;
   addedAt: string;
   source: "upload" | "example";
+  /** Explicit human approval; persisted locally only when committing reviewed training photos. */
+  review?: {
+    sourceModelId: string;
+    sourceDatasetVersion: number;
+    encoderKey: string;
+    proposedLabelId: string;
+    approvedLabelId: string;
+    approvedAt: string;
+    order: "uncertainty" | "random";
+    seed: number;
+    confidence: number;
+    margin: number;
+    entropy: number;
+  };
   /** Unlabelled images have no split until they receive a label. */
   split: Split | null;
 }

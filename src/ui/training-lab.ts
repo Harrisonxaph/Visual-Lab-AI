@@ -165,7 +165,8 @@ export function mountTrainingLab(root: HTMLElement) {
     | "training"
     | "final-test"
     | "baseline"
-    | "review" = "idle";
+    | "review"
+    | "promoting" = "idle";
   let abort: AbortController | null = null;
   let actionPending = false;
   let lessonRunning = false;
@@ -600,7 +601,7 @@ export function mountTrainingLab(root: HTMLElement) {
     const last = live.at(-1);
     if (phase === "training" && last)
       progressText.textContent = `Epoch ${last.epoch} of ${plannedEpochs}. Training loss ${num(last.trainLoss)}, validation accuracy ${pct(last.validationAccuracy)}.${last.trainObjective === undefined ? "" : ` Penalised training objective ${num(last.trainObjective)}.`}`;
-    cancel.disabled = phase === "idle";
+    cancel.disabled = phase === "idle" || phase === "promoting";
     drawCharts(live);
   }
 
@@ -1355,6 +1356,7 @@ export function mountTrainingLab(root: HTMLElement) {
           reviewMode = mode;
           renderReview();
         },
+        onCommit: commitReview,
         onClear: () => {
           reviewSession = null;
           reviewProgress = "Review queue cleared; no dataset labels changed.";
@@ -1377,6 +1379,33 @@ export function mountTrainingLab(root: HTMLElement) {
         },
       }),
     );
+  }
+
+  async function commitReview() {
+    if (!service || !reviewSession || busy()) return;
+    const session = structuredClone(reviewSession);
+    phase = "promoting";
+    reviewProgress = "Saving approved training labels atomically…";
+    renderAll();
+    try {
+      const count = await service.promoteReview(
+        session.source,
+        session.scores,
+        session.decisions,
+        reviewMode,
+      );
+      reviewSession = null;
+      reviewProgress = `${count} approved photo${count === 1 ? "" : "s"} committed to training. Existing validation/test assignments are unchanged. No model was retrained; train a new snapshot separately.`;
+    } catch (error) {
+      reviewProgress =
+        error instanceof Error
+          ? error.message
+          : "Approval commit failed; no labels saved.";
+      say(reviewProgress);
+    } finally {
+      phase = "idle";
+      await refresh();
+    }
   }
 
   async function scoreUnlabelled(source: ModelRecord) {

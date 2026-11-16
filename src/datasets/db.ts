@@ -1,3 +1,10 @@
+import { preparePromotion } from "../learning/review-promotion";
+import { ReviewError } from "../learning/active-review";
+import type {
+  ReviewScore,
+  ReviewDecisions,
+  ReviewOrder,
+} from "../learning/active-review";
 import { FinalCheckStore } from "../learning/final-store";
 import type { FinalCheckRecord } from "../learning/final-evaluation";
 import type { EmbeddingRecord, ModelRecord } from "../learning/types";
@@ -261,6 +268,80 @@ export class DatasetDb {
         }
         reject(describe(error));
       }
+    });
+  }
+
+  /** Read/validate/write under one lock: concurrent edits cannot slip between checks and puts. */
+  async promoteReview(
+    source: ModelRecord,
+    scores: readonly ReviewScore[],
+    decisions: ReviewDecisions,
+    order: ReviewOrder,
+  ): Promise<number> {
+    const tx = this.db.transaction(
+      ["datasets", "labels", "images", "models"],
+      "readwrite",
+    );
+    return new Promise<number>((resolve, reject) => {
+      let failure: unknown;
+      let count = 0;
+      tx.onerror = (event) => {
+        failure ??= (event.target as IDBRequest)?.error;
+      };
+      tx.onabort = () =>
+        reject(
+          failure instanceof ReviewError
+            ? failure
+            : describe(failure ?? tx.error),
+        );
+      tx.oncomplete = () => resolve(count);
+      const datasets = tx.objectStore("datasets"),
+        images = tx.objectStore("images");
+      const d = datasets.get(source.datasetId),
+        l = tx
+          .objectStore("labels")
+          .index("datasetId")
+          .getAll(source.datasetId),
+        i = images.index("datasetId").getAll(source.datasetId),
+        m = tx.objectStore("models").get(source.id);
+      // All four requests were queued together. Their callbacks run before transaction completion.
+      let remaining = 4;
+      const ready = () => {
+        if (--remaining) return;
+        try {
+          if (
+            !d.result ||
+            !m.result ||
+            JSON.stringify(m.result) !== JSON.stringify(source)
+          )
+            throw new ReviewError(
+              "The saved source changed or was deleted; nothing saved. Score again.",
+            );
+          const changes = preparePromotion(
+            {
+              dataset: d.result,
+              labels: (l.result as LabelRecord[]).sort((a, b) =>
+                a.createdAt.localeCompare(b.createdAt),
+              ),
+              images: (i.result as ImageRecord[]).sort(
+                (a, b) => a.order - b.order,
+              ),
+            },
+            source,
+            scores,
+            decisions,
+            order,
+            new Date().toISOString(),
+          );
+          count = changes.images.length;
+          datasets.put(changes.dataset);
+          for (const image of changes.images) images.put(image);
+        } catch (error) {
+          failure = error;
+          tx.abort();
+        }
+      };
+      for (const r of [d, l, i, m]) r.onsuccess = ready;
     });
   }
 

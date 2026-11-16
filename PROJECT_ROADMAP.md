@@ -283,8 +283,11 @@ review features are temporary too; no review cache records are written. Random r
 ordering is not an evaluated learning baseline. Import the pool before training/saving the source;
 new imports after training require a refreshed source snapshot for now.
 
-Remaining Phase 5 work: explicit training-only approval commit with cohort/provenance integrity,
-retraining and before/after validation measurement against equally budgeted random selection,
+The next slice adds a consent-gated atomic training-only approval commit, with per-image source,
+encoder, approved/proposed label, time, seed and review-order provenance. Existing evaluation
+assignments remain fixed; skips stay unlabelled. No automatic retraining or improvement claim.
+
+Remaining Phase 5 work: retraining and before/after validation measurement against equally budgeted random selection,
 reproducible round records and the final-test reuse protocol. Ordinary label assignment is not
 sufficient: it may place a new labelled group in validation/test, so promotion needs a dedicated
 protected transaction. Improvement must be measured, never promised or inferred from confidence.

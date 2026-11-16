@@ -30,6 +30,7 @@ export function activeReviewPanel(options: {
   onOrder(mode: ReviewOrder): void;
   onDecision(id: string, decision: ReviewDecision): void;
   onClear(): void;
+  onCommit(): void;
 }) {
   const section = el("section");
   section.id = "tr-review";
@@ -56,7 +57,7 @@ export function activeReviewPanel(options: {
   section.append(
     el(
       "p",
-      "Review-only step: accept, correct or skip suggestions. Decisions stay in page memory and clear on reload or detected snapshot/source changes. They do not change dataset labels/splits, retrain a model or demonstrate improvement yet. Committing approved examples to training and measured retraining will follow separately.",
+      "Review suggestions: accept, correct or skip. Decisions stay in page memory and clear on reload or detected snapshot/source changes. Nothing is saved until you explicitly commit approved photos to training below. Committing labels does not retrain a model or demonstrate improvement; measured retraining follows separately.",
     ),
   );
   const session = options.session;
@@ -175,6 +176,29 @@ export function activeReviewPanel(options: {
   clear.className = "button stop";
   clear.disabled = options.busy;
   clear.addEventListener("click", options.onClear);
-  section.append(summary, clear);
+  const consent = el("input");
+  consent.type = "checkbox";
+  consent.dataset.testid = "tr-review-consent";
+  consent.disabled = options.busy;
+  const consentLabel = el(
+    "label",
+    "Save my approved labels and review provenance locally, assigning these photos to training only. Existing validation/test assignments stay unchanged. Skipped and pending photos stay unlabelled.",
+  );
+  consentLabel.prepend(consent);
+  const commit = el("button", "Commit approved photos to training");
+  commit.type = "button";
+  commit.className = "button";
+  commit.dataset.testid = "tr-review-commit";
+  commit.disabled = true;
+  consent.addEventListener("change", () => {
+    commit.disabled =
+      options.busy ||
+      !consent.checked ||
+      !decisions.some((d) => d.kind === "approve");
+  });
+  commit.addEventListener("click", () => {
+    if (consent.checked && !commit.disabled) options.onCommit();
+  });
+  section.append(summary, consentLabel, commit, clear);
   return section;
 }

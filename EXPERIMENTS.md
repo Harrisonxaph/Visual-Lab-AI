@@ -311,8 +311,19 @@ not accuracy. You can switch between uncertainty-first and seeded random review 
 running inference again; this does not compare learning effectiveness.
 
 New review features remain temporary; existing permitted embeddings can be reused without new
-cache writes. Accept, correct to an existing class, or skip. Decisions are page-memory only in this first slice;
-reload clears them. No training examples are added, no splits change and no weights learn yet.
-Training-only commit, measured retraining, an equally budgeted random-selection arm and round
+cache writes. Accept, correct to an existing class, or skip. Decisions stay in page memory until
+explicitly committed as described below; reload clears uncommitted decisions. Scoring does not
+change splits or weights. Measured retraining, an equally budgeted random-selection arm and round
 records follow separately. Preserve all held-out/test-reuse rules. No test pixels are scored, and
 no improvement claim follows from a larger confidence or from accepting a proposed label.
+
+### Explicit training-only approval
+
+After reviewing suggestions, check the local-persistence consent and commit approved photos.
+Only approved labels enter training; pending/skipped photos remain unlabelled. The app records
+source/version/encoder, proposed/approved label, timestamp, seed/order and probability diagnostics
+on each approved image. Existing validation/test assignments and saved weights remain unchanged.
+A stale/deleted source, protected similarity group or storage error refuses the atomic batch.
+This is a data-annotation step, not retraining or measured improvement. After commit, train a new
+snapshot separately. Controlled before/after rounds and a matched-budget random learning arm remain
+pending; do not reuse exposed final-test results to guide those rounds.

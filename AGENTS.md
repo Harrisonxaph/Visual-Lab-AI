@@ -38,11 +38,12 @@ Implementation is not comprehensive physical-device validation. Accepted limits 
 reports remain unchanged. On 2026-11-15 the owner asked Codex to resume development and
 self-review with minimal input. On 2026-11-16 the owner explicitly approved Phase 4 closeout
 with its documented limitations and authorised Phase 5 development. PR #35 is merged as
-`0302438`; merge CI 43936757329 succeeded. The first bounded Phase 5 slice scores a current saved
-softmax source's eligible unlabelled pool and offers uncertainty/random review ordering plus
-page-memory accept/correct/skip decisions. Do not relabel, change splits, retrain or claim a learning
-improvement in this slice. Protect all labelled/test metadata cohorts and never read test pixels.
-Training-only promotion and measured retraining versus random selection follow separately.
+`0302438`; merge CI 43936757329 succeeded. PR #36 added a bounded unlabelled review queue and is merged as `e89ca50`.
+Current Phase 5 scope adds explicit local consent and an atomic training-only approval commit.
+Validate the saved source and metadata inside the write transaction; preserve all existing
+validation/test assignments, weights and final locks. Save image-level review provenance only
+with approval. No optimisation or improvement claim belongs to this slice. Measured retraining
+versus equally budgeted random selection and round records follow separately.
 Preserve accepted limitations, existing weights/locks/schema and privacy. No dependency, merge,
 deployment, production/protection/settings or automatic-Git changes are authorised.
 

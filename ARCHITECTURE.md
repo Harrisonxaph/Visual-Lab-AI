@@ -600,10 +600,28 @@ computed review features are page memory only. It rechecks metadata before each 
 read and the full snapshot/source before publishing a complete queue. A role change in another
 tab cannot turn a review cache write into a persistent test embedding because there are no review
 cache writes. Cancel/background/navigation publishes no partial queue. Relevant changes/reload clear decisions.
-No dataset metadata, model weights, final locks, schema or dependencies change.
+Scoring alone changes no dataset metadata, model weights, final locks, schema or dependencies.
 
-Future training-only promotion must not call ordinary setImageLabel and trust recompute: that can
-assign new groups to validation/test or merge protected groups. It needs an explicit atomic
-training-only policy preserving evaluation cohorts, consent and provenance, followed by controlled
-retraining/validation comparison with a seeded random-selection arm. Those are not implemented by
-this review slice. Test results cannot guide rounds or be silently refreshed after Phase 4 exposure.
+Promotion uses the explicit protected transaction described below rather than ordinary
+setImageLabel/recompute, which can assign new groups to validation/test. Controlled retraining and
+validation comparison with a seeded random-selection arm remain unimplemented. Test results cannot
+guide rounds or be silently refreshed after Phase 4 exposure.
+
+### Consent-gated training promotion
+
+`learning/review-promotion.ts` builds only approved training changes. `DatasetDb.promoteReview`
+reads dataset, source model, labels and all image metadata in one readwrite transaction, checks the
+exact saved model and current snapshot, then writes approved image records and increments the dataset
+version. No await or independent transaction separates validation from writes. Source deletion,
+stale versions and request failures abort the entire operation. All existing evaluation assignments,
+models, final locks, blobs and cached embeddings remain untouched. Hash-connected groups touching
+protected images are refused even through an unlabelled bridge; manual separation overrides do not
+weaken this check. No test pixels are read.
+
+An explicit consent checkbox gates the commit button. Provenance is an optional field on the
+existing image record (no schema/store migration): source model/version/encoder, proposed and approved
+labels, timestamp, score/margin/entropy, ordering and seed. It is deleted with the image/dataset.
+Decisions otherwise remain ephemeral. This short storage transaction is atomic, not cancellable;
+page closure leaves either the whole transaction or nothing, never a partial batch. Committing does
+not retrain, automatically compare runs or assert improvement. New dataset versions require a new
+source; controlled round records and equally budgeted random-selection learning remain future work.

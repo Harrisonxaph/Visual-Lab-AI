@@ -110,5 +110,7 @@ approved Phase 4 closeout and authorised Phase 5 on 2026-11-16.
 
 Import an unlabelled pool before training/saving a softmax source, then choose **Score unlabelled
 photos**. Review actual model suggestions in uncertainty or seeded random order; accept, correct
-or skip. This first Phase 5 slice keeps decisions in page memory only: it does not change labels,
-splits or weights, and does not yet measure a learning improvement. No camera is required.
+or skip. Decisions stay in page memory until you check the consent box and choose **Commit approved
+photos to training**. That saves approved labels and review provenance locally, preserving existing
+validation/test assignments. Skips stay unlabelled. It does not change weights or measure a learning
+improvement. Train a new snapshot separately; controlled round comparisons follow. No camera is required.
