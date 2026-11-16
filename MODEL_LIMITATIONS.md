@@ -380,3 +380,24 @@ validation examples illustrate the same generated relationship. Both layers lear
 and the validation labels never enter updates. There is no network save/reload or photo inference
 in this slice. All results remain in page memory. Desktop Chromium automation is not physical
 Safari evidence; accepted device limitations and unresolved reports are unchanged.
+
+
+## Photo-feature neural-network comparison
+
+The comparison trains both softmax and an 8-unit tanh classifier afresh on the same current frozen
+features and checks them on the same independent validation photos. A completed saved run provides
+snapshot, ordered cap, class order and configuration. Its historical weights and scores are not
+either fresh result. Copy checks have the Dataset lab's known limits; current embeddings recomputed
+on another runtime may differ. The encoder and detector remain frozen.
+
+The methods differ in capacity and initialisation; equal epochs are not equal compute. L2 applies
+the same strength/form to different weight matrices, so penalised objectives are not comparable.
+Prediction losses exclude penalties. One seed or small validation sample cannot prove superiority;
+repeated tuning can overfit validation. If a final score already guided choices, these comparisons
+do not make the same test images independent again.
+
+The network stays in page memory: no save/reload, report export or final-test path for this method
+yet. Stored source models and final locks are unchanged. Long runs may be slower on mobile; batch
+yields provide cancellation but do not establish hardware performance or physical Safari support.
+Physical-device evidence is not required or fabricated for this slice. Existing accepted limits
+and unresolved camera reports remain unchanged.

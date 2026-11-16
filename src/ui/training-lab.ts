@@ -1,4 +1,13 @@
 import {
+  prepareMethodComparison,
+  runMethodComparison,
+  type MethodRun,
+} from "../learning/method-comparison";
+import {
+  photoMethodComparisonPanel,
+  type PhotoMethodComparison,
+} from "./photo-method-comparison";
+import {
   BaselineError,
   nearestNeighbour,
   prepareBaseline,
@@ -134,6 +143,7 @@ export function mountTrainingLab(root: HTMLElement) {
   let lessonRunning = false;
   let reportNames = false;
   let baseline: BaselineComparison | null = null;
+  let methodComparison: PhotoMethodComparison | null = null;
   let baselineProgress = "";
   let finalRecord: FinalCheckRecord | null = null;
   let finalReadError = "";
@@ -961,13 +971,13 @@ export function mountTrainingLab(root: HTMLElement) {
 
   function renderBaseline() {
     baselineSection.replaceChildren(
-      el("h2", {}, "Learning methods — nearest-neighbour baseline"),
+      el("h2", {}, "Learning methods — shared frozen features"),
     );
     baselineSection.append(
       el(
         "p",
         { className: "ds-help" },
-        "Save a classifier, then choose Compare with 1-nearest neighbour beside it. The comparison requires its unchanged dataset snapshot and actual training subset. Both methods are checked on the same independent validation images. Missing training/validation embeddings may be computed and cached locally; test photos are never opened by this action.",
+        "Save a classifier, then choose Compare with 1-nearest neighbour or Compare training methods beside it. Training-method comparison requires a completed source run and trains fresh softmax and hidden-layer classifiers; results are temporary. The comparison requires its unchanged dataset snapshot and actual training subset. Both methods are checked on the same independent validation images. Missing training/validation embeddings may be computed and cached locally; test photos are never opened by this action.",
       ),
     );
     const message = el(
@@ -985,18 +995,29 @@ export function mountTrainingLab(root: HTMLElement) {
           dataset: { testid: "tr-baseline-cancel" },
         }),
       );
+    if (methodComparison)
+      baselineSection.append(
+        photoMethodComparisonPanel(
+          methodComparison,
+          finalRecord?.status === "complete",
+        ),
+      );
     if (baseline)
       baselineSection.append(
         baselineComparisonPanel(baseline, finalRecord?.status === "complete"),
       );
   }
 
-  async function compareBaseline(source: ModelRecord) {
+  async function compareBaseline(
+    source: ModelRecord,
+    method: "neighbour" | "network" = "neighbour",
+  ) {
     const s = service;
     if (!s?.current || busy()) return;
     const candidate = structuredClone(source);
     phase = "baseline";
     baseline = null;
+    methodComparison = null;
     baselineProgress = "Preparing shared validation inputs…";
     jobDatasetId = candidate.datasetId;
     jobDatasetGone = false;
@@ -1015,7 +1036,9 @@ export function mountTrainingLab(root: HTMLElement) {
     try {
       await s.reload();
       if (!s.current) throw new BaselineError("The dataset was deleted.");
-      const plan = prepareBaseline(s.current, candidate);
+      const prepare =
+        method === "network" ? prepareMethodComparison : prepareBaseline;
+      const plan = prepare(s.current, candidate);
       if (signal.aborted) throw new CancelledError();
       embedder ??= new Embedder();
       const encoder = embedder;
@@ -1039,27 +1062,48 @@ export function mountTrainingLab(root: HTMLElement) {
         cancelled,
       ]);
       const vector = (image: ImageRecord) => embedded.vectors.get(image.id)!;
-      const neighbour = await nearestNeighbour(
-        plan.train.map(vector),
-        plan.trainLabels,
-        plan.validation.map(vector),
-        candidate.labelIds.length,
-        {
-          signal,
-          onProgress: (done, total) =>
-            progressMessage(
-              `Comparing validation images: ${done} of ${total}. No partial comparison is published.`,
-            ),
-        },
-      );
-      const classifier = evaluate(
-        toSoftmax(candidate),
-        plan.validation.map(vector),
-        plan.truth,
-      );
+      let neighbour: Awaited<ReturnType<typeof nearestNeighbour>> | null = null;
+      let trained: MethodRun | null = null;
+      if (method === "network") {
+        trained = await runMethodComparison(
+          {
+            trainX: plan.train.map(vector),
+            trainY: plan.trainLabels,
+            validationX: plan.validation.map(vector),
+            validationY: plan.truth,
+            classes: candidate.labelIds.length,
+            dims: candidate.dims,
+          },
+          candidate.settings,
+          {
+            signal,
+            onEpoch: (which, row) =>
+              progressMessage(
+                `Training ${which === "linear" ? "fresh softmax" : "fresh hidden-layer network"}: epoch ${row.epoch} of ${candidate.settings.epochs}. No partial comparison is published.`,
+              ),
+          },
+        );
+      } else {
+        neighbour = await nearestNeighbour(
+          plan.train.map(vector),
+          plan.trainLabels,
+          plan.validation.map(vector),
+          candidate.labelIds.length,
+          {
+            signal,
+            onProgress: (done, total) =>
+              progressMessage(
+                `Comparing validation images: ${done} of ${total}. No partial comparison is published.`,
+              ),
+          },
+        );
+      }
+      const classifier =
+        trained?.linear.after ??
+        evaluate(toSoftmax(candidate), plan.validation.map(vector), plan.truth);
       if (!Number.isFinite(classifier.loss))
         throw new BaselineError(
-          "The saved classifier returned invalid measurements.",
+          "The classifier returned invalid measurements.",
         );
       await s.reload();
       if (signal.aborted) throw new CancelledError();
@@ -1067,7 +1111,7 @@ export function mountTrainingLab(root: HTMLElement) {
         throw new BaselineError(
           "The dataset was deleted; the comparison was discarded.",
         );
-      prepareBaseline(s.current, candidate);
+      prepare(s.current, candidate);
       if (
         !(await s.listModels(candidate.datasetId)).some(
           (m) => m.id === candidate.id,
@@ -1077,18 +1121,31 @@ export function mountTrainingLab(root: HTMLElement) {
           "The source model was deleted; the comparison was discarded.",
         );
       if (signal.aborted) throw new CancelledError();
-      baseline = {
-        record: candidate,
-        truth: plan.truth,
-        classifier,
-        neighbour,
-        trainCount: plan.train.length,
-        excluded: plan.excluded,
-      };
-      baselineProgress =
-        "Comparison completed — same validation images and frozen features. No weights changed.";
+      if (trained) {
+        methodComparison = {
+          record: candidate,
+          run: trained,
+          truth: plan.truth,
+          trainCount: plan.train.length,
+          excluded: plan.excluded,
+        };
+        baselineProgress =
+          "Training-method comparison completed — freshly trained models on shared frozen features. Source weights and final-test locks are unchanged.";
+      } else {
+        baseline = {
+          record: candidate,
+          truth: plan.truth,
+          classifier,
+          neighbour: neighbour!,
+          trainCount: plan.train.length,
+          excluded: plan.excluded,
+        };
+        baselineProgress =
+          "Comparison completed — same validation images and frozen features. No weights changed.";
+      }
     } catch (error) {
       baseline = null;
+      methodComparison = null;
       baselineProgress =
         signal.aborted || error instanceof CancelledError
           ? "Comparison cancelled. No partial comparison was published; choose Compare again to retry."
@@ -1337,6 +1394,14 @@ export function mountTrainingLab(root: HTMLElement) {
             "Compare with 1-nearest neighbour",
             () => void compareBaseline(m),
             { disabled: busy(), dataset: { testid: "tr-baseline-run" } },
+          ),
+          button(
+            "Compare training methods",
+            () => void compareBaseline(m, "network"),
+            {
+              disabled: busy() || m.stoppedEarly,
+              dataset: { testid: "tr-methods-run" },
+            },
           ),
           button("Load", () => act(() => loadModel(m)), {
             disabled: busy(),
@@ -1684,13 +1749,16 @@ export function mountTrainingLab(root: HTMLElement) {
         loaded = null;
       if (draft && draft.record.datasetId !== service.current?.dataset.id)
         draft = null;
+      const comparisonSource = baseline?.record ?? methodComparison?.record;
       if (
-        baseline &&
-        (baseline.record.datasetId !== service.current?.dataset.id ||
-          baseline.record.datasetVersion !== service.current?.dataset.version ||
-          !models.some((m) => m.id === baseline!.record.id))
+        comparisonSource &&
+        (comparisonSource.datasetId !== service.current?.dataset.id ||
+          comparisonSource.datasetVersion !==
+            service.current?.dataset.version ||
+          !models.some((m) => m.id === comparisonSource.id))
       ) {
         baseline = null;
+        methodComparison = null;
         baselineProgress =
           "Earlier comparison cleared because its dataset or source model changed.";
       }

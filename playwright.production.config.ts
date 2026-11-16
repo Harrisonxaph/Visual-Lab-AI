@@ -12,6 +12,7 @@ export default defineConfig({
     "nearest-neighbour.spec.ts",
     "regularisation.spec.ts",
     "nonlinear.spec.ts",
+    "photo-methods.spec.ts",
   ],
   timeout: 90000,
   workers: 1,
