@@ -36,12 +36,13 @@ The foundation, Dataset lab and first genuine Training lab are implemented and m
 PR #22, main at `98686c12f48a8f9604cf99b0de949f59bdf14872` when this policy was written.
 Implementation is not comprehensive physical-device validation. Accepted limits and unresolved
 reports remain unchanged. On 2026-11-15 the owner asked Codex to resume development and
-self-review with minimal input. Phase 4's nearest-neighbour baseline is merged through PR #30
-(`1cbdd00`). The next bounded slice adds optional L2 regularisation of classifier weights, default
-zero. Legacy zero behaviour and records are preserved; positive strength uses a distinct objective
-tag and records its penalised objective separately from prediction cross-entropy. Restoration,
-comparisons, reports, baseline and final-check compatibility remain required. No new architecture,
-encoder changes, schema/dependency changes, Phase 5, merge or deployment is authorized.
+self-review with minimal input. Phase 4's optional L2 regularisation is merged through PR #31
+(`9877d0d`), merge CI 43901143662 succeeded. The next bounded slice compares a linear model with
+a tiny randomly initialised neural network on the existing synthetic nonlinear lesson. The same
+numeric training/validation data and settings are used for both; both network layers really learn.
+This is an isolated teaching experiment, not photo-embedding method comparison. Preserve saved
+photo models, final locks, existing storage and all accepted limitations. No new dependency,
+schema migration, encoder changes, Phase 5, merge or deployment is authorized.
 
 Stay strictly within PROJECT_ROADMAP.md and the approved milestone. Preserve existing code and
 tests; defer unrelated cleanup, stretch features, new frameworks and speculative optimisations.

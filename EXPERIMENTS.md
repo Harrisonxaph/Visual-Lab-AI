@@ -223,3 +223,19 @@ experiments require strength to stay fixed. Neighbour comparison uses the actual
 the final test evaluates prediction quality without adding the training penalty. No final locks
 are reset and no test data enter optimisation. Further tuning after viewing final scores requires
 fresh held-out images before a new independent final claim.
+
+
+## Comparing linear and nonlinear capacity
+
+In Training lab → Learning patterns, choose **Compare linear model and tiny neural network**.
+No dataset or camera is needed. Both train on the same generated matching-signs task using
+48 training / 80 validation examples, seed 42, batch size 16, learning rate 0.5, 100 epochs and no
+L2 penalty. The fixed 2 → 8 tanh → 2 network starts from random weights, and both layers change.
+Compare measured prediction CE and accuracy curves; the app also reports per-layer weight changes.
+The linear model's straight boundary cannot capture all four groups. This task deliberately
+favours nonlinear capacity; it does not show which method is best for personal photos.
+
+Repeat runs are seeded. Initialisation scales differ between methods and equal epochs are not an
+equal-compute comparison. Cancel or leave to discard incomplete comparisons. Results are temporary:
+there are no model writes, uploads, image reads or final-test checks. Photo-embedding comparisons
+and saved neural networks remain deferred. No improvement claim generalises beyond this task.

@@ -469,3 +469,27 @@ The existing report schema gains optional `settings.l2` and `history[].trainObje
 reports refuse missing/non-finite objectives instead of substituting CE. No store/schema changes,
 weight-shape changes, encoder changes or new resources/dependencies are introduced. Existing final
 locks are not rewritten; fingerprints include each stored settings/manifest representation.
+
+
+## Nonlinear capacity lesson — ninth Phase 4 slice
+
+`learning/nonlinear.ts` is a bounded educational learner: two numeric inputs, eight tanh hidden
+units and two softmax outputs, 42 Float64 parameters. Xavier uniform initialises both weight
+matrices; biases start at zero. Backpropagation differentiates mean score-based cross-entropy
+through tanh into both layers and biases. Mini-batch SGD uses a seeded Fisher–Yates shuffle,
+yields between epochs and guards non-finite values. Only bounded two-feature binary lesson data
+are accepted; regularisation is disabled for this controlled comparison.
+
+`runCapacityComparison` in `learning/lessons.ts` feeds exactly one generated underfitting dataset
+to the existing softmax optimiser and the network. Both get 48 training / 80 separate validation
+examples, seed 42, learning rate 0.5, batch size 16 and 100 epochs. Softmax starts with small
+normal weights, the network with Xavier uniform. This is equal epoch budget, not equal compute
+or a general benchmark. Validation is evaluated after updates but never differentiated.
+
+`ui/nonlinear-lesson.ts` mounts inside the existing learning lessons. It shares their busy gate
+with photo operations and other lessons. Explicit Cancel publishes no completed comparison;
+leaving, backgrounding and pagehide discard incomplete output. Completed curves distinguish
+both methods and both splits; parameter evidence reports changes in each network weight matrix.
+Nothing is saved or uploaded. There are no dataset, encoder, camera or test-split dependencies.
+Photo classifiers, their saved format, final locks and database schema are unchanged. Training a
+network from random numeric features is not fine-tuning the detector or pretrained encoder.

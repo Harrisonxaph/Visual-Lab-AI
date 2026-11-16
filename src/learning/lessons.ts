@@ -1,6 +1,7 @@
 import { seededRandom } from "../datasets/example";
 import { runTraining, type TrainingData } from "./trainer";
 import type { TrainingSettings } from "./types";
+import { trainNetwork, type NetworkOptions } from "./nonlinear";
 
 export const LESSON_IDS = ["learnable", "overfitting", "underfitting"] as const;
 export type LessonId = (typeof LESSON_IDS)[number];
@@ -116,4 +117,33 @@ export async function runLesson(
   const lesson = createLesson(id);
   const run = await runTraining(lesson.data, lesson.settings, options);
   return { lesson, run };
+}
+
+/** Both methods receive exactly the same generated examples, settings and shuffle seed.
+ * Equal epochs are not equal compute; initialisation and parameter counts differ. */
+export async function runCapacityComparison(
+  options: Omit<NetworkOptions, "onEpoch"> & {
+    onEpoch?: (
+      method: "linear" | "network",
+      row: import("./types").EpochRecord,
+    ) => void;
+  } = {},
+) {
+  const lesson = createLesson("underfitting");
+  const linear = await runTraining(lesson.data, lesson.settings, {
+    ...options,
+    onEpoch: (row) => options.onEpoch?.("linear", row),
+  });
+  if (linear.stoppedEarly || options.signal?.aborted)
+    return { lesson, linear, network: null, complete: false };
+  const network = await trainNetwork(lesson.data, lesson.settings, {
+    ...options,
+    onEpoch: (row) => options.onEpoch?.("network", row),
+  });
+  return {
+    lesson,
+    linear,
+    network,
+    complete: !network.stoppedEarly && !options.signal?.aborted,
+  };
 }
