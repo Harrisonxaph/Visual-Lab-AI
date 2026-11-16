@@ -325,8 +325,8 @@ source/version/encoder, proposed/approved label, timestamp, seed/order and proba
 on each approved image. Existing validation/test assignments and saved weights remain unchanged.
 A stale/deleted source, protected similarity group or storage error refuses the atomic batch.
 The commit itself is annotation, not optimisation. After commit, use the measured round below.
-A matched-budget random learning arm remains pending; do not reuse exposed final-test results to
-guide those rounds.
+The separate generated-data experiment below provides a matched-budget teaching comparison; do not
+reuse exposed final-test results to guide rounds.
 
 ### Measure one approved batch
 
@@ -340,11 +340,47 @@ The table measures validation accuracy and cross-entropy for the saved source, f
 control (before) and expanded-data classifier (after). The fresh control handles encoder-feature
 recomputation more fairly than comparing historical scores. Report improvement, no change or worse
 results as measured; no confidence-based improvement claim. Equal epochs are not equal compute.
-This is not yet an uncertainty-vs-random-selection learning comparison. The normal training results
+This personal round is not an uncertainty-vs-random-selection learning comparison. The normal training results
 show the expanded classifier's loss/history and parameter changes; save it explicitly if wanted.
 
 Comparison evidence is temporary; reload/detected metadata/source changes clear it. Saved expanded
-models retain actual training/validation manifests for replay. Durable round comparison records and
-matched-budget random selection remain pending. Cancel/background/navigation discards incomplete
+models retain actual training/validation manifests for replay. Saving the expanded model now retains allowlisted cohort and numerical round evidence; existing
+reports include it. A separate generated-data acquisition experiment follows below. Cancel/background/navigation discards incomplete
 rounds; transient features are never written as new cache records. No additional device session is
 required by this slice, and prior physical/network limitations remain as documented.
+
+### Fixed generated-data acquisition comparison (2026-11-16)
+
+Choose **Compare uncertainty vs random** in the Training lab. This regenerates normal shapes
+using fixed seed 502026, prepares their existing JPEG/encoder features and uses a predeclared
+six-example balanced initial seed, 42-example pool and 12-example validation cohort (actual
+counts/exclusions are reported). Both acquisition methods reveal six simulated oracle labels,
+then train fresh softmax heads with identical seed 42, 50 epochs, learning rate 0.5, batch size 16
+and L2 zero. The selector never receives pool truth; validation never selects batches/settings.
+Overlap between batches is allowed. No personal data, stored image blobs or final-test set is used.
+
+Local Linux Chromium 156.0.8078.79, one real-encoder run, no physical-device evidence:
+
+| Learner | Validation correct / 12 | Accuracy | Cross-entropy |
+| --- | --- | --- | --- |
+| Initial six-label seed | 11 / 12 | 91.7% | 0.702912 |
+| Six uncertainty-selected additions | 4 / 12 | 33.3% | 0.897152 |
+| Six random-selected additions | 8 / 12 | 66.7% | 0.787603 |
+
+Both expanded heads learned parameters and performed worse than the initial model. Uncertainty
+performed worse than this random draw. Do not retune from this small validation result to claim
+success: this is a single-seed teaching observation, not a general conclusion about active learning.
+The explicit JSON download records settings, generator/encoder, cohorts/fingerprints, selections,
+measurements and browser details, without images/features/weights. Reproduction needs compatible
+code/runtime; identical bits across devices are not promised. Reload clears the in-app report.
+
+Self-review found that the first diagnostic used generator seed 2026, regenerating images from
+the bundled stored example. A failing fingerprint-overlap regression reproduced the problem.
+Seed 502026 was fixed to separate the tasks, not to select a better result; the corrected run
+above passes the overlap check. Earlier seed-2026 scores are not final experiment evidence.
+
+A numerical regression also reproduced an ordering confound on a five-class numeric fixture:
+the same acquired set in different selection orders gave different minibatch fits. Both arms now
+use canonical pool order for training, independently of ranking order, and record their actual
+training order. The identical-set regression passes. This does not change the predeclared budgets,
+settings or generator seed, and no configuration was selected to improve validation scores.

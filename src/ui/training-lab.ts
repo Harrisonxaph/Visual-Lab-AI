@@ -1,3 +1,12 @@
+import { generatedAcquisition } from "../learning/generated-acquisition";
+import {
+  acquisitionPanel,
+  type GeneratedComparison,
+} from "./acquisition-panel";
+import {
+  feedbackEvidence,
+  checkedFeedback,
+} from "../learning/feedback-evidence";
 import {
   prepareLearningRound,
   runLearningRound,
@@ -172,7 +181,8 @@ export function mountTrainingLab(root: HTMLElement) {
     | "baseline"
     | "review"
     | "promoting"
-    | "round" = "idle";
+    | "round"
+    | "acquisition" = "idle";
   let abort: AbortController | null = null;
   let actionPending = false;
   let lessonRunning = false;
@@ -182,6 +192,8 @@ export function mountTrainingLab(root: HTMLElement) {
   let loadedNetwork: LoadedNetwork | null = null;
   let networkExportNames = false;
   let baselineProgress = "";
+  let acquisitionResult: GeneratedComparison | null = null;
+  let acquisitionProgress = "";
   let roundResult: RoundResult | null = null;
   let roundProgress = "";
   let reviewSession: ReviewSession | null = null;
@@ -266,6 +278,7 @@ export function mountTrainingLab(root: HTMLElement) {
     className: "panel ds-panel",
     id: "tr-baseline",
   });
+  const acquisitionSection = el("div");
   const roundSection = el("div");
   const reviewSection = el("div");
   const finalSection = el("section", {
@@ -285,6 +298,7 @@ export function mountTrainingLab(root: HTMLElement) {
     baselineSection,
     reviewSection,
     roundSection,
+    acquisitionSection,
     finalSection,
     lessonRoot,
     aboutPanel(),
@@ -1353,6 +1367,16 @@ export function mountTrainingLab(root: HTMLElement) {
   }
 
   function renderReview() {
+    acquisitionSection.replaceChildren(
+      acquisitionPanel({
+        result: acquisitionResult,
+        progress: acquisitionProgress,
+        running: phase === "acquisition",
+        busy: busy(),
+        onRun: () => void compareAcquisition(),
+        onCancel: () => abort?.abort(),
+      }),
+    );
     roundSection.replaceChildren(
       learningRoundPanel(roundResult, roundProgress, phase === "round", () =>
         abort?.abort(),
@@ -1419,6 +1443,58 @@ export function mountTrainingLab(root: HTMLElement) {
       say(reviewProgress);
     } finally {
       phase = "idle";
+      await refresh();
+    }
+  }
+
+  async function compareAcquisition() {
+    if (busy()) return;
+    phase = "acquisition";
+    acquisitionResult = null;
+    acquisitionProgress = "Generating shapes for a matched-budget experiment…";
+    abort = new AbortController();
+    const signal = abort.signal;
+    embedder = new Embedder();
+    const encoder = embedder;
+    let onCancel: (() => void) | undefined;
+    renderAll();
+    const report = (message: string) => {
+      if (signal.aborted) return;
+      acquisitionProgress = message;
+      const node = acquisitionSection.querySelector("#tr-acquisition-status");
+      if (node) node.textContent = message;
+    };
+    try {
+      const cancelled = new Promise<never>((_, reject) => {
+        onCancel = () => reject(new CancelledError());
+        signal.addEventListener("abort", onCancel, { once: true });
+      });
+      const result = await Promise.race([
+        generatedAcquisition((image) => encoder.embed(image), signal, report),
+        cancelled,
+      ]);
+      if (signal.aborted) throw new CancelledError();
+      acquisitionResult = {
+        result,
+        createdAt: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        hardwareConcurrency: navigator.hardwareConcurrency || null,
+      };
+      acquisitionProgress =
+        "Example comparison complete — actual validation measurements, no general improvement claim.";
+    } catch (error) {
+      acquisitionProgress =
+        signal.aborted || error instanceof CancelledError
+          ? "Example comparison cancelled; no partial report was published."
+          : error instanceof Error
+            ? error.message
+            : "The example comparison failed.";
+      say(acquisitionProgress);
+    } finally {
+      if (onCancel) signal.removeEventListener("abort", onCancel);
+      phase = "idle";
+      abort = null;
+      releaseEncoder();
       await refresh();
     }
   }
@@ -1534,6 +1610,13 @@ export function mountTrainingLab(root: HTMLElement) {
           name: `Feedback — ${candidate.name}`,
           createdAt: new Date().toISOString(),
           datasetVersion: plan.datasetVersion,
+          feedback: feedbackEvidence(
+            candidate,
+            plan.train,
+            plan.added,
+            plan.validation,
+            run,
+          ),
           weights: run.expanded.model.weights,
           bias: run.expanded.model.bias,
           history: run.expanded.history,
@@ -1920,6 +2003,23 @@ export function mountTrainingLab(root: HTMLElement) {
     }
   }
 
+  function savedFeedback(model: ModelRecord) {
+    try {
+      const e = checkedFeedback(model)!;
+      return el(
+        "p",
+        { dataset: { testid: "tr-saved-feedback" } },
+        `Saved feedback round: ${e.approved.length} approved photos. Historical validation accuracy: original-data control ${pct(e.control.accuracy)}, expanded ${pct(e.expanded.accuracy)}. Source version ${e.sourceDatasetVersion}; ${e.validation.length} unchanged validation photos. This is not a new evaluation or a random-selection comparison. Original photos, encoder and compatible code are needed to repeat it.`,
+      );
+    } catch {
+      return el(
+        "p",
+        {},
+        "Feedback evidence is invalid; no comparison can be reported for this saved model.",
+      );
+    }
+  }
+
   function renderSaved() {
     const s = service;
     if (!s?.current) {
@@ -1939,6 +2039,7 @@ export function mountTrainingLab(root: HTMLElement) {
             { className: "ds-help" },
             ` ${m.labelNames.join(", ")}; ${last?.epoch ?? 0} epochs${m.stoppedEarly ? " (stopped early)" : ""}; learning rate ${m.settings.learningRate}; L2 ${m.settings.l2 ?? 0}; validation accuracy when trained ${pct(last?.validationAccuracy ?? null)}.`,
           ),
+          ...(m.feedback ? [savedFeedback(m)] : []),
           button("Restore run settings", () => act(() => restoreRun(m)), {
             disabled: busy(),
             dataset: { testid: "tr-restore" },
@@ -2394,7 +2495,8 @@ export function mountTrainingLab(root: HTMLElement) {
       phase === "final-test" ||
       phase === "baseline" ||
       phase === "review" ||
-      phase === "round"
+      phase === "round" ||
+      phase === "acquisition"
     )
       abort?.abort();
   };

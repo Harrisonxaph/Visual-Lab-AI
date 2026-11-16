@@ -305,6 +305,9 @@ test("explicit approval commit saves training-only provenance without changing p
   expect(savedRound.models).toHaveLength(2);
   const expanded = savedRound.models.find((m) => m.id !== before.models[0].id);
   expect(expanded.trainCount).toBe(before.models[0].trainCount + 1);
+  expect(expanded.feedback.approved).toHaveLength(1);
+  expect(expanded.feedback.sourceModelId).toBe(before.models[0].id);
+  await expect(page.getByTestId("tr-saved-feedback")).toHaveCount(1);
   expect(expanded.experiment.validation).toEqual(
     before.models[0].experiment.validation,
   );
@@ -319,6 +322,7 @@ test("explicit approval commit saves training-only provenance without changing p
   await expect(page.getByTestId("tr-round-result")).toHaveCount(0);
   await page.reload();
   await expect(page.getByTestId("tr-round-result")).toHaveCount(0);
+  await expect(page.getByTestId("tr-saved-feedback")).toHaveCount(1);
   const savedRow = page
     .getByTestId("tr-model")
     .filter({ has: page.locator("strong", { hasText: "Feedback —" }) });

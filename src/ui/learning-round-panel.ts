@@ -81,7 +81,7 @@ export function learningRoundPanel(
     ),
     el(
       "p",
-      "The expanded classifier appears in the normal results below and can be saved explicitly. Round comparison is page memory only; reload or detected dataset/source changes clear it. No test photos were opened or final-test choices changed. An earlier final test cannot become untouched again; use fresh held-out data for a new independent final claim. Matched-budget random selection and durable round comparison records remain pending.",
+      "The expanded classifier appears in the normal results below and can be saved explicitly. The in-session comparison clears on reload or detected dataset/source changes. Saving the expanded model also preserves numerical round evidence, visible in Saved models and its report. No test photos were opened or final-test choices changed. An earlier final test cannot become untouched again; use fresh held-out data for a new independent final claim. A separate generated-shapes experiment compares equal-budget uncertainty and random acquisition with simulated labels; it does not establish which method works better on your personal photos.",
     ),
   );
   return section;

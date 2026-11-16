@@ -1,3 +1,4 @@
+import type { FeedbackEvidence } from "./feedback-evidence";
 /** One photo's cached embedding: 1,024 numbers from the frozen encoder. */
 export interface EmbeddingRecord {
   imageId: string;
@@ -61,6 +62,8 @@ export interface ModelRecord {
   trainImages?: TrainImageRef[];
   /** Versioned input selection for restoring settings and fair recorded comparisons. */
   experiment?: RunManifest;
+  /** Saved only with explicit classifier Save; historical validation comparison, never test results. */
+  feedback?: FeedbackEvidence;
 }
 
 export interface TrainImageRef {

@@ -293,10 +293,23 @@ cohort. It also re-evaluates the saved source on those features. The expanded cl
 saved explicitly. Comparison results remain temporary. This first round requires an uncapped source
 and no dataset edits since the single approval commit. Equal epochs do not imply equal compute.
 
-Remaining Phase 5 work: before/after validation measurement against equally budgeted random selection,
-reproducible round records and the final-test reuse protocol. Ordinary label assignment is not
-sufficient: it may place a new labelled group in validation/test, so promotion needs a dedicated
-protected transaction. Improvement must be measured, never promised or inferred from confidence.
+The comparison slice adds a generated-shapes oracle simulation: fixed generator seed `502026`
+(distinct from the Dataset lab's `2026`), two initial examples and four validation examples per
+class, then six-label-total acquisition budgets for uncertainty and seeded random
+selection (no per-class acquisition quota). The selector never receives pool labels. Both heads retrain from the same seed,
+features and settings on equal-sized training sets. This is a teaching experiment, not human
+approval or evidence of general superiority on personal photos. Existing personal rounds still
+compare their original-data control, not a paired random-selection learning arm.
+
+Saving an expanded classifier also saves allowlisted original/approved/validation cohort references
+and source/control/expanded measurements. Existing local reports include this evidence; the
+generated experiment has its own numerical download. Original photos, encoder and compatible code
+are still needed to reproduce; reports are not backups and cross-runtime bits need not match.
+
+**Completion candidate, not closed:** see [Phase 5 closeout](docs/phases/PHASE_5_CLOSEOUT.md).
+Remaining work is review/merge and an explicit owner closeout decision with documented limitations;
+no additional routine device session is required by this slice. Preserve the final-test reuse
+protocol and all unresolved reports. No production deployment is authorised.
 
 Build a human-feedback learning loop and measure its effects.
 
